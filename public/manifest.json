@@ -1,0 +1,22 @@
+{
+  "name": "Mishby Health OS",
+  "short_name": "Mishby",
+  "description": "Live Naturally, Heal Holistically – Your Personal Health Companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e3dcc7",
+  "theme_color": "#e3dcc7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/mho-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/mho-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
