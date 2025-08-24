@@ -1,1 +1,0 @@
-/* mho/engine/extractors/labParser.ts */ export function labParser(t:string){ const L=t.toLowerCase(); const riskTags:string[]=[]; const notes:string[]=[]; if(L.includes("potassium")) riskTags.push("avoid_very_salty"); return {riskTags, cautionNotes:notes}; }

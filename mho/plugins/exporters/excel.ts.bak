@@ -1,4 +1,4 @@
-/* mho/plugins/exporters/excel.ts */
+/* mho/plugins/exporters/excel.ts (stub) */
 import { ComplianceGuard } from "../../compliance/ComplianceGuard";
 export async function exportPlanExcel(plan:any){
   const safe = ComplianceGuard.filterPlan(plan);

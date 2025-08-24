@@ -1,1 +1,1 @@
-/* mho/engine/extractors/ocr.ts (stub) */ export async function ocr(p:string){ return ""; }
+/* mho/engine/extractors/ocr.ts */ export async function ocr(_p:string){ return ""; }

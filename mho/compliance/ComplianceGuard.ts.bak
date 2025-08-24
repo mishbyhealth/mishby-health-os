@@ -10,7 +10,7 @@ import { STRINGS } from "./strings";
 const RULES = rulesJson as Rules;
 
 function redactString(s: string): string {
-  return (RULES.blockedTerms||[]).reduce((acc, r) => {
+  return (RULES.blockedTerms || []).reduce((acc, r) => {
     const re = new RegExp(r.pattern, r.flags || "gi");
     return acc.replace(re, r.replace ?? "[redacted]");
   }, s);
@@ -27,12 +27,12 @@ function redactDeep(v: any): any {
 }
 export const ComplianceGuard = {
   filterPlan<T extends PlanLike>(plan: T): T {
-    const filtered:any = redactDeep(plan);
+    const filtered: any = redactDeep(plan);
     filtered.meta = filtered.meta || {};
     filtered.meta.disclaimerId = filtered.meta.disclaimerId || "standard";
     filtered.meta.disclaimerText = filtered.meta.disclaimerText || STRINGS.disclaimer.en;
     return filtered as T;
   },
-  filterText(text: string){ return redactString(text); },
-  disclaimer(){ return STRINGS.disclaimer.en; }
+  filterText(text: string) { return redactString(text); },
+  disclaimer() { return STRINGS.disclaimer.en; }
 };

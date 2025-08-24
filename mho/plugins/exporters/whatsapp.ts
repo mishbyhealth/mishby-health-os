@@ -1,4 +1,4 @@
-/* mho/plugins/exporters/whatsapp.ts (stub) */
+/* mho/plugins/exporters/whatsapp.ts */
 import { ComplianceGuard } from "../../compliance/ComplianceGuard";
 export function buildWhatsAppText(plan:any){
   const safe = ComplianceGuard.filterPlan(plan);
