@@ -1,0 +1,1 @@
+/* mho/engine/extractors/rxParser.ts */ export function rxParser(_t:string){ return {riskTags:["keep_consistent_meal_times"], cautionNotes:[]}; }

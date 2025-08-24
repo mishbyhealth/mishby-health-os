@@ -1,0 +1,40 @@
+{
+  "profile": {
+    "name": "Rahul Sharma",
+    "age": 42,
+    "sex": "male",
+    "heightCm": 172,
+    "weightKg": 78,
+    "locale": "en-IN",
+    "country": "IN"
+  },
+  "lifestyle": {
+    "dietType": "lacto_vegetarian",
+    "culture": "Hindu",
+    "wakeupTime": "06:15",
+    "sleepTime": "22:30",
+    "mealsPerDay": 3,
+    "mealTimes": ["08:30", "13:30", "19:30"],
+    "activityLevel": "moderate"
+  },
+  "conditions": ["hypertension", "diabetes_type2"],
+  "labs": {
+    "bp": { "systolic": 136, "diastolic": 85 },
+    "fbs": 128,
+    "ppbs": 180,
+    "hba1c": 7.1,
+    "lipids": { "ldl": 110, "hdl": 42, "tg": 180, "tc": 190 },
+    "creatinine": 1.2,
+    "potassium": 4.8,
+    "sodium": 138,
+    "tsh": 3.2,
+    "b12": 350,
+    "vitaminD": 22
+  },
+  "preferences": {
+    "allergies": ["peanuts"],
+    "dislikes": ["brinjal"],
+    "cookingMethods": ["boil", "steam", "saute"]
+  },
+  "goals": ["bp_control", "sugar_control", "energy", "mental_calm", "longevity", "gut_health"]
+}

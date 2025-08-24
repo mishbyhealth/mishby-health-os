@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "type": "error",
+      "source": "firebase",
+      "conditions": [
+        {
+          "metric": "error_count",
+          "threshold": 5,
+          "window": "5m",
+          "operator": ">="
+        }
+      ],
+      "actions": [
+        {
+          "type": "email",
+          "targets": ["dev-team@mishby.com"]
+        },
+        {
+          "type": "slack",
+          "webhook": "https://hooks.slack.com/services/TXXXXXX/BXXXXXX"
+        }
+      ]
+    },
+    {
+      "type": "performance",
+      "source": "frontend",
+      "conditions": [
+        {
+          "metric": "page_load_time",
+          "threshold": 3000,
+          "window": "15m",
+          "operator": ">",
+          "percentile": 90
+        }
+      ],
+      "actions": [
+        {
+          "type": "log",
+          "severity": "warning"
+        }
+      ]
+    }
+  ]
+}

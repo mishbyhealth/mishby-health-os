@@ -1,0 +1,142 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+import { useSchemaForm } from "../../mho/form/useSchemaForm";
+import TextField from "../../mho/form/fields/TextField";
+import NumberField from "../../mho/form/fields/NumberField";
+
+export default function BuildPlanForm() {
+  const { data, setProfile, validateAll, validateField, clearDraft } = useSchemaForm();
+  const nav = useNavigate();
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = validateAll();
+    if (res.valid) {
+      nav("/plan/preview", { state: { profile: data.profile } });
+    } else {
+      // trigger re-render so errors show
+      setProfile({ name: data.profile.name });
+    }
+  };
+
+  return (
+    <div className="gw-container py-6">
+      <h1 className="text-2xl font-semibold mb-2">GloWell — Build Your Plan</h1>
+      <p className="text-sm text-[color:var(--gw-muted)] mb-6">
+        Step 1 of 6 — Profile.
+      </p>
+
+      <form onSubmit={onSubmit} className="max-w-xl">
+        <TextField
+          name="profile.name"
+          label="Full Name"
+          value={data.profile.name}
+          onChange={(v: string) => setProfile({ name: v })}
+          placeholder="e.g., Meena Patel"
+          errors={validateField("/profile/name")}
+        />
+
+        {/* Gender is required by the schema */}
+        <label className="grid gap-1 mb-3">
+          <span className="text-sm font-medium">Gender</span>
+          <select
+            className="border p-2 rounded"
+            value={data.profile.sex ?? "other"}
+            onChange={(e) => setProfile({ sex: e.target.value })}
+          >
+            <option value="male">male</option>
+            <option value="female">female</option>
+            <option value="other">other</option>
+          </select>
+          {/* optional error hint */}
+          {validateField("/profile/sex").length > 0 && (
+            <div className="text-red-600 text-xs">
+              {validateField("/profile/sex")[0]}
+            </div>
+          )}
+        </label>
+
+        <NumberField
+          name="profile.age"
+          label="Age"
+          value={data.profile.age}
+          onChange={(v: number) => setProfile({ age: v })}
+          min={1}
+          max={120}
+          placeholder="Enter age"
+          errors={validateField("/profile/age")}
+        />
+
+        <NumberField
+          name="profile.heightCm"
+          label="Height (cm)"
+          value={data.profile.heightCm}
+          onChange={(v: number) => setProfile({ heightCm: v })}
+          min={50}
+          max={250}
+          placeholder="e.g., 160"
+          errors={validateField("/profile/heightCm")}
+        />
+
+        <NumberField
+          name="profile.weightKg"
+          label="Weight (kg)"
+          value={data.profile.weightKg}
+          onChange={(v: number) => setProfile({ weightKg: v })}
+          min={10}
+          max={250}
+          placeholder="e.g., 67.8"
+          errors={validateField("/profile/weightKg")}
+        />
+
+        {/* Locale -> Language & Region (dropdown) */}
+        <label className="grid gap-1 mb-3">
+          <span className="text-sm font-medium">Language &amp; Region</span>
+          <select
+            className="border p-2 rounded"
+            value={data.profile.locale ?? "en-IN"}
+            onChange={(e) => setProfile({ locale: e.target.value })}
+          >
+            <option value="en-IN">English (India)</option>
+            <option value="hi-IN">Hindi (India)</option>
+            <option value="gu-IN">Gujarati (India)</option>
+            <option value="en-US">English (US)</option>
+          </select>
+          {validateField("/profile/locale").length > 0 && (
+            <div className="text-red-600 text-xs">
+              {validateField("/profile/locale")[0]}
+            </div>
+          )}
+        </label>
+
+        <TextField
+          name="profile.country"
+          label="Country (ISO-2)"
+          value={data.profile.country}
+          onChange={(v: string) => setProfile({ country: v })}
+          placeholder="IN"
+          errors={validateField("/profile/country")}
+        />
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="submit"
+            className="rounded-lg px-4 py-2 bg-[color:var(--gw-primary)] text-white"
+          >
+            Continue
+          </button>
+
+          <button
+            type="button"
+            className="rounded-lg px-4 py-2 border border-[color:var(--gw-border)]"
+            onClick={clearDraft}
+            title="Clear saved draft"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
