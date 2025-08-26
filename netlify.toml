@@ -1,17 +1,18 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+# आपका असली ऐप इस subfolder में है:
+base = "Documents/MishbyHealthOS"
 
-# Ensure client-side routing works (SPA fallback)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Vite build command
+command = "npm run build"
 
-# Optional: tighten security headers (safe defaults)
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+# Build output फ़ोल्डर (base के अंदर माना जाएगा → Documents/MishbyHealthOS/dist)
+publish = "dist"
+
+# (Functions use नहीं कर रहे, इसलिए यह key नहीं रख रहे)
+# functions = "netlify/functions"
+
+[dev]
+command = "npm run dev"
+port = 5173
+targetPort = 5173
+framework = "vite"
