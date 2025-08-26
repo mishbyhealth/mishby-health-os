@@ -1,0 +1,206 @@
+# Project Tree (MishbyHealthOS)
+# Generated: 2025-08-21T20:35:39.674Z
+# Max depth: 5
+
+MishbyHealthOS/
+├── _manifest/
+│   ├── duplicates.txt
+│   ├── file-tree.txt
+│   ├── manifest.csv
+│   ├── mho-public-tree.txt
+│   ├── mho-root-tree.txt
+│   └── summary.txt
+├── .env
+├── .env.example
+├── .firebaserc
+├── .gitignore
+├── .vscode/
+│   └── settings.json
+├── backups/
+│   └── mishby-backup-2025-07-31T07-39-48-696Z.zip
+├── core/
+│   └── config.ts
+├── docs/
+│   └── README.md
+├── eslint.config.js
+├── features/
+│   ├── auth/
+│   │   ├── authService.ts
+│   │   └── useAuth.ts
+│   ├── component-library/
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── index.ts
+│   │   └── LoadingSpinner.tsx
+│   ├── deployment/
+│   │   ├── deploy-helper.ts
+│   │   └── netlify-config.ts
+│   ├── health-plan/
+│   │   ├── BasicInfoStep.tsx
+│   │   ├── generateHealthPlan.ts
+│   │   ├── MultiStepHealthForm.tsx
+│   │   └── planGenerator.ts
+│   ├── maintenance/
+│   ├── services/
+│   │   ├── pdfService.ts
+│   │   └── userService.ts
+│   └── testing/
+│       ├── health-plan.test.ts
+│       ├── mocks/
+│       │   └── mockData.ts
+│       └── setup/
+│           └── test-utils.ts
+├── file_tree.mjs
+├── file_tree.txt
+├── firebase.json
+├── firebase.ts
+├── firestore.indexes.json
+├── firestore.rules
+├── functions/
+│   ├── .eslintrc.js
+│   ├── .gitignore
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src/
+│   │   └── index.ts
+│   ├── tsconfig.dev.json
+│   └── tsconfig.json
+├── index.html
+├── make-icons.mjs
+├── mho/
+│   ├── config/
+│   │   └── app.json
+│   ├── data/
+│   │   └── foods.db.json
+│   ├── engine/
+│   │   ├── index.ts
+│   │   ├── normalize.ts
+│   │   └── processForm.ts
+│   ├── form/
+│   │   ├── ajv.ts
+│   │   ├── example.profile.json
+│   │   ├── fields/
+│   │   │   ├── NumberField.tsx
+│   │   │   └── TextField.tsx
+│   │   ├── healthForm.schema/
+│   │   │   └── index.ts
+│   │   ├── healthForm.schema.json
+│   │   ├── healthForm.schema.ts
+│   │   └── useSchemaForm.ts
+│   ├── plan/
+│   │   ├── export.ts
+│   │   └── useGeneratePlan.ts
+│   ├── planner/
+│   │   └── buildPlan.ts
+│   ├── plugins/
+│   │   └── exporters/
+│   │       └── PDF.ts
+│   ├── rules/
+│   │   ├── conditions/
+│   │   │   ├── ckd.json
+│   │   │   ├── diabetes.json
+│   │   │   └── high_bp.json
+│   │   └── safety.global.json
+│   └── types/
+│       └── json-shims.d.ts
+├── monitoring/
+│   └── alert-rules.json
+├── netlify.toml
+├── package-lock.json
+├── package.json
+├── postcss.config.cjs
+├── project_structure.txt
+├── public/
+│   ├── _mho_trial_archive/
+│   │   ├── exporter.js
+│   │   └── planner/
+│   │       └── form/
+│   │           └── healthForm.schema.json
+│   ├── _redirects
+│   ├── apple-touch-icon.png
+│   ├── favicon.ico
+│   ├── logo.png
+│   ├── logo192.png
+│   ├── logo512.png
+│   └── manifest.json
+├── README.md
+├── rename_glowell.mjs
+├── scripts/
+│   ├── analyze-bundle.cjs
+│   ├── backup.js
+│   ├── ci-check.js
+│   ├── make-file-tree.mjs
+│   └── validate-health-form.mjs
+├── src/
+│   ├── _archive/
+│   ├── App.css
+│   ├── App.d.ts
+│   ├── App.d.ts.map
+│   ├── App.tsx
+│   ├── assets/
+│   │   └── react.svg
+│   ├── components/
+│   │   ├── Footer.d.ts
+│   │   ├── Footer.d.ts.map
+│   │   ├── Footer.tsx
+│   │   ├── forms/
+│   │   │   └── HealthFormStepper.tsx
+│   │   ├── Header.d.ts
+│   │   ├── Header.d.ts.map
+│   │   ├── Header.tsx
+│   │   ├── plan/
+│   │   │   └── PlanCard.tsx
+│   │   ├── SideNav.d.ts
+│   │   ├── SideNav.d.ts.map
+│   │   └── SideNav.tsx
+│   ├── global.d.ts
+│   ├── index.css
+│   ├── layouts/
+│   │   ├── MainLayout.d.ts
+│   │   ├── MainLayout.d.ts.map
+│   │   └── MainLayout.tsx
+│   ├── main.d.ts
+│   ├── main.d.ts.map
+│   ├── main.tsx
+│   ├── pages/
+│   │   ├── __backup_BuildPlanForm.tsx.bak
+│   │   ├── Dashboard.d.ts
+│   │   ├── Dashboard.d.ts.map
+│   │   ├── Dashboard.tsx
+│   │   ├── DebugEngine.tsx
+│   │   ├── HealthForm.tsx
+│   │   ├── HealthPlan.d.ts
+│   │   ├── HealthPlan.d.ts.map
+│   │   ├── HealthPlan.tsx
+│   │   ├── HomePage.tsx
+│   │   ├── Learn.tsx
+│   │   ├── PlannerTest.tsx
+│   │   ├── PlanView.tsx
+│   │   ├── Profile.d.ts
+│   │   ├── Profile.d.ts.map
+│   │   └── Profile.tsx
+│   ├── routes/
+│   │   ├── AppRoutes.d.ts
+│   │   ├── AppRoutes.d.ts.map
+│   │   └── AppRoutes.tsx
+│   ├── services/
+│   │   ├── authService.js
+│   │   └── webhookService.js
+│   ├── utils/
+│   │   ├── formPersistence.ts
+│   │   ├── rateLimiter.js
+│   │   └── validators.ts
+│   └── vite-env.d.ts
+├── tailwind.config.cjs
+├── tools/
+│   ├── generate_manifest.mjs
+│   └── repo-audit.ps1
+├── ts_errors.txt
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── tsconfig.tsbuildinfo
+├── vite-env.d.ts
+├── vite.config.ts
+├── vitest.config.js
+└── vitest.config.ts

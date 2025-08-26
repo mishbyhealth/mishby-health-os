@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src",
+    "noEmit": false,
+    "types": ["node"],
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "sourceMap": true,
+    "target": "ESNext"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "lib"]
+}

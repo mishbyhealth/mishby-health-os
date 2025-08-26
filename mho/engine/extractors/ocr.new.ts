@@ -1,0 +1,1 @@
+/* mho/engine/extractors/ocr.ts */ export async function ocr(_p:string){ return ""; }

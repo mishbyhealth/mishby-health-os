@@ -1,0 +1,9 @@
+/* Enable Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Calm theme tweaks (optional) */
+:root { --bg:#f6f7fb; --ink:#1f2937; }
+html,body,#root{height:100%;}
+body{background:var(--bg); color:var(--ink);}

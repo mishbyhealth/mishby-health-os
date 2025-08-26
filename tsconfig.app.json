@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "types": ["vite/client", "@types/react", "@types/react-dom"]
+  },
+  "include": ["src", "core", "mho", "vite-env.d.ts"],
+  "exclude": ["dist", "node_modules", "features", "**/*.test.*", "**/__tests__/**"]
+}

@@ -1,0 +1,33 @@
+{
+  "condition": "diabetes",
+  "version": 1,
+  "match": {
+    "anyOf": ["diabetes", "type 2 diabetes", "type 1 diabetes", "t2d", "t1d"]
+  },
+  "avoid": [
+    "added sugar",
+    "sugary drinks",
+    "refined flour",
+    "ultra-processed snacks",
+    "deep-fried sweets"
+  ],
+  "prefer": [
+    "non-starchy vegetables",
+    "whole grains (measured portions)",
+    "legumes",
+    "lean proteins",
+    "healthy fats (nuts/seeds/olive oil)"
+  ],
+  "targets": {
+    "daily_carb_g": { "min": 130, "max": 200 },
+    "added_sugar_g": { "max": 24 }
+  },
+  "flags": {
+    "low_gi": true,
+    "even_meal_distribution": true
+  },
+  "notes": [
+    "Prioritize low-GI carbs and protein pairing.",
+    "Distribute carbs across meals; avoid large spikes."
+  ]
+}

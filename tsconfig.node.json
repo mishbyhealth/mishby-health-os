@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./.cache/tsbuildinfo/node.tsbuildinfo",
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "skipLibCheck": false
+  },
+  "include": [
+    "vite.config.*",
+    "vitest.config.*",
+    "scripts/**/*",
+    "netlify/**/*"
+  ]
+}

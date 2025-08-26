@@ -1,0 +1,25 @@
+/* src/index.css — Tailwind enable + small theme tweaks */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: app-wide look matching calm theme */
+:root {
+  --bg: #f6f7fb;          /* soft gray */
+  --ink: #1f2937;         /* slate-800 */
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Card + headings polish (optional) */
+.card {
+  @apply rounded-2xl border bg-white/70 backdrop-blur p-4;
+}
+h1,h2,h3 { @apply tracking-tight; }

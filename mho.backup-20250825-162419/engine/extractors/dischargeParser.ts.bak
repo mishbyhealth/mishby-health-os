@@ -1,0 +1,1 @@
+/* mho/engine/extractors/dischargeParser.ts */ export function dischargeParser(_t:string){ return {riskTags:["rest_priority","gentle_movement_only"], cautionNotes:[]}; }
