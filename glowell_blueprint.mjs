@@ -230,7 +230,7 @@ const pagesDir    = has("src/pages") ? "src/pages" : "src";
 const featuresDir = has("features")  ? "features"  : "src/features";
 const functionsSrc= has("functions/src") ? "functions/src" : "functions/src";
 const isTS        = has("tsconfig.json") || globHasTS();
-const featuresV2 = has("features-v2") ? "features-v2" : "src/features-v2";
+const featuresV2 = has("features") ? "features" : "src/features";
 
 function globHasTS(){
   try{
@@ -731,7 +731,7 @@ const docsPromptPack = `# Prompt Pack (Copy-Paste)
 
 /** ================= Compliance v2 (namespaced) =================== */
 
-const compliance2TS = `/* mho2/compliance/ComplianceGuard2.ts
+const compliance2TS = `/* mho/compliance/ComplianceGuard2.ts
  * Redacts clinical wording and injects non-clinical disclaimers (v2 namespace).
  */
 export type AnyObj = Record<string, any>;
@@ -778,7 +778,7 @@ const compliance2RulesJSON = {
   ]
 };
 
-const compliance2StringsTS = `/* mho2/compliance/strings2.ts */
+const compliance2StringsTS = `/* mho/compliance/strings2.ts */
 export const STRINGS2 = {
   disclaimer: {
     en: "This app shares general wellness suggestions only. It is not medical advice.",
@@ -788,7 +788,7 @@ export const STRINGS2 = {
 
 /** ================= Advanced Engine v2 (namespaced) ============== */
 
-const v2TypesTS = `/* mho2/engine-v2/types.ts */
+const v2TypesTS = `/* mho/engine-v2/types.ts */
 export type TimeHHmm = string;
 export type ISODate = string;
 
@@ -863,7 +863,7 @@ export type IntakeV2 = {
   notes?: NotesOnly;
 };`;
 
-const v2NormalizeTS = `/* mho2/engine-v2/normalize.ts */
+const v2NormalizeTS = `/* mho/engine-v2/normalize.ts */
 import type { IntakeV2 } from "./types";
 
 export function normalizeV2(input:any): IntakeV2 {
@@ -875,7 +875,7 @@ export function normalizeV2(input:any): IntakeV2 {
 }`;
 
 /** A strict, plain-English cross-field validator */
-const v2ValidateTS = `/* mho2/engine-v2/validate.ts */
+const v2ValidateTS = `/* mho/engine-v2/validate.ts */
 import type { IntakeV2 } from "./types";
 
 export type ValidationIssue = { path: string; message: string };
@@ -898,7 +898,7 @@ export function validateV2(i: IntakeV2): ValidationIssue[] {
 }`;
 
 /** Neutral calculations */
-const v2CalcsTS = `/* mho2/engine-v2/calcs.ts */
+const v2CalcsTS = `/* mho/engine-v2/calcs.ts */
 export function bmi(weightKg:number, heightCm:number){
   if(!weightKg||!heightCm) return null;
   const m=heightCm/100;
@@ -916,7 +916,7 @@ export function tdee(bmr:number|null, activity:"sedentary"|"light"|"moderate"|"a
 }`;
 
 /** Modes/flags demo */
-const v2ModesTS = `/* mho2/engine-v2/modes.ts */
+const v2ModesTS = `/* mho/engine-v2/modes.ts */
 import type { IntakeV2 } from "./types";
 
 export type ModeFlags = {
@@ -939,7 +939,7 @@ export function computeModes(i: IntakeV2): ModeFlags {
 }`;
 
 /** Plan schema + safe builder */
-const v2PlanSchemaTS = `/* mho2/plan-v2/schema.ts */
+const v2PlanSchemaTS = `/* mho/plan-v2/schema.ts */
 export type PlanV2 = {
   meta: {
     generatedAtISO: string;
@@ -961,7 +961,7 @@ export type PlanV2 = {
   shareables?: { whatsappText?: string };
 };`;
 
-const v2BuildPlanTS = `/* mho2/engine-v2/buildPlan.ts */
+const v2BuildPlanTS = `/* mho/engine-v2/buildPlan.ts */
 import type { IntakeV2 } from "./types";
 import type { PlanV2 } from "../plan-v2/schema";
 
@@ -989,7 +989,7 @@ export function buildNeutralPlanV2(i: IntakeV2): PlanV2 {
 }`;
 
 /** Safe generate wrapper */
-const v2SafeGenerateTS = `/* mho2/engine-v2/safeGenerate.ts */
+const v2SafeGenerateTS = `/* mho/engine-v2/safeGenerate.ts */
 import { ComplianceGuard2 } from "../compliance/ComplianceGuard2";
 import type { IntakeV2 } from "./types";
 import { normalizeV2 } from "./normalize";
@@ -1218,10 +1218,10 @@ export default function PlanViewV2({plan}:{plan:any}){
 /** ================= Uploads v2 (namespaced) ====================== */
 
 /* Extractors (stubs) */
-const v2OCR = `/* mho2/uploads-v2/ocr.ts */
+const v2OCR = `/* mho/uploads-v2/ocr.ts */
 export async function ocrV2(_p:string){ return ""; }`;
 
-const v2Classify = `/* mho2/uploads-v2/classify.ts */
+const v2Classify = `/* mho/uploads-v2/classify.ts */
 export type DocType="prescription"|"lab"|"discharge"|"other";
 export function classifyV2(t:string):DocType{
   t=t.toLowerCase();
@@ -1232,17 +1232,17 @@ export function classifyV2(t:string):DocType{
 }`;
 
 /* Neutral parsers (stubs) */
-const v2LabParser = `/* mho2/uploads-v2/labParser.ts */
+const v2LabParser = `/* mho/uploads-v2/labParser.ts */
 export function labParserV2(_t:string){
   return { riskTags:["neutral_tag_lab"], notes:[] };
 }`;
 
-const v2RxParser = `/* mho2/uploads-v2/rxParser.ts */
+const v2RxParser = `/* mho/uploads-v2/rxParser.ts */
 export function rxParserV2(_t:string){
   return { riskTags:["neutral_tag_rx"], notes:[] };
 }`;
 
-const v2Discharge = `/* mho2/uploads-v2/dischargeParser.ts */
+const v2Discharge = `/* mho/uploads-v2/dischargeParser.ts */
 export function dischargeParserV2(_t:string){
   return { riskTags:["rest_priority"], notes:[] };
 }`;
@@ -1286,7 +1286,7 @@ export async function cleanupUploadsV2(){
 
 /** ================= Exporters v2 (namespaced) ==================== */
 
-const v2ExportPDF = `/* mho2/plugins/exporters/pdf.v2.ts */
+const v2ExportPDF = `/* mho/plugins/exporters/pdf.v2.ts */
 import { ComplianceGuard2 } from "../../compliance/ComplianceGuard2";
 export async function exportPlanPDFv2(plan:any){
   const safe = ComplianceGuard2.filter(plan);
@@ -1294,7 +1294,7 @@ export async function exportPlanPDFv2(plan:any){
   return new Blob([JSON.stringify(safe,null,2)], { type:"application/pdf" });
 }`; 
 
-const v2ExportCSV = `/* mho2/plugins/exporters/csv.v2.ts */
+const v2ExportCSV = `/* mho/plugins/exporters/csv.v2.ts */
 import { ComplianceGuard2 } from "../../compliance/ComplianceGuard2";
 export async function exportPlanCSVv2(plan:any){
   const safe = ComplianceGuard2.filter(plan);
@@ -1303,7 +1303,7 @@ export async function exportPlanCSVv2(plan:any){
   return new Blob([csv],{type:"text/csv"});
 }`; 
 
-const v2ExportWA = `/* mho2/plugins/exporters/whatsapp.v2.ts */
+const v2ExportWA = `/* mho/plugins/exporters/whatsapp.v2.ts */
 import { ComplianceGuard2 } from "../../compliance/ComplianceGuard2";
 export function buildWhatsAppTextV2(plan:any){
   const safe = ComplianceGuard2.filter(plan);
@@ -1315,7 +1315,7 @@ export function buildWhatsAppTextV2(plan:any){
 
 const v2DocsREADME = `# Advanced Engine V2 (Namespaced)
 - Beautiful, accessible UI for form and plan (Tailwind-based)
-- Non-clinical engine & compliance v2 (mho2/*)
+- Non-clinical engine & compliance v2 (mho/*)
 - Coexists with v1 without collisions
 
 ## Quickstart
@@ -1325,7 +1325,7 @@ const v2DocsREADME = `# Advanced Engine V2 (Namespaced)
 4) Export via v2 exporters (PDF/CSV/WhatsApp).`;
 
 const v2DocsMIGRATE = `# Migration (V2)
-- Files live under \`mho2/\`, \`features-v2/\`, \`services-v2/*\`.
+- Files live under \`mho/\`, \`features/\`, \`services-v2/*\`.
 - Does not overwrite v1 counterparts.
 - Use v2 scripts to lint and preview.`;
 
@@ -1339,7 +1339,7 @@ const v2DocsPROMPTS = `# Prompt Pack (V2)
 
 const v2Lint = `/* scripts/nonclinical-lint.v2.cjs */
 const fs=require("fs"), path=require("path");
-const rulesPath=path.join(process.cwd(),"mho2","compliance","nonClinical.v2.rules.json");
+const rulesPath=path.join(process.cwd(),"mho","compliance","nonClinical.v2.rules.json");
 if(!fs.existsSync(rulesPath)){ console.log("v2 rules not found. Skip."); process.exit(0); }
 const rules=JSON.parse(fs.readFileSync(rulesPath,"utf8"));
 const patterns=(rules.blockedTerms||[]).map(r=>new RegExp(r.pattern, r.flags||"gi"));
@@ -1348,7 +1348,7 @@ function walk(d){ const out=[]; for(const e of fs.readdirSync(d,{withFileTypes:t
   if(e.isDirectory()) out.push(...walk(p));
   else if(/\\.(ts|tsx|js|jsx|md|txt|json)$/i.test(e.name)) out.push(p);
 } return out;}
-const roots=["src","mho2","features-v2"].filter(r=>fs.existsSync(r));
+const roots=["src","mho","features"].filter(r=>fs.existsSync(r));
 let bad=false;
 for(const r of roots){
   for(const f of walk(path.join(process.cwd(),r))){
@@ -1365,25 +1365,28 @@ process.exit(bad?1:0);`;
 /* ================= Writers for V2 ================== */
 
 function writeCompliance2(){
-  ensureDir(path.join(root,"mho2/compliance"));
-  writeSmart(path.join(root,"mho2/compliance/ComplianceGuard2.ts"), compliance2TS);
-  writeSmart(path.join(root,"mho2/compliance/nonClinical.v2.rules.json"), compliance2RulesJSON);
-  writeSmart(path.join(root,"mho2/compliance/strings2.ts"), compliance2StringsTS);
+  ensureDir(path.join(root,"mho/compliance"));
+  writeSmart(path.join(root,"mho/compliance/ComplianceGuard2.ts"), compliance2TS);
+  writeSmart(
+  path.join(root,"mho/compliance/nonClinical.v2.rules.json"),
+  JSON.stringify(compliance2RulesJSON, null, 2)
+);
+  writeSmart(path.join(root,"mho/compliance/strings2.ts"), compliance2StringsTS);
   ok("Compliance v2 ready.");
 }
 
 function writeEngineV2(){
-  ensureDir(path.join(root,"mho2/engine-v2"));
-  writeSmart(path.join(root,"mho2/engine-v2/types.ts"), v2TypesTS);
-  writeSmart(path.join(root,"mho2/engine-v2/normalize.ts"), v2NormalizeTS);
-  writeSmart(path.join(root,"mho2/engine-v2/validate.ts"), v2ValidateTS);
-  writeSmart(path.join(root,"mho2/engine-v2/calcs.ts"), v2CalcsTS);
-  writeSmart(path.join(root,"mho2/engine-v2/modes.ts"), v2ModesTS);
+  ensureDir(path.join(root,"mho/engine-v2"));
+  writeSmart(path.join(root,"mho/engine-v2/types.ts"), v2TypesTS);
+  writeSmart(path.join(root,"mho/engine-v2/normalize.ts"), v2NormalizeTS);
+  writeSmart(path.join(root,"mho/engine-v2/validate.ts"), v2ValidateTS);
+  writeSmart(path.join(root,"mho/engine-v2/calcs.ts"), v2CalcsTS);
+  writeSmart(path.join(root,"mho/engine-v2/modes.ts"), v2ModesTS);
 
-  ensureDir(path.join(root,"mho2/plan-v2"));
-  writeSmart(path.join(root,"mho2/plan-v2/schema.ts"), v2PlanSchemaTS);
-  writeSmart(path.join(root,"mho2/engine-v2/buildPlan.ts"), v2BuildPlanTS);
-  writeSmart(path.join(root,"mho2/engine-v2/safeGenerate.ts"), v2SafeGenerateTS);
+  ensureDir(path.join(root,"mho/plan-v2"));
+  writeSmart(path.join(root,"mho/plan-v2/schema.ts"), v2PlanSchemaTS);
+  writeSmart(path.join(root,"mho/engine-v2/buildPlan.ts"), v2BuildPlanTS);
+  writeSmart(path.join(root,"mho/engine-v2/safeGenerate.ts"), v2SafeGenerateTS);
   ok("Engine v2 ready.");
 }
 
@@ -1395,12 +1398,12 @@ function writeBeautifulUI(){
 }
 
 function writeUploadsV2(){
-  ensureDir(path.join(root,"mho2/uploads-v2"));
-  writeSmart(path.join(root,"mho2/uploads-v2/ocr.ts"), v2OCR);
-  writeSmart(path.join(root,"mho2/uploads-v2/classify.ts"), v2Classify);
-  writeSmart(path.join(root,"mho2/uploads-v2/labParser.ts"), v2LabParser);
-  writeSmart(path.join(root,"mho2/uploads-v2/rxParser.ts"), v2RxParser);
-  writeSmart(path.join(root,"mho2/uploads-v2/dischargeParser.ts"), v2Discharge);
+  ensureDir(path.join(root,"mho/uploads-v2"));
+  writeSmart(path.join(root,"mho/uploads-v2/ocr.ts"), v2OCR);
+  writeSmart(path.join(root,"mho/uploads-v2/classify.ts"), v2Classify);
+  writeSmart(path.join(root,"mho/uploads-v2/labParser.ts"), v2LabParser);
+  writeSmart(path.join(root,"mho/uploads-v2/rxParser.ts"), v2RxParser);
+  writeSmart(path.join(root,"mho/uploads-v2/dischargeParser.ts"), v2Discharge);
 
   ensureDir(path.join(root, featuresV2, "uploads-v2"));
   writeSmart(path.join(root, featuresV2, "uploads-v2/UploadsBeautifulV2.tsx"), v2UploadsUI);
@@ -1415,10 +1418,10 @@ function writeUploadsV2(){
 }
 
 function writeExportersV2(){
-  ensureDir(path.join(root,"mho2/plugins/exporters"));
-  writeSmart(path.join(root,"mho2/plugins/exporters/pdf.v2.ts"), v2ExportPDF);
-  writeSmart(path.join(root,"mho2/plugins/exporters/csv.v2.ts"), v2ExportCSV);
-  writeSmart(path.join(root,"mho2/plugins/exporters/whatsapp.v2.ts"), v2ExportWA);
+  ensureDir(path.join(root,"mho/plugins/exporters"));
+  writeSmart(path.join(root,"mho/plugins/exporters/pdf.v2.ts"), v2ExportPDF);
+  writeSmart(path.join(root,"mho/plugins/exporters/csv.v2.ts"), v2ExportCSV);
+  writeSmart(path.join(root,"mho/plugins/exporters/whatsapp.v2.ts"), v2ExportWA);
   ok("Exporters v2 ready.");
 }
 

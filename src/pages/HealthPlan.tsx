@@ -1,6 +1,8 @@
 // src/pages/HealthPlan.tsx
 import { Link } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
+import MultiStepHealthForm from "@/features/health-plan/MultiStepHealthForm";
+
 
 export default function HealthPlan() {
   return (

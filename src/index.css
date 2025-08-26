@@ -1,194 +1,25 @@
-/* Tailwind v4 setup */
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
+/* src/index.css — Tailwind enable + small theme tweaks */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* -----------------------------
-   GloWell (GW) – Brand Tokens
------------------------------- */
+/* Optional: app-wide look matching calm theme */
 :root {
-  --gw-teal: #0D9488;
-  --gw-teal-hover: #0B7F7A;
-  --gw-bg: #FAF7F0;
-  --gw-navy: #1F2937;
-  --gw-muted: #6B7280;
-  --gw-leaf: #65A30D;
-  --gw-white: #FFFFFF;
-  --gw-card: #FFFFFF;
-  --gw-border: rgba(31, 41, 55, 0.08);
-  --gw-focus: rgba(13, 148, 136, 0.35);
-  --gw-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  --gw-shadow-lg: 0 16px 40px rgba(0,0,0,0.10);
-  --gw-radius: 12px;
+  --bg: #f6f7fb;          /* soft gray */
+  --ink: #1f2937;         /* slate-800 */
 }
 
-@layer base {
-  html, body, #root {
-    height: 100%;
-  }
-
-  body {
-    background: var(--gw-bg);
-    color: var(--gw-navy);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "cv02","cv03","cv04","cv11";
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    line-height: 1.5;
-  }
-
-  h1,h2,h3,h4 {
-    font-weight: 700;
-    color: var(--gw-navy);
-    letter-spacing: -0.01em;
-  }
-
-  a {
-    color: var(--gw-teal);
-  }
-
-  /* Focus ring for accessibility */
-  :focus-visible {
-    outline: 2px solid var(--gw-teal);
-    outline-offset: 2px;
-  }
+html, body, #root {
+  height: 100%;
 }
 
-@layer components {
-  /* -----------------------------
-     Layout helpers
-  ------------------------------ */
-  .gw-container {
-    @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
-  }
-  .glass {
-    background: color-mix(in oklab, var(--gw-bg) 85%, white 0%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--gw-border);
-  }
-
-  /* -----------------------------
-     Buttons
-  ------------------------------ */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-transform duration-150;
-    border-radius: var(--gw-radius);
-    box-shadow: var(--gw-shadow);
-  }
-  .btn:active { transform: translateY(1px); }
-
-  .btn-primary {
-    background: var(--gw-teal);
-    color: var(--gw-white);
-  }
-  .btn-primary:hover { background: var(--gw-teal-hover); }
-  .btn-primary:focus-visible { box-shadow: 0 0 0 4px var(--gw-focus); }
-
-  .btn-outline {
-    background: transparent;
-    color: var(--gw-teal);
-    border: 1px solid color-mix(in oklab, var(--gw-teal) 40%, black 0%);
-  }
-  .btn-outline:hover {
-    background: color-mix(in oklab, var(--gw-teal) 8%, white 92%);
-  }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--gw-navy);
-  }
-  .btn-ghost:hover {
-    background: color-mix(in oklab, var(--gw-navy) 6%, white 94%);
-  }
-
-  .btn-success {
-    background: var(--gw-leaf);
-    color: var(--gw-white);
-  }
-  .btn-success:hover {
-    filter: brightness(0.95);
-  }
-
-  .btn-lg {
-    @apply px-5 py-3 text-base;
-    border-radius: var(--gw-radius);
-  }
-
-  /* -----------------------------
-     Cards
-  ------------------------------ */
-  .card {
-    background: var(--gw-card);
-    border: 1px solid var(--gw-border);
-    border-radius: var(--gw-radius);
-    box-shadow: var(--gw-shadow);
-  }
-  .card-hover {
-    transition: box-shadow 180ms ease, transform 180ms ease;
-  }
-  .card-hover:hover {
-    box-shadow: var(--gw-shadow-lg);
-    transform: translateY(-1px);
-  }
-
-  /* -----------------------------
-     Inputs
-  ------------------------------ */
-  .input {
-    @apply w-full px-3 py-2 text-sm;
-    background: var(--gw-white);
-    color: var(--gw-navy);
-    border: 1px solid var(--gw-border);
-    border-radius: var(--gw-radius);
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-  }
-  .input::placeholder { color: var(--gw-muted); }
-  .input:focus {
-    border-color: var(--gw-teal);
-    box-shadow: 0 0 0 4px var(--gw-focus);
-    outline: none;
-  }
-
-  /* -----------------------------
-     Links
-  ------------------------------ */
-  .link {
-    color: var(--gw-teal);
-    text-underline-offset: 3px;
-  }
-  .link:hover { text-decoration: underline; }
-
-  /* -----------------------------
-     Header / Nav
-  ------------------------------ */
-  .nav-link {
-    @apply px-3 py-2 text-sm font-medium;
-    color: var(--gw-navy);
-    border-radius: calc(var(--gw-radius) - 6px);
-    transition: background 150ms ease, color 150ms ease;
-  }
-  .nav-link:hover {
-    background: color-mix(in oklab, var(--gw-navy) 6%, white 94%);
-  }
-  .nav-link-active {
-    color: var(--gw-teal);
-    background: color-mix(in oklab, var(--gw-teal) 10%, white 90%);
-  }
-
-  /* -----------------------------
-     Pills / badges
-  ------------------------------ */
-  .pill {
-    @apply inline-flex items-center px-3 py-1 text-xs font-medium;
-    background: color-mix(in oklab, var(--gw-teal) 12%, white 88%);
-    color: var(--gw-teal);
-    border-radius: 999px;
-  }
+body {
+  background: var(--bg);
+  color: var(--ink);
 }
 
-@layer utilities {
-  .gw-muted { color: var(--gw-muted); }
-  .gw-bg { background: var(--gw-bg); }
-  .gw-shadow { box-shadow: var(--gw-shadow); }
-  .gw-shadow-lg { box-shadow: var(--gw-shadow-lg); }
+/* Card + headings polish (optional) */
+.card {
+  @apply rounded-2xl border bg-white/70 backdrop-blur p-4;
 }
+h1,h2,h3 { @apply tracking-tight; }

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GloWell Health Form (Non-Clinical)",
+  "type": "object",
+  "properties": {
+    "locale": { "type": "string", "enum": ["en","hi"] },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "age": { "type": "number", "minimum": 0, "maximum": 120 },
+        "sex": { "type": "string", "enum": ["male","female","other"] }
+      },
+      "additionalProperties": true
+    },
+    "lifestyle": {
+      "type": "object",
+      "properties": {
+        "dietType": { "type": "string", "enum": ["vegan","veg","eggetarian","pescatarian","non-veg","mixed"] },
+        "religion": { "type": "string", "enum": ["", "jain", "sattvic", "halal", "kosher"] },
+        "allergies": { "type": "array", "items": { "type": "string" } },
+        "preferences": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "wake": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+        "sleep": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" }
+      },
+      "additionalProperties": true
+    },
+    "problems": {
+      "type": "array",
+      "description": "Any known conditions (self-reported; purely informational).",
+      "items": { "type": "string" }
+    },
+    "symptoms": {
+      "type": "array",
+      "description": "Current problems/symptoms in your own words.",
+      "items": { "type": "string" }
+    },
+    "uploads": {
+      "type": "object",
+      "properties": {
+        "prescriptions": { "type": "array", "items": { "type": "string", "description": "storage path/URL" } },
+        "labReports":    { "type": "array", "items": { "type": "string" } },
+        "otherDocs":     { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "goals": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["lifestyle"],
+  "additionalProperties": true
+}

@@ -1,0 +1,16 @@
+{
+  "blockedTerms": [
+    {
+      "pattern": "\\\\b(diagnose|prescribe|therapy|dose|dosage|mg|contraindicated)\\\\b"
+    },
+    {
+      "pattern": "\\\\b(diabetes|renal|ckd|hypertension|bp|hba1c|ldl|hdl|triglycerides|potassium|creatinine)\\\\b"
+    }
+  ],
+  "requiredDisclaimers": [
+    {
+      "id": "standard_v2",
+      "text": "This app shares general wellness suggestions only. It is not medical advice."
+    }
+  ]
+}

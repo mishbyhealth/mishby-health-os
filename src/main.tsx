@@ -1,14 +1,13 @@
-// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-
-// ✅ Import Tailwind styles
-import "./index.css";
-
-import AppRoutes from "./routes/AppRoutes";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import "./styles/theme.css"; // अगर theme किसी और path पर है तो वही लिखें
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AppRoutes />
+    <BrowserRouter basename="/">
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );

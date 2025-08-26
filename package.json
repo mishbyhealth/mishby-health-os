@@ -15,7 +15,8 @@
     "type-check:watch": "tsc --noEmit --watch",
     "validate:form": "node scripts/validate-health-form.mjs",
     "glowell:lint:nonclinical": "node scripts/nonclinical-lint.cjs",
-    "glowell:plan:demo": "echo \"Use generateSafePlan(formData) to preview output.\""
+    "glowell:plan:demo": "echo \"Use generateSafePlan(formData) to preview output.\"",
+    "glowell:lint:nonclinical:v2": "node scripts/nonclinical-lint.v2.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -23,7 +24,9 @@
     "archiver": "^7.0.1",
     "dayjs": "^1.11.13",
     "firebase": "^12.0.0",
+    "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
+    "jspdf": "^3.0.1",
     "nanoid": "^5.1.5",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
@@ -54,7 +57,7 @@
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^6.0.3",
     "sharp": "^0.34.3",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.1.3",
