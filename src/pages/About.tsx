@@ -1,9 +1,39 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 export default function About() {
   return (
     <section className="space-y-6">
+      <Helmet>
+        <title>About GloWell</title>
+        <meta
+          name="description"
+          content="GloWell helps people improve mental and physical health through simple, safe and sustainable habits."
+        />
+        <link rel="canonical" href="https://mishbyhealth.netlify.app/about" />
+
+        <meta property="og:site_name" content="GloWell" />
+        <meta property="og:title" content="About GloWell" />
+        <meta
+          property="og:description"
+          content="Learn our mission and promise: calm, privacy-first health habits that last."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mishbyhealth.netlify.app/about" />
+        <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About GloWell" />
+        <meta
+          name="twitter:description"
+          content="Our mission: simple, sustainable health habits—calm, respectful, ad-free."
+        />
+        <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
+      </Helmet>
+
       <header className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">About GloWell</h2>
         <Link
