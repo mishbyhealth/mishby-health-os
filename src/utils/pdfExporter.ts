@@ -50,7 +50,9 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   // ---- Page + content box (A4) ----
   const pageWpt = pdf.internal.pageSize.getWidth();
   const pageHpt = pdf.internal.pageSize.getHeight();
-  const margin = { top: 60, right: 40, bottom: 60, left: 40 };
+
+  // 👉 margins थोड़ा बढ़ाए ताकि right-side कटना न हो
+  const margin = { top: 60, right: 48, bottom: 60, left: 48 };
   const contentWpt = pageWpt - margin.left - margin.right;
   const contentWpx = Math.floor(contentWpt * PX_PER_PT);
 
@@ -77,7 +79,7 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
         width: contentWpt, // in pt
         autoPaging: "text",
         html2canvas: {
-          scale: 1.6,               // थोड़ा compact
+          scale: 1.5,               // थोड़ा compact
           useCORS: true,
           backgroundColor: "#FFFFFF",
           letterRendering: true,
@@ -176,7 +178,7 @@ export async function exportPlanPDFPureText(planEl: HTMLElement) {
     author: "GloWell",
   });
 
-  const margin = { top: 60, left: 40, right: 40, bottom: 60 };
+  const margin = { top: 60, left: 48, right: 48, bottom: 60 };
   const width = doc.internal.pageSize.getWidth() - margin.left - margin.right;
   const lineGap = 16;
 
