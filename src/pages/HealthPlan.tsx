@@ -1,11 +1,8 @@
 import React, { useRef, useState } from "react";
-import { exportPlanPDF } from "../utils/pdfExporter"; // helper import
+import { exportPlanPDF } from "../utils/pdfExporter";
+import { downloadPlanTxt } from "../utils/downloadTxt";
 
-/** 
- * HealthPlan page
- * - Shows sample PlanViewV2 style cards
- * - Download PDF button (text-based export with fallback)
- */
+/** HealthPlan page with text-PDF + TXT export */
 export default function HealthPlan() {
   const planRef = useRef<HTMLDivElement | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -14,7 +11,7 @@ export default function HealthPlan() {
     if (!planRef.current) return;
     setExporting(true);
     try {
-      await exportPlanPDF(planRef.current, "text"); // use text-based export
+      await exportPlanPDF(planRef.current, "text"); // text-based export
     } catch (err) {
       console.error("PDF export error:", err);
       alert("PDF export में दिक्कत आई — कृपया पुनः प्रयास करें।");
@@ -23,20 +20,33 @@ export default function HealthPlan() {
     }
   };
 
+  const handleExportTXT = () => {
+    if (!planRef.current) return;
+    downloadPlanTxt(planRef.current);
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Build Plan</h2>
-        <button
-          onClick={handleExportPDF}
-          disabled={exporting}
-          className="px-4 py-2 rounded-xl bg-slate-800 text-white shadow disabled:opacity-60"
-        >
-          {exporting ? "Preparing PDF…" : "Download PDF"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            className="px-4 py-2 rounded-xl bg-slate-800 text-white shadow disabled:opacity-60"
+          >
+            {exporting ? "Preparing PDF…" : "Download PDF (Text)"}
+          </button>
+          <button
+            onClick={handleExportTXT}
+            className="px-4 py-2 rounded-xl bg-white border border-black/10 shadow"
+          >
+            Download .txt
+          </button>
+        </div>
       </div>
 
-      {/* stable wrapper for PlanView */}
+      {/* stable wrapper */}
       <div
         id="plan-root"
         ref={planRef}
@@ -75,7 +85,6 @@ export default function HealthPlan() {
         </PlanCard>
       </div>
 
-      {/* Print styles for clean PDF */}
       <style>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -83,12 +92,13 @@ export default function HealthPlan() {
           main { padding: 0 !important; }
           #plan-root { background: #ffffff !important; }
         }
+        /* better page breaks */
+        #plan-root > * { page-break-inside: avoid; }
       `}</style>
     </section>
   );
 }
 
-/** Reusable card component (PlanViewV2 style) */
 function PlanCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="p-4 rounded-2xl shadow bg-white/90 border border-black/5">
