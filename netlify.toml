@@ -7,3 +7,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+# Ensure correct MIME type for PWA manifest
+[[headers]]
+  for = "/site.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
+    Cache-Control = "public, max-age=3600"
