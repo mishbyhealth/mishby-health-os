@@ -1,38 +1,41 @@
 ﻿<!doctype html>
 <html lang="en">
   <head>
+    <!-- Always keep UTF-8 first to avoid mojibake -->
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>GloWell</title>
-    <meta
-      name="description"
-      content="GloWell helps you build calm, sustainable health habitsâ€”water, meals, movement, and sleepâ€”through a clean, privacy-first experience."
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Icons / PWA -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Basic SEO -->
+    <title>GloWell — Live Naturally.</title>
+    <meta name="description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
+    <link rel="canonical" href="https://mishbyhealth.netlify.app/" />
+
+    <!-- Icons & PWA -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1fb6ae" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest" />
 
-
-    <!-- Open Graph / Twitter (image can be added later) -->
-    <meta property="og:site_name" content="GloWell" />
-    <meta property="og:title" content="GloWell â€” Live Naturally." />
-    <meta property="og:description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
+    <!-- Open Graph (static, for link previews that don't run JS) -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GloWell" />
     <meta property="og:url" content="https://mishbyhealth.netlify.app/" />
+    <!-- Use a simple hyphen in OG text to avoid any encoding issues in some preview bots -->
+    <meta property="og:title" content="GloWell - Live Naturally." />
+    <meta property="og:description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
+    <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GloWell â€” Live Naturally." />
+    <meta name="twitter:title" content="GloWell - Live Naturally." />
     <meta name="twitter:description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-</head>
+    <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
