@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mishbyhealth.netlify.app/sitemap.xml
