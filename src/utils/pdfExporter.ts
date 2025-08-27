@@ -1,6 +1,6 @@
 // src/utils/pdfExporter.ts
 
-// ---- helpers ----
+// ---------- helpers ----------
 async function toDataURL(url: string): Promise<string | null> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -22,10 +22,10 @@ async function toDataURL(url: string): Promise<string | null> {
   });
 }
 
-// px/pt mapping (jsPDF uses pt; browser DOM uses px ~ 96dpi)
+// px/pt mapping (jsPDF uses pt; DOM uses px @96dpi)
 const PX_PER_PT = 96 / 72;
 
-// ---- main styled/text exporter ----
+// ---------- main styled/text exporter ----------
 export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" = "text") {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
     import("jspdf"),
@@ -47,14 +47,14 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
     subject: "Health Plan",
   });
 
-  // page + content box
+  // ---- Page + content box (A4) ----
   const pageWpt = pdf.internal.pageSize.getWidth();
   const pageHpt = pdf.internal.pageSize.getHeight();
   const margin = { top: 60, right: 40, bottom: 60, left: 40 };
   const contentWpt = pageWpt - margin.left - margin.right;
-  const contentWpx = Math.floor(contentWpt * PX_PER_PT); // clamp DOM width to this
+  const contentWpx = Math.floor(contentWpt * PX_PER_PT);
 
-  // Temporarily constrain export width to avoid right cutoff/overlap
+  // ---- Clamp DOM width to avoid right-cut & overlaps ----
   const prev = {
     width: planEl.style.width,
     maxWidth: (planEl.style as any).maxWidth,
@@ -64,20 +64,28 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   planEl.style.width = `${contentWpx}px`;
   (planEl.style as any).maxWidth = "none";
 
+  // ✅ PDF layout mode: smaller fonts/padding for export
+  planEl.classList.add("pdf-export");
+
   try {
     const hasHtml = typeof (pdf as any).html === "function";
 
     if (mode === "text" && hasHtml) {
       await (pdf as any).html(planEl, {
-        // Important: give x/y and exact width matching content box
         x: margin.left,
         y: margin.top,
         width: contentWpt, // in pt
         autoPaging: "text",
-        // Better accuracy; letterRendering avoids glyph crowding
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#FFFFFF", letterRendering: true },
+        html2canvas: {
+          scale: 1.6,               // थोड़ा compact
+          useCORS: true,
+          backgroundColor: "#FFFFFF",
+          letterRendering: true,
+        },
         callback: async (doc: any) => {
           const pageCount = doc.getNumberOfPages();
+
+          // Optional logo
           const logoData =
             (await toDataURL("/logo.png")) ||
             (await toDataURL("/logo.svg")) ||
@@ -97,6 +105,7 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
               doc.setFontSize(12);
               doc.text("GloWell — Personal Wellness Plan", margin.left, 32);
             }
+            // Thin brand line
             doc.setDrawColor(30, 41, 59);
             doc.setLineWidth(0.5);
             doc.line(margin.left, 38, pageWpt - margin.right, 38);
@@ -117,43 +126,47 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
       return;
     }
 
-    // ---- IMAGE fallback (robust) ----
+    // ---------- IMAGE fallback (robust & width-safe) ----------
     const canvas = await html2canvas(planEl, {
-      scale: 2,
+      scale: 1.8,
       useCORS: true,
       backgroundColor: "#FFFFFF",
-      windowWidth: contentWpx, // ensure capture matches our clamped width
+      windowWidth: contentWpx,                // clamp capture width
       windowHeight: planEl.scrollHeight,
       letterRendering: true,
     });
 
     const imgData = canvas.toDataURL("image/png");
+    const usableHpt = pageHpt - margin.top - margin.bottom;
+
     const imgWpt = contentWpt;
-    const imgHpt = (canvas.height * (imgWpt * PX_PER_PT)) / canvas.width / PX_PER_PT;
+    const imgHpt = (canvas.height / canvas.width) * imgWpt;
 
-    let y = margin.top;
-    let remaining = imgHpt;
+    let renderedHeight = 0;
 
-    pdf.addImage(imgData, "PNG", margin.left, y, imgWpt, imgHpt, undefined, "FAST");
-    remaining -= (pageHpt - margin.top - margin.bottom);
+    // First page
+    pdf.addImage(imgData, "PNG", margin.left, margin.top, imgWpt, imgHpt, undefined, "FAST");
+    renderedHeight += usableHpt;
 
-    while (remaining > 0) {
+    // Extra pages by shifting the same large image up
+    while (renderedHeight < imgHpt) {
       pdf.addPage();
-      y = margin.top - (imgHpt - remaining);
+      const y = margin.top - renderedHeight; // negative shifts image upward
       pdf.addImage(imgData, "PNG", margin.left, y, imgWpt, imgHpt, undefined, "FAST");
-      remaining -= (pageHpt - margin.top - margin.bottom);
+      renderedHeight += usableHpt;
     }
 
     pdf.save(fileName);
   } finally {
-    // Restore DOM styles
+    // Restore DOM styles + export mode off
+    planEl.classList.remove("pdf-export");
     planEl.style.width = prev.width;
     (planEl.style as any).maxWidth = prev.maxWidth;
     planEl.style.boxSizing = prev.boxSizing;
   }
 }
 
-// ---- ALWAYS-extractable plain-text exporter (backup) ----
+// ---------- ALWAYS-extractable plain-text exporter (backup) ----------
 export async function exportPlanPDFPureText(planEl: HTMLElement) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF("p", "pt", "a4");
