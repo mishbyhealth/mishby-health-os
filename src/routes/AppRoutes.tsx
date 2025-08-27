@@ -1,27 +1,19 @@
-// src/routes/AppRoutes.tsx
 import React from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
-import MainLayout from "@/layouts/MainLayout";
-import HomePage from "@/pages/HomePage";
-import HealthPlanFlow from "@/pages/HealthPlanFlow";
-import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
-import PlanView from "@/pages/PlanView"; // ✅ added
-
-const router = createBrowserRouter([
-  {
-    element: <MainLayout />,
-    children: [
-      { path: "/", element: <HomePage /> },
-      { path: "/health-plan", element: <HealthPlanFlow /> },
-      { path: "/dashboard", element: <Dashboard /> },
-      { path: "/profile", element: <Profile /> },
-      { path: "/plan", element: <PlanView /> }, // ✅ added
-    ],
-  },
-]);
+import HomePage from "../pages/HomePage";
+import Dashboard from "../pages/Dashboard";
+import HealthPlan from "../pages/HealthPlan";
+import Profile from "../pages/Profile";
 
 export default function AppRoutes() {
-  return <RouterProvider router={router} />;
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/health-plan" element={<HealthPlan />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="*" element={<HomePage />} />
+    </Routes>
+  );
 }
