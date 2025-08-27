@@ -1,32 +1,14 @@
 // src/utils/pdfExporter.ts
 
-// ---------- helpers ----------
-async function toDataURL(url: string): Promise<string | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const c = document.createElement("canvas");
-        c.width = img.naturalWidth;
-        c.height = img.naturalHeight;
-        const ctx = c.getContext("2d")!;
-        ctx.drawImage(img, 0, 0);
-        resolve(c.toDataURL("image/png"));
-      } catch {
-        resolve(null);
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
-}
-
-// px/pt mapping (jsPDF uses pt; DOM uses px @96dpi)
+// px/pt mapping (jsPDF uses pt; DOM uses px @ 96dpi)
 const PX_PER_PT = 96 / 72;
 
-// ---------- main styled/text exporter ----------
-export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" = "text") {
+/**
+ * IMAGE-PERFECT styled PDF (visual match, no clipping)
+ * - Always uses html2canvas -> image -> multi-page
+ * - Narrow safe content width so nothing cuts on the right
+ */
+export async function exportPlanPDF(planEl: HTMLElement) {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
     import("jspdf"),
     import("html2canvas"),
@@ -47,16 +29,16 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
     subject: "Health Plan",
   });
 
-  // ---- Page + content box (A4) ----
+  // ---- A4 page + safe content box ----
   const pageWpt = pdf.internal.pageSize.getWidth();
   const pageHpt = pdf.internal.pageSize.getHeight();
 
-  // 👉 margins थोड़ा बढ़ाए ताकि right-side कटना न हो
-  const margin = { top: 60, right: 48, bottom: 60, left: 48 };
+  // थोड़ी ज्यादा सेफ्टी: left/right margin 56pt
+  const margin = { top: 60, right: 56, bottom: 60, left: 56 };
   const contentWpt = pageWpt - margin.left - margin.right;
   const contentWpx = Math.floor(contentWpt * PX_PER_PT);
 
-  // ---- Clamp DOM width to avoid right-cut & overlaps ----
+  // ---- Clamp DOM width (so nothing can overflow on right) ----
   const prev = {
     width: planEl.style.width,
     maxWidth: (planEl.style as any).maxWidth,
@@ -66,101 +48,42 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   planEl.style.width = `${contentWpx}px`;
   (planEl.style as any).maxWidth = "none";
 
-  // ✅ PDF layout mode: smaller fonts/padding for export
+  // PDF export mode (smaller font/padding via page CSS)
   planEl.classList.add("pdf-export");
 
   try {
-    const hasHtml = typeof (pdf as any).html === "function";
-
-    if (mode === "text" && hasHtml) {
-      await (pdf as any).html(planEl, {
-        x: margin.left,
-        y: margin.top,
-        width: contentWpt, // in pt
-        autoPaging: "text",
-        html2canvas: {
-          scale: 1.5,               // थोड़ा compact
-          useCORS: true,
-          backgroundColor: "#FFFFFF",
-          letterRendering: true,
-        },
-        callback: async (doc: any) => {
-          const pageCount = doc.getNumberOfPages();
-
-          // Optional logo
-          const logoData =
-            (await toDataURL("/logo.png")) ||
-            (await toDataURL("/logo.svg")) ||
-            null;
-
-          for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-
-            // Header
-            if (logoData) {
-              doc.addImage(logoData, "PNG", margin.left, 18, 18, 18);
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(12);
-              doc.text("GloWell — Personal Wellness Plan", margin.left + 24, 32);
-            } else {
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(12);
-              doc.text("GloWell — Personal Wellness Plan", margin.left, 32);
-            }
-            // Thin brand line
-            doc.setDrawColor(30, 41, 59);
-            doc.setLineWidth(0.5);
-            doc.line(margin.left, 38, pageWpt - margin.right, 38);
-
-            // Footer
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text(
-              `Page ${i} of ${pageCount}`,
-              pageWpt - margin.right - 100,
-              pageHpt - 24
-            );
-          }
-
-          doc.save(fileName);
-        },
-      });
-      return;
-    }
-
-    // ---------- IMAGE fallback (robust & width-safe) ----------
+    // Rasterize entire plan at this exact width
     const canvas = await html2canvas(planEl, {
-      scale: 1.8,
+      scale: 2,                       // crisp
       useCORS: true,
       backgroundColor: "#FFFFFF",
-      windowWidth: contentWpx,                // clamp capture width
+      windowWidth: contentWpx,        // important: clamp width
       windowHeight: planEl.scrollHeight,
       letterRendering: true,
     });
 
     const imgData = canvas.toDataURL("image/png");
-    const usableHpt = pageHpt - margin.top - margin.bottom;
 
+    // Lay the big image across multiple pages by vertical shifting
+    const usableHpt = pageHpt - margin.top - margin.bottom;      // content height per page
     const imgWpt = contentWpt;
     const imgHpt = (canvas.height / canvas.width) * imgWpt;
 
-    let renderedHeight = 0;
-
     // First page
     pdf.addImage(imgData, "PNG", margin.left, margin.top, imgWpt, imgHpt, undefined, "FAST");
-    renderedHeight += usableHpt;
 
-    // Extra pages by shifting the same large image up
-    while (renderedHeight < imgHpt) {
+    // Extra pages
+    let rendered = usableHpt;
+    while (rendered < imgHpt - 0.1) {
       pdf.addPage();
-      const y = margin.top - renderedHeight; // negative shifts image upward
+      const y = margin.top - rendered; // shift image up by what's already shown
       pdf.addImage(imgData, "PNG", margin.left, y, imgWpt, imgHpt, undefined, "FAST");
-      renderedHeight += usableHpt;
+      rendered += usableHpt;
     }
 
     pdf.save(fileName);
   } finally {
-    // Restore DOM styles + export mode off
+    // Restore DOM
     planEl.classList.remove("pdf-export");
     planEl.style.width = prev.width;
     (planEl.style as any).maxWidth = prev.maxWidth;
@@ -168,7 +91,10 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   }
 }
 
-// ---------- ALWAYS-extractable plain-text exporter (backup) ----------
+/**
+ * ALWAYS-SELECTABLE pure-text PDF (backup/export for copy/search)
+ * - No styling; bullet text only
+ */
 export async function exportPlanPDFPureText(planEl: HTMLElement) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF("p", "pt", "a4");
@@ -178,34 +104,30 @@ export async function exportPlanPDFPureText(planEl: HTMLElement) {
     author: "GloWell",
   });
 
-  const margin = { top: 60, left: 48, right: 48, bottom: 60 };
+  const margin = { top: 60, left: 56, right: 56, bottom: 60 };
   const width = doc.internal.pageSize.getWidth() - margin.left - margin.right;
-  const lineGap = 16;
+  const pageH = doc.internal.pageSize.getHeight();
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(14);
   doc.text("GloWell — Personal Wellness Plan (Text Export)", margin.left, margin.top);
+  let y = margin.top + 24;
 
-  let cursorY = margin.top + 24;
-
-  const blocks: string[] = [];
+  // Collect simple text
+  const lines: string[] = [];
   planEl.querySelectorAll("h2, h3, li, p").forEach((node) => {
     const tag = node.tagName.toLowerCase();
     const text = (node as HTMLElement).innerText.trim();
     if (!text) return;
-    if (tag === "h2" || tag === "h3") blocks.push(`\n${text.toUpperCase()}\n`);
-    else blocks.push(`• ${text}`);
+    if (tag === "h2" || tag === "h3") lines.push("", text.toUpperCase(), "");
+    else lines.push("• " + text);
   });
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(12);
-  const lines = doc.splitTextToSize(blocks.join("\n"), width);
-  const pageH = doc.internal.pageSize.getHeight();
-
-  for (const line of lines) {
-    if (cursorY > pageH - margin.bottom) {
-      doc.addPage(); cursorY = margin.top;
-    }
-    doc.text(line, margin.left, cursorY);
-    cursorY += lineGap;
+  const wrapped = doc.splitTextToSize(lines.join("\n"), width);
+  for (const line of wrapped) {
+    if (y > pageH - margin.bottom) { doc.addPage(); y = margin.top; }
+    doc.text(line, margin.left, y);
+    y += 16;
   }
 
   const total = doc.getNumberOfPages();
