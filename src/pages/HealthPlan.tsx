@@ -1,28 +1,36 @@
 import React, { useRef, useState } from "react";
-import { exportPlanPDF } from "../utils/pdfExporter";
-import { downloadPlanTxt } from "../utils/downloadTxt";
+import { exportPlanPDF, exportPlanPDFPureText } from "../utils/pdfExporter";
+// (optional) अगर आपने पहले बनाया है:
+// import { downloadPlanTxt } from "../utils/downloadTxt";
 
-/** HealthPlan page with text-PDF + TXT export */
 export default function HealthPlan() {
   const planRef = useRef<HTMLDivElement | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<null | "styled" | "text">(null);
 
-  const handleExportPDF = async () => {
+  const handleStyledPDF = async () => {
     if (!planRef.current) return;
-    setExporting(true);
+    setExporting("styled");
     try {
-      await exportPlanPDF(planRef.current, "text"); // text-based export
-    } catch (err) {
-      console.error("PDF export error:", err);
-      alert("PDF export में दिक्कत आई — कृपया पुनः प्रयास करें।");
+      await exportPlanPDF(planRef.current, "text"); // uses html() if available
+    } catch (e) {
+      console.error(e);
+      alert("Styled PDF export में दिक्कत आई — कृपया पुनः प्रयास करें।");
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
-  const handleExportTXT = () => {
+  const handlePureTextPDF = async () => {
     if (!planRef.current) return;
-    downloadPlanTxt(planRef.current);
+    setExporting("text");
+    try {
+      await exportPlanPDFPureText(planRef.current); // always extractable
+    } catch (e) {
+      console.error(e);
+      alert("Text-only PDF export में दिक्कत आई — कृपया पुनः प्रयास करें।");
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
@@ -31,22 +39,28 @@ export default function HealthPlan() {
         <h2 className="text-xl font-semibold">Build Plan</h2>
         <div className="flex gap-2">
           <button
-            onClick={handleExportPDF}
-            disabled={exporting}
+            onClick={handleStyledPDF}
+            disabled={!!exporting}
             className="px-4 py-2 rounded-xl bg-slate-800 text-white shadow disabled:opacity-60"
           >
-            {exporting ? "Preparing PDF…" : "Download PDF (Text)"}
+            {exporting === "styled" ? "Preparing…" : "Download PDF (Styled)"}
           </button>
           <button
-            onClick={handleExportTXT}
-            className="px-4 py-2 rounded-xl bg-white border border-black/10 shadow"
+            onClick={handlePureTextPDF}
+            disabled={!!exporting}
+            className="px-4 py-2 rounded-xl bg-white border border-black/10 shadow disabled:opacity-60"
           >
+            {exporting === "text" ? "Preparing…" : "Download PDF (Pure Text)"}
+          </button>
+          {/*
+          <button onClick={() => planRef.current && downloadPlanTxt(planRef.current)}
+                  className="px-4 py-2 rounded-xl bg-white border border-black/10 shadow">
             Download .txt
           </button>
+          */}
         </div>
       </div>
 
-      {/* stable wrapper */}
       <div
         id="plan-root"
         ref={planRef}
@@ -92,7 +106,6 @@ export default function HealthPlan() {
           main { padding: 0 !important; }
           #plan-root { background: #ffffff !important; }
         }
-        /* better page breaks */
         #plan-root > * { page-break-inside: avoid; }
       `}</style>
     </section>
