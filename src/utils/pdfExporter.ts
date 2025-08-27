@@ -1,151 +1,139 @@
 // src/utils/pdfExporter.ts
+// Classic, text-based PDF (no images) – clean bullets, safe margins, no clipping.
 
-// px/pt mapping (jsPDF uses pt; DOM uses px @ 96dpi)
-const PX_PER_PT = 96 / 72;
+type Section = { title: string; items: string[] };
 
-/**
- * IMAGE-PERFECT styled PDF (visual match, no clipping)
- * - Always uses html2canvas -> image -> multi-page
- * - Narrow safe content width so nothing cuts on the right
- */
-export async function exportPlanPDF(planEl: HTMLElement) {
-  const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
-    import("jspdf"),
-    import("html2canvas"),
-  ]);
+export async function exportPlanPDFClassic(sections: Section[]) {
+  const { jsPDF } = await import("jspdf");
 
-  const now = new Date();
-  const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
-    now.getDate()
-  ).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
-  const fileName = `GloWell_HealthPlan_${stamp}.pdf`;
-
-  const pdf = new jsPDF("p", "pt", "a4");
-  (pdf as any).setProperties?.({
+  const doc = new jsPDF("p", "pt", "a4");
+  (doc as any).setProperties?.({
     title: "GloWell — Personal Wellness Plan",
     author: "GloWell",
     subject: "Health Plan",
   });
 
-  // ---- A4 page + safe content box ----
-  const pageWpt = pdf.internal.pageSize.getWidth();
-  const pageHpt = pdf.internal.pageSize.getHeight();
-
-  // थोड़ी ज्यादा सेफ्टी: left/right margin 56pt
-  const margin = { top: 60, right: 56, bottom: 60, left: 56 };
-  const contentWpt = pageWpt - margin.left - margin.right;
-  const contentWpx = Math.floor(contentWpt * PX_PER_PT);
-
-  // ---- Clamp DOM width (so nothing can overflow on right) ----
-  const prev = {
-    width: planEl.style.width,
-    maxWidth: (planEl.style as any).maxWidth,
-    boxSizing: planEl.style.boxSizing,
-  };
-  planEl.style.boxSizing = "border-box";
-  planEl.style.width = `${contentWpx}px`;
-  (planEl.style as any).maxWidth = "none";
-
-  // PDF export mode (smaller font/padding via page CSS)
-  planEl.classList.add("pdf-export");
-
-  try {
-    // Rasterize entire plan at this exact width
-    const canvas = await html2canvas(planEl, {
-      scale: 2,                       // crisp
-      useCORS: true,
-      backgroundColor: "#FFFFFF",
-      windowWidth: contentWpx,        // important: clamp width
-      windowHeight: planEl.scrollHeight,
-      letterRendering: true,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-
-    // Lay the big image across multiple pages by vertical shifting
-    const usableHpt = pageHpt - margin.top - margin.bottom;      // content height per page
-    const imgWpt = contentWpt;
-    const imgHpt = (canvas.height / canvas.width) * imgWpt;
-
-    // First page
-    pdf.addImage(imgData, "PNG", margin.left, margin.top, imgWpt, imgHpt, undefined, "FAST");
-
-    // Extra pages
-    let rendered = usableHpt;
-    while (rendered < imgHpt - 0.1) {
-      pdf.addPage();
-      const y = margin.top - rendered; // shift image up by what's already shown
-      pdf.addImage(imgData, "PNG", margin.left, y, imgWpt, imgHpt, undefined, "FAST");
-      rendered += usableHpt;
-    }
-
-    pdf.save(fileName);
-  } finally {
-    // Restore DOM
-    planEl.classList.remove("pdf-export");
-    planEl.style.width = prev.width;
-    (planEl.style as any).maxWidth = prev.maxWidth;
-    planEl.style.boxSizing = prev.boxSizing;
-  }
-}
-
-/**
- * ALWAYS-SELECTABLE pure-text PDF (backup/export for copy/search)
- * - No styling; bullet text only
- */
-export async function exportPlanPDFPureText(planEl: HTMLElement) {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF("p", "pt", "a4");
-
-  (doc as any).setProperties?.({
-    title: "GloWell — Personal Wellness Plan (Text Export)",
-    author: "GloWell",
-  });
-
-  const margin = { top: 60, left: 56, right: 56, bottom: 60 };
-  const width = doc.internal.pageSize.getWidth() - margin.left - margin.right;
+  // Page & layout
+  const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
-  doc.setFont("helvetica", "bold"); doc.setFontSize(14);
-  doc.text("GloWell — Personal Wellness Plan (Text Export)", margin.left, margin.top);
-  let y = margin.top + 24;
+  // Safe margins (slightly wider on sides to avoid any cut)
+  const M = { top: 64, right: 56, bottom: 64, left: 56 };
+  const W = pageW - M.left - M.right;
 
-  // Collect simple text
-  const lines: string[] = [];
-  planEl.querySelectorAll("h2, h3, li, p").forEach((node) => {
-    const tag = node.tagName.toLowerCase();
-    const text = (node as HTMLElement).innerText.trim();
-    if (!text) return;
-    if (tag === "h2" || tag === "h3") lines.push("", text.toUpperCase(), "");
-    else lines.push("• " + text);
-  });
+  // Typography
+  const FONT = "helvetica";
+  const SIZE = {
+    title: 16,
+    h: 14,
+    body: 12,
+    small: 10,
+  };
+  const GAP = {
+    afterTitle: 18,
+    afterH: 10,
+    line: 16,
+    bulletGap: 6,
+  };
+  const INDENT = { bulletDot: 6, bulletText: 16 };
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(12);
-  const wrapped = doc.splitTextToSize(lines.join("\n"), width);
-  for (const line of wrapped) {
-    if (y > pageH - margin.bottom) { doc.addPage(); y = margin.top; }
-    doc.text(line, margin.left, y);
-    y += 16;
+  let y = M.top;
+
+  // Header per page
+  const drawHeader = () => {
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(SIZE.title);
+    doc.text("GloWell — Personal Wellness Plan", M.left, M.top - 28);
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.5);
+    doc.line(M.left, M.top - 22, pageW - M.right, M.top - 22);
+  };
+
+  // Footer per page
+  const drawFooterAllPages = () => {
+    const total = doc.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i);
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(SIZE.small);
+      doc.text(
+        `© GloWell · Non-clinical wellness guidance. Page ${i} of ${total}`,
+        M.left,
+        pageH - 22
+      );
+    }
+  };
+
+  // Ensure space or add page with header
+  const ensure = (need: number) => {
+    if (y + need <= pageH - M.bottom) return;
+    doc.addPage();
+    drawHeader();
+    y = M.top;
+  };
+
+  // Start – first page header
+  drawHeader();
+
+  // Title (visual, optional – already in header; keep small title in body for clarity)
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(SIZE.title);
+  doc.text("GloWell — Personal Wellness Plan", M.left, y);
+  y += GAP.afterTitle;
+
+  // Render sections
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(SIZE.h);
+
+  for (const sec of sections) {
+    // Section Heading
+    ensure(SIZE.h + GAP.afterH);
+    doc.text(sec.title, M.left, y);
+    y += GAP.afterH;
+
+    // Bullets
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(SIZE.body);
+
+    for (const raw of sec.items) {
+      const text = raw.trim();
+      // Wrap bullet text to fit width
+      const wrapWidth = W - INDENT.bulletText;
+      const lines = doc.splitTextToSize(text, wrapWidth);
+
+      const bulletY = y;
+      ensure(GAP.line * Math.max(1, lines.length));
+      // Bullet dot
+      doc.circle(M.left + INDENT.bulletDot, bulletY - 3.5, 1.2, "F");
+      // Bullet text
+      let lineY = bulletY;
+      for (const ln of lines) {
+        doc.text(ln, M.left + INDENT.bulletText, lineY);
+        lineY += GAP.line;
+      }
+      y = bulletY + GAP.line * Math.max(1, lines.length) - (GAP.line - GAP.bulletGap);
+    }
+
+    // Gap after each section
+    y += 6;
+    // Reset heading style for next section
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(SIZE.h);
   }
 
-  const total = doc.getNumberOfPages();
-  for (let i = 1; i <= total; i++) {
-    doc.setPage(i);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-    doc.text(
-      `Page ${i} of ${total}`,
-      doc.internal.pageSize.getWidth() - 100,
-      doc.internal.pageSize.getHeight() - 24
-    );
-  }
+  // Timestamp (on last page near bottom)
+  const stamp = new Date().toLocaleString();
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(SIZE.small);
+  ensure(24);
+  doc.text(stamp, M.left, y + 14);
 
-  const now = new Date();
-  const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
-    now.getDate()
-  ).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
-  doc.save(`GloWell_HealthPlan_TEXT_${stamp}.pdf`);
+  // Footer on all pages (page X of Y)
+  drawFooterAllPages();
+
+  // Save
+  const stampFile =
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}` +
+    `_${String(new Date().getHours()).padStart(2, "0")}${String(new Date().getMinutes()).padStart(2, "0")}`;
+  doc.save(`GloWell_Health_Plan_${stampFile}.pdf`);
 }
