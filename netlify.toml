@@ -1,14 +1,8 @@
 [build]
-  # Vite project: build command and output folder
   command = "npm run build"
   publish = "dist"
-  base = ""
 
-[build.environment]
-  VITE_APP_NAME = "GloWell"
-  VITE_API_BASE = "/"
-
-# SPA routes fix (React/Vite): send all routes to index.html
+# Single Page App routing: send all paths to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
