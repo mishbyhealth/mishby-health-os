@@ -13,6 +13,9 @@ const items = [
   { to: '/mho/test', label: 'Planner Test', icon: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   )},
+  { to: '/about', label: 'About', icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 6a6 6 0 1 1-6 6 6 6 0 0 1 6-6Zm-.8 3.4h1.6V18h-1.6V9.4Zm.8-3.9a.95.95 0 1 0 .001 1.9A.95.95 0 0 0 12 5.5Z" stroke="currentColor" strokeWidth="1.4"/></svg>
+  )},
 ]
 
 export default function SideNav() {
