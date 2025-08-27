@@ -13,7 +13,7 @@ export default function HomePage() {
         />
         <link rel="canonical" href="https://mishbyhealth.netlify.app/" />
 
-        {/* Open Graph / Twitter (image add करेंगे अगले स्टेप में) */}
+        {/* Open Graph / Twitter */}
         <meta property="og:site_name" content="GloWell" />
         <meta property="og:title" content="GloWell — Live Naturally." />
         <meta
@@ -22,12 +22,17 @@ export default function HomePage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://mishbyhealth.netlify.app/" />
+        <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="GloWell — Live Naturally." />
         <meta
           name="twitter:description"
           content="Build simple, sustainable health habits with a calm, privacy-first app."
         />
+        <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
       </Helmet>
 
       {/* Hero */}
