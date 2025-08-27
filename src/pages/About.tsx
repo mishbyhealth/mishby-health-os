@@ -17,33 +17,34 @@ export default function About() {
       <div className="grid gap-4">
         <Card title="Our Mission">
           <p className="text-slate-700">
-            GloWell का उद्देश्य लोगों की <strong>मानसिक एवं शारीरिक सेहत</strong> को
-            सरल, सुरक्षित और टिकाऊ आदतों के ज़रिये बेहतर बनाना है — शोर से दूर,
-            प्रकृति के करीब। हम चाहते हैं कि हर व्यक्ति शांति, करुणा और स्पष्टता के साथ
-            जी सके।
+            GloWell helps people improve their <strong>mental and physical health</strong> through
+            simple, safe and sustainable habits—away from noise, closer to nature. We want every
+            person to live with calm, compassion, and clarity.
           </p>
         </Card>
 
         <Card title="What You’ll Find">
           <ul className="list-disc ml-5 text-slate-700 space-y-1">
-            <li>Evidence-informed दैनिक रूटीन (पानी, भोजन, मूवमेंट, नींद)</li>
-            <li>सीधी भाषा, छोटे-छोटे actionable स्टेप्स</li>
-            <li>सुंदर PDF export, शेयर-friendly प्लान</li>
-            <li>प्राइवेसी-first डिज़ाइन (आपका डेटा आपका है)</li>
+            <li>Evidence-informed daily routines (water, meals, movement, sleep)</li>
+            <li>Clear language and small, actionable steps</li>
+            <li>Beautiful PDF export and share-friendly plans</li>
+            <li>Privacy-first design (your data stays yours)</li>
           </ul>
         </Card>
 
         <Card title="Our Promise">
           <p className="text-slate-700">
-            GloWell चिकित्सा सलाह का विकल्प नहीं है, पर आपको रोज़मर्रा की
-            स्वस्थ आदतें बनाने में <em>मदद</em> करता है। हम सुरक्षित, सम्मानजनक और
-            विज्ञापन-मुक्त अनुभव देने के लिए प्रतिबद्ध हैं।
+            GloWell is not a substitute for medical advice. It supports you in building healthy,
+            everyday habits. We are committed to a safe, respectful, and ad-free experience.
           </p>
         </Card>
 
         <Card title="Contact">
           <p className="text-slate-700">
-            सुझाव/प्रश्न: <a className="underline" href="mailto:hello@mishbyhealth.com">hello@mishbyhealth.com</a>
+            Suggestions or questions:{" "}
+            <a className="underline" href="mailto:hello@mishbyhealth.com">
+              hello@mishbyhealth.com
+            </a>
           </p>
         </Card>
       </div>
