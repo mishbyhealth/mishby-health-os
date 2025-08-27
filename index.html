@@ -1,7 +1,6 @@
 ﻿<!doctype html>
 <html lang="en">
   <head>
-    <!-- Always keep UTF-8 first to avoid mojibake -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -16,23 +15,26 @@
     <meta name="theme-color" content="#1fb6ae" />
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Open Graph (static, for link previews that don't run JS) -->
+    <!-- Open Graph (static for share bots) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="GloWell" />
     <meta property="og:url" content="https://mishbyhealth.netlify.app/" />
-    <!-- Use a simple hyphen in OG text to avoid any encoding issues in some preview bots -->
     <meta property="og:title" content="GloWell - Live Naturally." />
     <meta property="og:description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
-    <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
+    <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png?v=2" />
+    <meta property="og:image:secure_url" content="https://mishbyhealth.netlify.app/og.png?v=2" />
+    <meta property="og:image:alt" content="GloWell — simple, sustainable health habits." />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="GloWell - Live Naturally." />
     <meta name="twitter:description" content="Build simple, sustainable health habits with a calm, privacy-first app." />
-    <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
+    <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png?v=2" />
+    <meta name="twitter:image:src" content="https://mishbyhealth.netlify.app/og.png?v=2" />
   </head>
   <body>
     <div id="root"></div>
