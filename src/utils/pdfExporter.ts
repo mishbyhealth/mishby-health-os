@@ -1,6 +1,28 @@
 // src/utils/pdfExporter.ts
 
-// Text/Styled exporter (tries jsPDF.html() → falls back to image mode)
+// Small helper: load an image and return a PNG dataURL (or null)
+async function toDataURL(url: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        resolve(c.toDataURL("image/png"));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+// Styled/Text exporter (tries jsPDF.html → else falls back to image mode)
 export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" = "text") {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
     import("jspdf"),
@@ -15,30 +37,57 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   ).padStart(2, "0")}`;
   const fileName = `GloWell_HealthPlan_${stamp}.pdf`;
 
-  // ⚠️ IMPORTANT: check instance, not prototype
   const pdf = new jsPDF("p", "pt", "a4");
+  (pdf as any).setProperties?.({
+    title: "GloWell — Personal Wellness Plan",
+    author: "GloWell",
+    subject: "Health Plan",
+  });
+
   const hasHtml = typeof (pdf as any).html === "function";
 
   if (mode === "text" && hasHtml) {
     await (pdf as any).html(planEl, {
-      margin: [60, 40, 60, 40],
+      margin: [60, 40, 60, 40], // t, l, b, r
       autoPaging: "text",
       html2canvas: { scale: 2, useCORS: true, backgroundColor: "#FFFFFF" },
-      callback: (doc: any) => {
+      callback: async (doc: any) => {
         const pageCount = doc.getNumberOfPages();
+
+        // Try to load logo (optional)
+        const logoData =
+          (await toDataURL("/logo.png")) ||
+          (await toDataURL("/logo.svg")) ||
+          null;
+
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
+
           // Header
-          doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-          doc.text("GloWell — Personal Wellness Plan", 40, 32);
+          if (logoData) {
+            // Logo + Title
+            doc.addImage(logoData, "PNG", 40, 18, 18, 18);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.text("GloWell — Personal Wellness Plan", 64, 32);
+          } else {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.text("GloWell — Personal Wellness Plan", 40, 32);
+          }
+
+          // Thin brand line
+          doc.setDrawColor(30, 41, 59); // slate-800-ish
+          doc.setLineWidth(0.5);
+          doc.line(40, 38, doc.internal.pageSize.getWidth() - 40, 38);
+
           // Footer
-          doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-          doc.text(
-            `Page ${i} of ${pageCount}`,
-            doc.internal.pageSize.getWidth() - 100,
-            doc.internal.pageSize.getHeight() - 24
-          );
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          const y = doc.internal.pageSize.getHeight() - 24;
+          doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 100, y);
         }
+
         doc.save(fileName);
       },
     });
@@ -77,10 +126,15 @@ export async function exportPlanPDF(planEl: HTMLElement, mode: "text" | "image" 
   pdf.save(fileName);
 }
 
-// NEW: Pure-text exporter — always extractable/selectable
+// ALWAYS-extractable Plain-Text PDF (backup)
 export async function exportPlanPDFPureText(planEl: HTMLElement) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF("p", "pt", "a4");
+
+  (doc as any).setProperties?.({
+    title: "GloWell — Personal Wellness Plan (Text Export)",
+    author: "GloWell",
+  });
 
   const margin = { top: 60, left: 40, right: 40, bottom: 60 };
   const width = doc.internal.pageSize.getWidth() - margin.left - margin.right;
@@ -92,7 +146,7 @@ export async function exportPlanPDFPureText(planEl: HTMLElement) {
 
   let cursorY = margin.top + 24;
 
-  // Build a plain text from headings + lists (simple and robust)
+  // Collect plain text
   const blocks: string[] = [];
   planEl.querySelectorAll("h2, h3, li, p").forEach((node) => {
     const tag = node.tagName.toLowerCase();
@@ -104,7 +158,6 @@ export async function exportPlanPDFPureText(planEl: HTMLElement) {
 
   const joined = blocks.join("\n");
   doc.setFont("helvetica", "normal"); doc.setFontSize(12);
-
   const lines = doc.splitTextToSize(joined, width);
 
   const pageHeight = doc.internal.pageSize.getHeight();
