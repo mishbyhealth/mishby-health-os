@@ -1,0 +1,15 @@
+﻿{
+  "name": "GloWell",
+  "short_name": "GloWell",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ed",
+  "theme_color": "#1fb6ae",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
