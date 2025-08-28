@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = "dist"
 
-# NOTE:
-# We keep ALL routing/maintenance in public/_redirects via Git.
-# (No catch-all redirects here to avoid overriding maintenance mode.)
+[build.environment]
+  NODE_VERSION = "20"
+
+# (optional, helps local Netlify dev)
+[dev]
+  framework = "vite"
+  command = "npm run dev"
+  targetPort = 5173
