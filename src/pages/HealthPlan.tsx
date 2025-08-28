@@ -1,9 +1,9 @@
 /* src/pages/HealthPlan.tsx
-   Health Plan page with REAL PDF export and a polished, on-brand Download button
+   Adds a second button for Landscape PDF export
 */
 import React from "react";
-import PlanView from "./PlanView"; // same folder
-import { exportPlanPDF } from "../../mho/plugins/exporters/pdf";
+import PlanView from "./PlanView";
+import { exportPlanPDF, exportPlanPDFLandscape } from "../../mho/plugins/exporters/pdf";
 
 function loadPlan(): any {
   const fromWindow = (window as any).__PLAN__;
@@ -11,7 +11,7 @@ function loadPlan(): any {
   try {
     const raw = localStorage.getItem("glowell:plan");
     if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
+  } catch {}
   return {
     meta: { disclaimerText: "Non-clinical, general wellness guidance." },
     day: {
@@ -34,52 +34,147 @@ function loadPlan(): any {
   };
 }
 
+/** Read user first name from multiple places */
+function getUserFirstName(plan: any): string | null {
+  const wUser = (window as any).__USER__;
+  const fromWindow = wUser?.firstName || wUser?.name?.split?.(" ")?.[0];
+
+  const fromPlan =
+    plan?.meta?.user?.firstName ||
+    plan?.meta?.userName?.split?.(" ")?.[0];
+
+  let fromStorage: string | null = null;
+  try {
+    const raw = localStorage.getItem("glowell:user");
+    if (raw) {
+      const obj = JSON.parse(raw);
+      fromStorage = obj?.firstName || obj?.name?.split?.(" ")?.[0] || null;
+    }
+  } catch {}
+
+  return (fromWindow || fromPlan || fromStorage || null) ?? null;
+}
+
+function sanitizeForFilename(s: string): string {
+  return s
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .trim();
+}
+
+/** Ask once for first name and store it */
+function ensureFirstName(): string | null {
+  try {
+    const stored = localStorage.getItem("glowell:user");
+    if (stored) {
+      const obj = JSON.parse(stored);
+      if (obj?.firstName) return obj.firstName as string;
+    }
+  } catch {}
+  const input = window.prompt("Optional: enter your first name for the PDF filename", "");
+  const name = (input || "").trim();
+  if (!name) return null;
+  const safe = sanitizeForFilename(name);
+  try {
+    localStorage.setItem("glowell:user", JSON.stringify({ firstName: safe }));
+  } catch {}
+  (window as any).__USER__ = { ...(window as any).__USER__, firstName: safe };
+  return safe;
+}
+
+function buildFilename(suffix: string, includeName: boolean, plan: any) {
+  const date = new Date().toISOString().slice(0, 10);
+  let first = getUserFirstName(plan);
+  if (!first && includeName) first = ensureFirstName();
+  const namePart = first ? "_" + sanitizeForFilename(first) : "";
+  return `GloWell_Plan_${date}${namePart}${suffix}.pdf`;
+}
+
 export default function HealthPlan() {
   const plan = React.useMemo(() => loadPlan(), []);
-  const [downloading, setDownloading] = React.useState(false);
+  const [downloadingPortrait, setDownloadingPortrait] = React.useState(false);
+  const [downloadingLandscape, setDownloadingLandscape] = React.useState(false);
 
-  async function handleDownloadPDF() {
-    if (downloading) return;
-    setDownloading(true);
+  async function handleDownloadPortrait() {
+    if (downloadingPortrait) return;
+    setDownloadingPortrait(true);
     try {
       const blob = await exportPlanPDF(plan);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const date = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `GloWell_Plan_${date}.pdf`;
+      a.download = buildFilename("", true, plan); // e.g., ..._Mukul.pdf
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error("PDF export failed:", e);
-      alert("PDF export नहीं हो पाया — Console में error देखें.");
+      console.error("PDF export (portrait) failed:", e);
+      alert("PDF export failed — see Console for details.");
     } finally {
-      setDownloading(false);
+      setDownloadingPortrait(false);
+    }
+  }
+
+  async function handleDownloadLandscape() {
+    if (downloadingLandscape) return;
+    setDownloadingLandscape(true);
+    try {
+      const blob = await exportPlanPDFLandscape(plan);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = buildFilename("_Landscape", true, plan); // e.g., ..._Mukul_Landscape.pdf
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("PDF export (landscape) failed:", e);
+      alert("PDF export failed — see Console for details.");
+    } finally {
+      setDownloadingLandscape(false);
     }
   }
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <h1 className="text-2xl font-semibold">Health Plan</h1>
 
-        {/* On-brand button: brand color #1fb6ae with subtle hover/disabled */}
-        <button
-          onClick={handleDownloadPDF}
-          disabled={downloading}
-          className={[
-            "px-3 py-2 rounded-lg border transition",
-            "border-[#1fb6ae]/30",
-            downloading
-              ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed"
-              : "bg-[#1fb6ae] text-white hover:bg-[#18a299]"
-          ].join(" ")}
-          title="Download as PDF"
-        >
-          {downloading ? "Downloading…" : "⬇️ Download PDF"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadPortrait}
+            disabled={downloadingPortrait}
+            className={[
+              "px-3 py-2 rounded-lg border transition",
+              "border-[#1fb6ae]/30",
+              downloadingPortrait
+                ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed"
+                : "bg-[#1fb6ae] text-white hover:bg-[#18a299]"
+            ].join(" ")}
+            title="Download as PDF (Portrait)"
+          >
+            {downloadingPortrait ? "Downloading…" : "⬇️ Download PDF"}
+          </button>
+
+          <button
+            onClick={handleDownloadLandscape}
+            disabled={downloadingLandscape}
+            className={[
+              "px-3 py-2 rounded-lg border transition",
+              "border-[#1fb6ae]/30",
+              downloadingLandscape
+                ? "bg-[#1fb6ae]/20 text-[#1fb6ae] cursor-not-allowed"
+                : "bg-white text-[#1fb6ae] hover:bg-[#e9f7f6]"
+            ].join(" ")}
+            title="Download as PDF (Landscape)"
+          >
+            {downloadingLandscape ? "Preparing…" : "⬇️ Download (Landscape)"}
+          </button>
+        </div>
       </div>
 
       <PlanView plan={plan} />

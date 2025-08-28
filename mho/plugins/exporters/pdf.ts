@@ -1,9 +1,7 @@
 /* mho/plugins/exporters/pdf.ts
-   Stable English-only PDF export (no Unicode font loading)
-   - Brand header (logo + optional repeat on new pages)
-   - Two-column cards (Hydration, Movement)
-   - Meals table with zebra rows
-   - Footer with page number
+   Stable English-only PDF export with orientation support
+   - exportPlanPDF(plan)            → Portrait (default)
+   - exportPlanPDFLandscape(plan)   → Landscape (for wider tables)
 */
 
 const BRAND = {
@@ -16,22 +14,8 @@ const BRAND = {
   zebra: "#fbfaf5",
 };
 
-const TYPE = {
-  title: 18,
-  h1: 13,
-  body: 11,
-  small: 10,
-  tiny: 9,
-};
-
-const SPACE = {
-  pageTop: 84,
-  margin: 36,
-  gutter: 16,
-  cardHeader: 26,
-  cardPad: 12,
-  line: 15,
-};
+const TYPE = { title: 18, h1: 13, body: 11, small: 10, tiny: 9 };
+const SPACE = { pageTop: 84, margin: 36, gutter: 16, cardHeader: 26, cardPad: 12, line: 15 };
 
 const UI = {
   logoPath: "/og.png",
@@ -52,7 +36,7 @@ async function tryFilterPlan(plan: any): Promise<any> {
   try {
     const mod: any = await import("../../compliance/ComplianceGuard");
     if (mod?.ComplianceGuard?.filterPlan) return mod.ComplianceGuard.filterPlan(plan);
-  } catch {/* ignore */}
+  } catch {}
   return plan;
 }
 
@@ -260,12 +244,11 @@ function renderMealsTable(
   return yy - y;
 }
 
-/* ---------- main ---------- */
-export async function exportPlanPDF(plan: any): Promise<Blob> {
-  // Robust import (works whether jsPDF is named or default export)
+/* ---------- core builder with orientation ---------- */
+async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promise<Blob> {
   const mod: any = await import("jspdf");
   const JSPDFClass = mod.jsPDF || mod.default;
-  const doc: any = new JSPDFClass({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc: any = new JSPDFClass({ orientation, unit: "pt", format: "a4" });
 
   const safePlan = await tryFilterPlan(plan);
   const logo = await fetchAsDataURL(UI.logoPath);
@@ -347,4 +330,13 @@ export async function exportPlanPDF(plan: any): Promise<Blob> {
 
   const blob = (doc as any).output?.("blob");
   return blob instanceof Blob ? blob : new Blob([], { type: "application/pdf" });
+}
+
+/* ---------- public exports ---------- */
+export async function exportPlanPDF(plan: any): Promise<Blob> {
+  return buildPDF(plan, "portrait");
+}
+
+export async function exportPlanPDFLandscape(plan: any): Promise<Blob> {
+  return buildPDF(plan, "landscape");
 }
