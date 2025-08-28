@@ -1,15 +1,7 @@
-[build]
+﻿[build]
   command = "npm run build"
   publish = "dist"
 
-# Single Page App routing: send all paths to index.html
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-# Ensure correct MIME type for PWA manifest
-[[headers]]
-  for = "/site.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json; charset=utf-8"
-    Cache-Control = "public, max-age=3600"
+# NOTE:
+# We keep ALL routing/maintenance in public/_redirects via Git.
+# (No catch-all redirects here to avoid overriding maintenance mode.)
