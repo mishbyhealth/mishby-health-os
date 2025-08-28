@@ -5,13 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# (optional, helps local Netlify dev)
 [dev]
   framework = "vite"
   command = "npm run dev"
   targetPort = 5173
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
