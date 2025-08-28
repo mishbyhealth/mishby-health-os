@@ -1,4 +1,4 @@
-[build]
+﻿[build]
   command = "npm run build"
   publish = "dist"
 
@@ -11,3 +11,7 @@
   command = "npm run dev"
   targetPort = 5173
 
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
