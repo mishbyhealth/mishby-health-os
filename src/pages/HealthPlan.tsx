@@ -1,92 +1,88 @@
-import React, { useRef } from "react";
-import { Helmet } from "react-helmet-async";
+/* src/pages/HealthPlan.tsx
+   Health Plan page with REAL PDF export and a polished, on-brand Download button
+*/
+import React from "react";
+import PlanView from "./PlanView"; // same folder
+import { exportPlanPDF } from "../../mho/plugins/exporters/pdf";
 
-export default function HealthPlan() {
-  const planRef = useRef<HTMLDivElement>(null);
-
-  const downloadPdf = async () => {
-    // Lightweight, reliable “print to PDF” fallback
-    // (your earlier advanced exporter is great; this keeps a simple path too)
-    window.print();
+function loadPlan(): any {
+  const fromWindow = (window as any).__PLAN__;
+  if (fromWindow) return fromWindow;
+  try {
+    const raw = localStorage.getItem("glowell:plan");
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {
+    meta: { disclaimerText: "Non-clinical, general wellness guidance." },
+    day: {
+      hydration: {
+        schedule: ["Morning: 300 ml warm water", "Before lunch: 300 ml", "Evening: 300 ml"],
+        notes: ["Sip slowly", "Adjust by climate/activity"],
+        target: "2400 ml",
+      },
+      movement: {
+        blocks: ["8k steps target", "Every 60–90 min: 3–5 min stretch", "15–25 min brisk walk"],
+        notes: ["Keep posture neutral"],
+      },
+      meals: [
+        { label: "Breakfast", ideas: ["Whole grains", "Protein", "Fruit"], avoid: [] },
+        { label: "Lunch", ideas: ["Dal/beans", "Veg", "Brown rice/Roti"], avoid: [] },
+        { label: "Evening", ideas: ["Fruit or nuts (small)"], avoid: [] },
+        { label: "Dinner (light)", ideas: ["Veg + protein"], avoid: ["Heavy fried", "Late meals"] },
+      ],
+    },
   };
-
-  return (
-    <section className="space-y-6">
-      <Helmet>
-        <title>Build Plan • GloWell</title>
-        <meta
-          name="description"
-          content="Your personal wellness plan—hydration, movement and meals. Download a clean, shareable PDF."
-        />
-        <link rel="canonical" href="https://mishbyhealth.netlify.app/health-plan" />
-
-        <meta property="og:site_name" content="GloWell" />
-        <meta property="og:title" content="Your GloWell Plan" />
-        <meta
-          property="og:description"
-          content="Hydration, movement and meals—simple steps you can stick with. Download as PDF."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://mishbyhealth.netlify.app/health-plan" />
-        <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Your GloWell Plan" />
-        <meta
-          name="twitter:description"
-          content="Hydration, movement and meals—simple steps you can stick with. Download as PDF."
-        />
-        <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
-      </Helmet>
-
-      <header className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Build Plan</h2>
-        <button
-          onClick={downloadPdf}
-          className="px-4 py-2 rounded-xl bg-slate-800 text-white shadow hover:opacity-90"
-        >
-          Download PDF
-        </button>
-      </header>
-
-      <div ref={planRef} id="plan-root" className="space-y-4">
-        <Section title="Hydration">
-          <ul className="list-disc ml-5 text-slate-700 space-y-1">
-            <li>Morning: 300 ml warm water</li>
-            <li>Before lunch: 300 ml</li>
-            <li>Evening: 300 ml</li>
-            <li>Total target: 2400 ml (adjust by climate/activity)</li>
-          </ul>
-        </Section>
-
-        <Section title="Movement">
-          <ul className="list-disc ml-5 text-slate-700 space-y-1">
-            <li>Daily steps target: 8000</li>
-            <li>Every 60–90 min: 3–5 min light stretch/walk</li>
-            <li>Add 15–25 min brisk walk</li>
-          </ul>
-        </Section>
-
-        <Section title="Meals">
-          <ul className="list-disc ml-5 text-slate-700 space-y-1">
-            <li>Breakfast: whole grains + protein + fruit</li>
-            <li>Lunch: dal/beans + veg + grain (brown rice/roti)</li>
-            <li>Evening: fruit or nuts (small portion)</li>
-            <li>Dinner (light): veg + protein; avoid heavy fried/late meals</li>
-          </ul>
-        </Section>
-      </div>
-    </section>
-  );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export default function HealthPlan() {
+  const plan = React.useMemo(() => loadPlan(), []);
+  const [downloading, setDownloading] = React.useState(false);
+
+  async function handleDownloadPDF() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const blob = await exportPlanPDF(plan);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `GloWell_Plan_${date}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("PDF export failed:", e);
+      alert("PDF export नहीं हो पाया — Console में error देखें.");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
-    <div className="p-4 rounded-2xl shadow bg-white/90 border border-black/5">
-      <h3 className="font-medium mb-2">{title}</h3>
-      {children}
+    <div className="p-4 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Health Plan</h1>
+
+        {/* On-brand button: brand color #1fb6ae with subtle hover/disabled */}
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className={[
+            "px-3 py-2 rounded-lg border transition",
+            "border-[#1fb6ae]/30",
+            downloading
+              ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed"
+              : "bg-[#1fb6ae] text-white hover:bg-[#18a299]"
+          ].join(" ")}
+          title="Download as PDF"
+        >
+          {downloading ? "Downloading…" : "⬇️ Download PDF"}
+        </button>
+      </div>
+
+      <PlanView plan={plan} />
     </div>
   );
 }
