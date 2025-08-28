@@ -16,7 +16,9 @@
     "validate:form": "node scripts/validate-health-form.mjs",
     "glowell:lint:nonclinical": "node scripts/nonclinical-lint.cjs",
     "glowell:plan:demo": "echo \"Use generateSafePlan(formData) to preview output.\"",
-    "glowell:lint:nonclinical:v2": "node scripts/nonclinical-lint.v2.cjs"
+    "glowell:lint:nonclinical:v2": "node scripts/nonclinical-lint.v2.cjs",
+    "lock": "powershell -ExecutionPolicy Bypass -File ./scripts/Lock.ps1",
+    "unlock": "powershell -ExecutionPolicy Bypass -File ./scripts/Unlock.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -26,7 +28,7 @@
     "firebase": "^12.0.0",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
-    "jspdf": "^2.5.1",
+    "jspdf": "^3.0.2",
     "nanoid": "^5.1.5",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
