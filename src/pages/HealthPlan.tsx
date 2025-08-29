@@ -1,4 +1,4 @@
-// src/pages/HealthPlan.tsx — fixed header via CSS Grid (stable on desktop & mobile)
+// src/pages/HealthPlan.tsx — header fixed + reset confirmation
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import PlanView from "./PlanView";
@@ -68,7 +68,10 @@ export default function HealthPlan() {
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
       toast("PDF ready to download");
-    } catch (e) { console.error(e); alert("Failed to export PDF. See console for details."); }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to export PDF. See console for details.");
+    }
   };
 
   const handleCopyShare = async () => {
@@ -78,7 +81,13 @@ export default function HealthPlan() {
     catch { alert("Unable to copy link. Please copy manually:\n" + link); }
   };
 
+  // ✅ NEW: confirm before clearing local data
   const handleReset = () => {
+    const ok = window.confirm(
+      "Reset all local data? This will clear the current plan, your name, and orientation stored in this browser.\n\nYou can Export JSON first if you want a backup."
+    );
+    if (!ok) return;
+
     try {
       localStorage.removeItem(LS_PLAN);
       localStorage.removeItem(LS_USER);
@@ -87,7 +96,9 @@ export default function HealthPlan() {
       setUser({});
       setOrientation("portrait");
       toast("Cleared!");
-    } catch { alert("Could not clear data. Please hard-refresh if needed (Ctrl+Shift+R)."); }
+    } catch {
+      alert("Could not clear data. Please hard-refresh if needed (Ctrl+Shift+R).");
+    }
   };
 
   const handleLoadSample = () => {
