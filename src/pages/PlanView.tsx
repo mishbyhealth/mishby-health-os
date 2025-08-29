@@ -44,14 +44,14 @@ export default function PlanView({ data }: { data: PlanData }) {
         </Card>
       </div>
 
-      {/* Meals table (polished zebra) */}
+      {/* Meals table (polished zebra + theme classes) */}
       <div>
         <Table title="Meals">
           <thead>
-            <tr className="bg-emerald-600/90">
-              <Th className="w-[20%] text-white text-center">Meal</Th>
-              <Th className="w-[50%] text-white text-center">Ideas</Th>
-              <Th className="w-[30%] text-white text-center">Avoid</Th>
+            <tr>
+              <Th className="text-center">Meal</Th>
+              <Th className="text-center">Ideas</Th>
+              <Th className="text-center">Avoid</Th>
             </tr>
           </thead>
           <tbody className="text-gray-800">
@@ -59,7 +59,7 @@ export default function PlanView({ data }: { data: PlanData }) {
               <tr
                 key={idx}
                 className={
-                  (idx % 2 === 0 ? "bg-gray-50 " : "bg-white ") +
+                  (idx % 2 === 0 ? "bg-[var(--zebra)] " : "bg-white ") +
                   "align-top hover:bg-emerald-50/50 transition-colors"
                 }
               >
@@ -74,6 +74,7 @@ export default function PlanView({ data }: { data: PlanData }) {
             ))}
           </tbody>
         </Table>
+
         <p className="mt-3 text-xs text-gray-500">
           This page provides non-clinical, general wellness guidance only.
         </p>
@@ -82,7 +83,7 @@ export default function PlanView({ data }: { data: PlanData }) {
   );
 }
 
-/* ---------- UI primitives ---------- */
+/* ---------- UI primitives (theme-aware) ---------- */
 
 function Card({
   title,
@@ -92,8 +93,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
+    <section className="card overflow-hidden">
+      {/* gradient header from the global theme */}
+      <div className="section-header px-4 py-2 font-semibold">{title}</div>
       <div className="px-4 py-3">{children}</div>
     </section>
   );
@@ -116,7 +118,7 @@ function List({
     <ul className={`space-y-2 ${textSize} ${className}`}>
       {bullets.map((b, i) => (
         <li key={i} className="flex gap-2">
-          <span className="select-none mt-[6px] h-[6px] w-[6px] rounded-full bg-emerald-500" />
+          <span className="select-none mt-[6px] h-[6px] w-[6px] rounded-full bg-[var(--primary)]" />
           <span className="leading-relaxed">{b}</span>
         </li>
       ))}
@@ -132,10 +134,11 @@ function Table({
   title: string;
 }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
+    <section className="card overflow-hidden">
+      {/* gradient header */}
+      <div className="section-header px-4 py-2 font-semibold">{title}</div>
       <div className="overflow-x-auto">
-        <table className="w-full border-separate [border-spacing:0]">
+        <table className="table">
           {children}
         </table>
       </div>
@@ -151,11 +154,7 @@ function Th({
   className?: string;
 }) {
   return (
-    <th
-      className={`px-3 py-3 text-sm font-semibold border-b border-emerald-700/40 ${className}`}
-    >
-      {children}
-    </th>
+    <th className={`px-3 py-3 text-sm font-semibold ${className}`}>{children}</th>
   );
 }
 
@@ -167,11 +166,10 @@ function Td({
   className?: string;
 }) {
   // extra vertical space for readability; align-top handled on <tr>
-  return <td className={`px-3 py-3 border-b border-gray-200 ${className}`}>{children}</td>;
+  return <td className={`px-3 py-3 border-b border-[var(--line)] ${className}`}>{children}</td>;
 }
 
 function Wrap({ text }: { text: string }) {
-  // naive line-wrap helper for long comma-separated lists
   if (!text) return <span>-</span>;
   return <span className="whitespace-pre-wrap break-words leading-relaxed">{text}</span>;
 }
