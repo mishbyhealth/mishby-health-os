@@ -1,14 +1,14 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.cjs
 module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./src/components/**/*.{js,jsx,ts,tsx}",
-    "./src/features/**/*.{js,jsx,ts,tsx}",
-    "./mho/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  safelist: [
+    "section-header"
   ],
   theme: {
     extend: {},
   },
   plugins: [],
-};
+}
