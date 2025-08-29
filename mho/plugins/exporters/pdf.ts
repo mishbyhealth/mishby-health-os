@@ -1,7 +1,9 @@
 /* mho/plugins/exporters/pdf.ts
-   Stable English-only PDF export with orientation support
-   - exportPlanPDF(plan)            → Portrait (default)
-   - exportPlanPDFLandscape(plan)   → Landscape (for wider tables)
+   English-only PDF export with:
+   - Portrait + Landscape
+   - Header shows custom plan title (plan.meta.title)
+   - Optional subtitle: "Prepared for <FirstName>"
+   - Correct footer: "Page X of Y"
 */
 
 const BRAND = {
@@ -15,17 +17,17 @@ const BRAND = {
 };
 
 const TYPE = { title: 18, h1: 13, body: 11, small: 10, tiny: 9 };
-const SPACE = { pageTop: 84, margin: 36, gutter: 16, cardHeader: 26, cardPad: 12, line: 15 };
+const SPACE = { pageTop: 90, margin: 36, gutter: 16, cardHeader: 26, cardPad: 12, line: 15 };
 
 const UI = {
   logoPath: "/og.png",
   logoWidth: 34,
   showLogoOnEveryPage: true,
-  titleFirstPage: "GloWell — Daily Wellness Plan",
+  titleFallback: "GloWell — Daily Wellness Plan", // used if meta.title is empty
   titleOtherPages: "Daily Wellness Plan",
 };
 
-/* ---------- helpers ---------- */
+/* ---------------- helpers ---------------- */
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
@@ -51,44 +53,71 @@ async function fetchAsDataURL(path: string): Promise<string | null> {
       fr.onerror = () => r(null);
       fr.readAsDataURL(blob);
     });
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
-/* ---------- header / footer ---------- */
-function addHeader(doc: any, opts: { logo?: string | null; title: string }) {
+/** Get saved first name for "Prepared for …" */
+function getFirstName(): string | null {
+  try {
+    const w: any = window as any;
+    const fromWindow = w?.__USER__?.firstName || w?.__USER__?.name?.split?.(" ")?.[0];
+    if (fromWindow) return String(fromWindow);
+
+    const raw = localStorage.getItem("glowell:user");
+    if (raw) {
+      const obj = JSON.parse(raw);
+      return obj?.firstName || obj?.name?.split?.(" ")?.[0] || null;
+    }
+  } catch {}
+  return null;
+}
+
+/* ---------------- header + footer ---------------- */
+function addHeader(doc: any, opts: { logo?: string | null; title: string; subtitle?: string | null }) {
   const W = doc.internal.pageSize.getWidth();
   const [pr, pg, pb] = hexToRgb(BRAND.primary);
-
-  // brand bar
   doc.setFillColor(pr, pg, pb);
   doc.rect(0, 0, W, 18, "F");
 
   const M = SPACE.margin;
   const y = 30;
-
-  // logo
   const lw = UI.logoWidth;
+
   if (opts.logo) {
-    try { doc.addImage(opts.logo, "PNG", M, y - lw * 0.33, lw, lw); } catch {}
+    try {
+      doc.addImage(opts.logo, "PNG", M, y - lw * 0.33, lw, lw);
+    } catch {}
   }
 
-  // title
+  // Title
   doc.setFont("helvetica", "bold");
   doc.setFontSize(TYPE.title);
   doc.setTextColor(0, 0, 0);
   doc.text(opts.title, W / 2, y, { align: "center" });
 
-  // date
+  // Date (right)
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.small);
   doc.text(new Date().toLocaleDateString(), W - M, y, { align: "right" });
 
-  // underline
+  // Subtitle (Prepared for …)
+  if (opts.subtitle) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(TYPE.small);
+    doc.setTextColor(60, 60, 60);
+    doc.text(opts.subtitle, W / 2, y + 14, { align: "center" });
+  }
+
+  // Underline
   doc.setDrawColor(210);
-  doc.line(M, y + 8, W - M, y + 8);
+  const underlineY = opts.subtitle ? y + 22 : y + 8;
+  doc.line(SPACE.margin, underlineY, W - SPACE.margin, underlineY);
 }
 
-function addFooter(doc: any) {
+/** Footer: "Page X of Y" */
+function drawFooter(doc: any, page: number, total: number) {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const M = SPACE.margin;
@@ -100,31 +129,40 @@ function addFooter(doc: any) {
   doc.setFontSize(TYPE.tiny);
   doc.setTextColor(60, 60, 60);
   doc.text("© 2025 GloWell — Non-clinical, general wellness guidance", M, H - 22);
-
-  const pageCount = (doc as any).getNumberOfPages?.() ?? 1;
-  doc.text(`Page ${pageCount}`, W - M, H - 22, { align: "right" });
+  doc.text(`Page ${page} of ${total}`, W - M, H - 22, { align: "right" });
 }
 
-/* ---------- layout helpers ---------- */
+/* ---------------- layout helpers ---------------- */
 function wrap(doc: any, text: string[], width: number, lineH = SPACE.line) {
   const out: string[] = [];
   for (const t of text) out.push(...doc.splitTextToSize(t, width));
   return { lines: out, height: out.length * lineH };
 }
 
-function ensureSpace(doc: any, need: number, y: number, topY: number, logo: string | null) {
+/** Add a new page when needed (footers come at the end) */
+function ensureSpace(
+  doc: any,
+  need: number,
+  y: number,
+  topY: number,
+  logo: string | null,
+  subtitle: string | null
+) {
   const H = doc.internal.pageSize.getHeight();
   const bottom = 42;
   if (y + need > H - bottom) {
     (doc as any).addPage?.();
-    addHeader(doc, { logo: UI.showLogoOnEveryPage ? logo : null, title: UI.titleOtherPages });
-    addFooter(doc);
+    addHeader(doc, {
+      logo: UI.showLogoOnEveryPage ? logo : null,
+      title: UI.titleOtherPages,
+      subtitle,
+    });
     return topY;
   }
   return y;
 }
 
-/* ---------- cards + table ---------- */
+/* ---------------- cards + table ---------------- */
 type SectionCard = { heading: string; lines: string[] };
 
 function renderCard(doc: any, x: number, y: number, w: number, card: SectionCard): number {
@@ -137,25 +175,25 @@ function renderCard(doc: any, x: number, y: number, w: number, card: SectionCard
   const bodyH = measured.height + pad * 2;
   const h = headerH + bodyH;
 
-  // header bg
+  // Header bg
   const [pr, pg, pb] = hexToRgb(BRAND.primary);
   doc.setFillColor(pr, pg, pb);
   doc.setDrawColor(210);
   doc.rect(x, y, w, headerH, "F");
 
-  // heading
+  // Heading text
   doc.setFont("helvetica", "bold");
   doc.setFontSize(TYPE.h1);
   doc.setTextColor(255, 255, 255);
   doc.text(card.heading, x + pad, y + headerH - 9);
 
-  // body bg
+  // Body bg
   const [br, bg, bb] = hexToRgb(BRAND.bg);
   doc.setFillColor(br, bg, bb);
   doc.setTextColor(35, 35, 35);
   doc.rect(x, y + headerH, w, bodyH, "F");
 
-  // text
+  // Body text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.body);
   let ty = y + headerH + pad + 2;
@@ -164,7 +202,7 @@ function renderCard(doc: any, x: number, y: number, w: number, card: SectionCard
     ty += SPACE.line;
   }
 
-  // border
+  // Border
   const [borR, borG, borB] = hexToRgb(BRAND.border);
   doc.setDrawColor(borR, borG, borB);
   doc.rect(x, y, w, h);
@@ -183,11 +221,11 @@ function renderMealsTable(
   const headerH = 24;
   const lineH = SPACE.line - 1;
 
-  const col1 = Math.round(w * 0.20);
+  const col1 = Math.round(w * 0.2);
   const col2 = Math.round(w * 0.55);
   const col3 = w - col1 - col2;
 
-  // header
+  // Header
   const [thR, thG, thB] = hexToRgb(BRAND.tableHeader);
   doc.setFillColor(thR, thG, thB);
   doc.rect(x, y, w, headerH, "F");
@@ -201,6 +239,7 @@ function renderMealsTable(
   doc.text("Ideas", x + col1 + cellPad, y + 16);
   doc.text("Avoid", x + col1 + col2 + cellPad, y + 16);
 
+  // Rows
   let yy = y + headerH;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.small);
@@ -232,11 +271,20 @@ function renderMealsTable(
 
     // text
     let ty = yy + 14;
-    l1.forEach(line => { doc.text(line, x + cellPad, ty); ty += lineH; });
+    l1.forEach(line => {
+      doc.text(line, x + cellPad, ty);
+      ty += lineH;
+    });
     ty = yy + 14;
-    l2.forEach(line => { doc.text(line, x + col1 + cellPad, ty); ty += lineH; });
+    l2.forEach(line => {
+      doc.text(line, x + col1 + cellPad, ty);
+      ty += lineH;
+    });
     ty = yy + 14;
-    l3.forEach(line => { doc.text(line, x + col1 + col2 + cellPad, ty); ty += lineH; });
+    l3.forEach(line => {
+      doc.text(line, x + col1 + col2 + cellPad, ty);
+      ty += lineH;
+    });
 
     yy += rowH;
   });
@@ -244,8 +292,11 @@ function renderMealsTable(
   return yy - y;
 }
 
-/* ---------- core builder with orientation ---------- */
+/* ---------------- core builder with orientation ---------------- */
 async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promise<Blob> {
+  // IMPORTANT: capture the raw title BEFORE filtering (filters may drop it)
+  const rawTitle = plan?.meta?.title || "";
+
   const mod: any = await import("jspdf");
   const JSPDFClass = mod.jsPDF || mod.default;
   const doc: any = new JSPDFClass({ orientation, unit: "pt", format: "a4" });
@@ -253,8 +304,13 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   const safePlan = await tryFilterPlan(plan);
   const logo = await fetchAsDataURL(UI.logoPath);
 
-  // first page header
-  addHeader(doc, { logo, title: UI.titleFirstPage });
+  // Title & subtitle
+  const planTitle: string = rawTitle ? `GloWell — ${String(rawTitle)}` : UI.titleFallback;
+  const firstName = getFirstName();
+  const subtitle = firstName ? `Prepared for ${firstName}` : null;
+
+  // First page header
+  addHeader(doc, { logo, title: planTitle, subtitle });
 
   const W = doc.internal.pageSize.getWidth();
   const M = SPACE.margin;
@@ -263,7 +319,7 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   const topY = SPACE.pageTop;
   let y = topY;
 
-  // disclaimer
+  // Disclaimer
   const disc =
     safePlan?.meta?.disclaimerText ||
     "This PDF contains non-clinical, general wellness guidance only. For medical concerns, consult a qualified professional.";
@@ -272,11 +328,11 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   doc.setTextColor(80, 80, 80);
   const discWrapped = doc.splitTextToSize(disc, contentW);
   const discH = discWrapped.length * (SPACE.line - 2) + 6;
-  y = ensureSpace(doc, discH, y, topY, logo);
+  y = ensureSpace(doc, discH, y, topY, logo, subtitle);
   doc.text(discWrapped, M, y);
   y += discH;
 
-  // data prep
+  // Data prep
   const H = safePlan?.day?.hydration || {};
   const hydration: string[] = [];
   if (Array.isArray(H.schedule) && H.schedule.length) hydration.push(...H.schedule.map((t: string) => `• ${t}`));
@@ -290,7 +346,7 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   if (Array.isArray(MV.notes) && MV.notes.length) movement.push(`Notes: ${MV.notes.join(" • ")}`);
   if (!movement.length) movement.push("• Gentle stretches and a brisk walk");
 
-  // measure both cards
+  // Two cards
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.body);
   const leftMeasure = wrap(doc, hydration, colW - SPACE.cardPad * 2);
@@ -299,44 +355,46 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   const rightH = SPACE.cardHeader + (rightMeasure.height + SPACE.cardPad * 2);
   const rowH = Math.max(leftH, rightH);
 
-  y = ensureSpace(doc, rowH, y, topY, logo);
+  y = ensureSpace(doc, rowH, y, topY, logo, subtitle);
   const usedLeft = renderCard(doc, M, y, colW, { heading: "Hydration", lines: hydration });
   const usedRight = renderCard(doc, M + colW + SPACE.gutter, y, colW, { heading: "Movement", lines: movement });
   y += Math.max(usedLeft, usedRight) + 14;
 
-  // meals
+  // Meals
   const meals = Array.isArray(safePlan?.day?.meals) ? safePlan.day.meals : [];
   const rows = meals.length
     ? meals.map((m: any) => ({ label: m?.label ?? "", ideas: m?.ideas ?? [], avoid: m?.avoid ?? [] }))
     : [{ label: "Balanced Plate", ideas: ["Veg + whole grains + protein"], avoid: [] }];
 
-  // section label
   doc.setFont("helvetica", "bold");
   doc.setFontSize(TYPE.h1);
   const [sr, sg, sb] = hexToRgb(BRAND.subtle);
   doc.setTextColor(sr, sg, sb);
 
   const approx = 24 + rows.length * 28;
-  y = ensureSpace(doc, approx, y, topY, logo);
+  y = ensureSpace(doc, approx, y, topY, logo, subtitle);
   doc.text("Meals", M, y);
   y += 6;
 
-  // table
   doc.setTextColor(35, 35, 35);
   const tableH = renderMealsTable(doc, M, y, contentW, rows);
   y += tableH + 6;
 
-  addFooter(doc);
+  // Footers: "Page X of Y"
+  const total = (doc as any).getNumberOfPages?.() ?? 1;
+  for (let p = 1; p <= total; p++) {
+    (doc as any).setPage?.(p);
+    drawFooter(doc, p, total);
+  }
 
   const blob = (doc as any).output?.("blob");
   return blob instanceof Blob ? blob : new Blob([], { type: "application/pdf" });
 }
 
-/* ---------- public exports ---------- */
+/* ---------------- public APIs ---------------- */
 export async function exportPlanPDF(plan: any): Promise<Blob> {
   return buildPDF(plan, "portrait");
 }
-
 export async function exportPlanPDFLandscape(plan: any): Promise<Blob> {
   return buildPDF(plan, "landscape");
 }
