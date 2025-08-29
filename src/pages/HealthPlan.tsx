@@ -2,16 +2,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import PlanView from "./PlanView";
-// Use RELATIVE import instead of "@"
-import { toast } from "../utils/toast"; 
-import { exportPlanPDF } from "../mho/plugins/exporters/pdf"; 
+import { toast } from "../utils/toast";
+// NOTE: mho is at PROJECT ROOT (../.. from src/pages)
+import { exportPlanPDF } from "../../mho/plugins/exporters/pdf";
 
 const LS_PLAN = "glowell:plan";
 const LS_USER = "glowell:user";
 const LS_ORIENTATION = "glowell:pdfOrientation";
 
 type Orientation = "portrait" | "landscape";
-
 type PlanMeta = { title?: string };
 type UserInfo = { firstName?: string };
 type PlanData = {
@@ -78,7 +77,6 @@ export default function HealthPlan() {
       a.click();
       URL.revokeObjectURL(url);
 
-      // Small confirmation (optional)
       toast("PDF ready to download");
     } catch (e) {
       console.error(e);
@@ -91,7 +89,6 @@ export default function HealthPlan() {
     const link = `https://mishbyhealth.com/health-plan?v=${v}`;
     try {
       await navigator.clipboard.writeText(link);
-      // POINT 2: toast after copy
       toast("Link copied!");
     } catch {
       alert("Unable to copy link. Please copy manually:\n" + link);
@@ -106,7 +103,6 @@ export default function HealthPlan() {
       setPlan({ meta: { title: "" } });
       setUser({});
       setOrientation("portrait");
-      // POINT 3: toast after reset
       toast("Cleared!");
     } catch {
       alert("Could not clear data. Please hard-refresh if needed (Ctrl+Shift+R).");
