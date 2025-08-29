@@ -1,22 +1,47 @@
-# GloWell – Developer Guide
+# 📚 GloWell Documentation Index
 
-Welcome to the GloWell codebase.
+This folder contains project-level documentation for **GloWell**.  
+It is organized into two sections:
 
-## Folder Structure
+---
 
-- `/core` – global configs, context, hooks
-- `/features` – all feature modules (auth, planner, tracking, services, etc.)
-- `/public` – static assets
-- `/docs` – documentation
-- `.env` – environment config
+## ✅ Canonical Docs (latest, maintained)
 
-## Dev Setup
+All new contributors should use these files:
 
-1. Copy `.env.example` to `.env` and fill your Firebase keys
-2. Run `npm install`
-3. Start dev server with `npm run dev`
+- `PASTE_MAP.md`  
+  → Simple copy–paste guide for where each file/code block belongs.  
+- `advanced-engine-v2/README.md`  
+  → Overview of Advanced Engine v2.  
+- `advanced-engine-v2/MIGRATION.md`  
+  → Migration steps and upgrade guide.  
+- `advanced-engine-v2/PROMPTS.md`  
+  → Prompt pack and usage examples for Engine v2.
 
-## Build & Deploy
+---
 
-```bash
-npm run build
+## 📦 Archived Docs (legacy, for reference only)
+
+Old versions are kept safe here.  
+Do **not** edit these — they are for history/reference:
+
+- `_archive/ADV_ENGINE_V2_README.md`  
+- `_archive/ADV_ENGINE_V2_MIGRATION.md`  
+- `_archive/ADV_ENGINE_V2_PROMPTS.md`  
+- `_archive/GLOWELL_BLUEPRINT_README.md`  
+- `_archive/MIGRATION_STEPS.md`  
+- `_archive/PROMPT_PACK.md`
+
+---
+
+## ℹ️ Notes
+
+- Always prefer **canonical docs** inside `advanced-engine-v2/`.  
+- Use `_archive/` files only to check history or compare with older drafts.  
+- If adding new docs, please follow the same structure:
+  - Put maintained docs in a clear subfolder.
+  - Move old/drafts to `_archive/` instead of deleting.
+
+---
+
+**Last Updated:** August 2025  
