@@ -1,60 +1,115 @@
-﻿/* src/pages/PlanView.tsx
-   Presentational-only view of the plan (no Download button here)
-*/
-import React from "react";
+﻿import React from "react";
 
-type PlanProps = { plan: any };
+/** Brand palette (keep in sync with PDF exporter) */
+const BRAND = {
+  primary: "#1fb6ae",
+  bg: "#f7f5ed",
+  border: "#dcd7c9",
+  subtle: "#52616b",
+  zebra: "#fbfaf5",
+  header: "#e9f7f6",
+};
 
-export default function PlanView({ plan }: PlanProps) {
-  const d = plan?.day || {};
+type Plan = any;
+
+function useSections(plan: Plan) {
+  const H = plan?.day?.hydration || {};
+  const hydration: string[] = [];
+  if (Array.isArray(H.schedule) && H.schedule.length) hydration.push(...H.schedule.map((t: string) => `• ${t}`));
+  if (Array.isArray(H.notes) && H.notes.length) hydration.push(`Notes: ${H.notes.join(" • ")}`);
+  if (H.target) hydration.push(`Target: ${H.target}`);
+  if (!hydration.length) hydration.push("• As per your day’s routine");
+
+  const MV = plan?.day?.movement || {};
+  const movement: string[] = [];
+  if (Array.isArray(MV.blocks) && MV.blocks.length) movement.push(...MV.blocks.map((b: string) => `• ${b}`));
+  if (Array.isArray(MV.notes) && MV.notes.length) movement.push(`Notes: ${MV.notes.join(" • ")}`);
+  if (!movement.length) movement.push("• Gentle stretches and a brisk walk");
+
+  const meals = Array.isArray(plan?.day?.meals) ? plan.day.meals : [];
+  const mealRows =
+    meals.length
+      ? meals.map((m: any) => ({
+          label: m?.label ?? "",
+          ideas: (m?.ideas ?? []).join(", "),
+          avoid: (m?.avoid ?? []).join(", "),
+        }))
+      : [{ label: "Balanced Plate", ideas: "Veg + whole grains + protein", avoid: "" }];
+
+  return { hydration, movement, mealRows };
+}
+
+function Card({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-2xl overflow-hidden border" style={{ borderColor: BRAND.border, background: "#fff" }}>
+      <div className="px-4 py-3" style={{ background: BRAND.primary }}>
+        <h3 className="text-white font-semibold">{title}</h3>
+      </div>
+      <div className="p-4" style={{ background: BRAND.bg }}>
+        <ul className="space-y-2 text-[15px] leading-6 text-gray-800">
+          {items.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function MealsTable({ rows }: { rows: Array<{ label: string; ideas: string; avoid: string }> }) {
+  return (
+    <div className="rounded-2xl overflow-hidden border" style={{ borderColor: BRAND.border, background: "#fff" }}>
+      <div className="px-4 py-3 text-sm font-semibold" style={{ background: BRAND.header, color: "#1f2937" }}>
+        Meals
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="text-left" style={{ background: BRAND.header }}>
+              <th className="px-4 py-3 w-[20%]">Meal</th>
+              <th className="px-4 py-3 w-[55%]">Ideas</th>
+              <th className="px-4 py-3 w-[25%]">Avoid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, idx) => (
+              <tr key={idx} style={{ background: idx % 2 ? BRAND.zebra : "#fff" }}>
+                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
+                  {r.label}
+                </td>
+                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
+                  {r.ideas}
+                </td>
+                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
+                  {r.avoid}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default function PlanView({ plan }: { plan: Plan }) {
+  const { hydration, movement, mealRows } = useSections(plan);
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold">Your Daily Wellness Plan</h2>
-        <p className="text-sm opacity-70">
-          {plan?.meta?.disclaimerText || "Non-clinical, general wellness guidance."}
-        </p>
+    <div className="space-y-5">
+      {/* Top cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card title="Hydration" items={hydration} />
+        <Card title="Movement" items={movement} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <section className="p-3 border rounded">
-          <h3 className="font-medium mb-2">Hydration</h3>
-          <ul className="list-disc pl-5">
-            {(d.hydration?.schedule || []).map((t: string, i: number) => (
-              <li key={i}>{t}</li>
-            ))}
-          </ul>
-          <div className="text-sm opacity-70">
-            {(d.hydration?.notes || []).join(" • ")}
-            {d.hydration?.target ? ` • Target: ${d.hydration.target}` : ""}
-          </div>
-        </section>
+      {/* Meals table */}
+      <MealsTable rows={mealRows} />
 
-        <section className="p-3 border rounded">
-          <h3 className="font-medium mb-2">Movement</h3>
-          <ul className="list-disc pl-5">
-            {(d.movement?.blocks || []).map((b: string, i: number) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-          <div className="text-sm opacity-70">{(d.movement?.notes || []).join(" • ")}</div>
-        </section>
-
-        <section className="p-3 border rounded md:col-span-2">
-          <h3 className="font-medium mb-2">Meals</h3>
-          <ul className="list-disc pl-5">
-            {(d.meals || []).map((m: any, i: number) => (
-              <li key={i}>
-                <b>{m.label}:</b> {(m.ideas || []).join(", ")}{" "}
-                {Array.isArray(m.avoid) && m.avoid.length ? (
-                  <i className="opacity-70">(avoid: {m.avoid.join(", ")})</i>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      {/* Friendly disclaimer (matches PDF language) */}
+      <p className="text-xs text-gray-600">
+        This page provides non-clinical, general wellness guidance only. For medical concerns, please consult a qualified professional.
+      </p>
     </div>
   );
 }
