@@ -1,115 +1,185 @@
-﻿import React from "react";
+﻿// src/pages/PlanView.tsx
+import React from "react";
 
-/** Brand palette (keep in sync with PDF exporter) */
-const BRAND = {
-  primary: "#1fb6ae",
-  bg: "#f7f5ed",
-  border: "#dcd7c9",
-  subtle: "#52616b",
-  zebra: "#fbfaf5",
-  header: "#e9f7f6",
+type PlanData = {
+  meta?: { title?: string };
+  hydration?: { tips?: string[]; notes?: string[]; target?: string };
+  movement?: { routines?: string[]; notes?: string[] };
+  meals?: Array<{ label: string; ideas?: string[]; avoid?: string[] }>;
+  mind?: { practices?: string[] };
 };
 
-type Plan = any;
+export default function PlanView({ data }: { data: PlanData }) {
+  const hydration = data?.hydration || {};
+  const movement = data?.movement || {};
+  const meals = data?.meals || [];
 
-function useSections(plan: Plan) {
-  const H = plan?.day?.hydration || {};
-  const hydration: string[] = [];
-  if (Array.isArray(H.schedule) && H.schedule.length) hydration.push(...H.schedule.map((t: string) => `• ${t}`));
-  if (Array.isArray(H.notes) && H.notes.length) hydration.push(`Notes: ${H.notes.join(" • ")}`);
-  if (H.target) hydration.push(`Target: ${H.target}`);
-  if (!hydration.length) hydration.push("• As per your day’s routine");
-
-  const MV = plan?.day?.movement || {};
-  const movement: string[] = [];
-  if (Array.isArray(MV.blocks) && MV.blocks.length) movement.push(...MV.blocks.map((b: string) => `• ${b}`));
-  if (Array.isArray(MV.notes) && MV.notes.length) movement.push(`Notes: ${MV.notes.join(" • ")}`);
-  if (!movement.length) movement.push("• Gentle stretches and a brisk walk");
-
-  const meals = Array.isArray(plan?.day?.meals) ? plan.day.meals : [];
-  const mealRows =
-    meals.length
-      ? meals.map((m: any) => ({
-          label: m?.label ?? "",
-          ideas: (m?.ideas ?? []).join(", "),
-          avoid: (m?.avoid ?? []).join(", "),
-        }))
-      : [{ label: "Balanced Plate", ideas: "Veg + whole grains + protein", avoid: "" }];
-
-  return { hydration, movement, mealRows };
-}
-
-function Card({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-2xl overflow-hidden border" style={{ borderColor: BRAND.border, background: "#fff" }}>
-      <div className="px-4 py-3" style={{ background: BRAND.primary }}>
-        <h3 className="text-white font-semibold">{title}</h3>
-      </div>
-      <div className="p-4" style={{ background: BRAND.bg }}>
-        <ul className="space-y-2 text-[15px] leading-6 text-gray-800">
-          {items.map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
+    <div className="space-y-6">
+      {/* Top cards: Hydration + Movement */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card title="Hydration">
+          <List bullets={hydration.tips} />
+          {hydration.target ? (
+            <p className="mt-2 text-sm text-gray-700">
+              <span className="font-medium">Target:</span> {hydration.target}
+            </p>
+          ) : null}
+          {hydration.notes?.length ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</p>
+              <List bullets={hydration.notes} size="sm" className="mt-1" />
+            </div>
+          ) : null}
+        </Card>
 
-function MealsTable({ rows }: { rows: Array<{ label: string; ideas: string; avoid: string }> }) {
-  return (
-    <div className="rounded-2xl overflow-hidden border" style={{ borderColor: BRAND.border, background: "#fff" }}>
-      <div className="px-4 py-3 text-sm font-semibold" style={{ background: BRAND.header, color: "#1f2937" }}>
-        Meals
+        <Card title="Movement">
+          <List bullets={movement.routines} />
+          {movement.notes?.length ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</p>
+              <List bullets={movement.notes} size="sm" className="mt-1" />
+            </div>
+          ) : null}
+        </Card>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+
+      {/* Meals table (polished zebra) */}
+      <div>
+        <Table title="Meals">
           <thead>
-            <tr className="text-left" style={{ background: BRAND.header }}>
-              <th className="px-4 py-3 w-[20%]">Meal</th>
-              <th className="px-4 py-3 w-[55%]">Ideas</th>
-              <th className="px-4 py-3 w-[25%]">Avoid</th>
+            <tr className="bg-emerald-600/90">
+              <Th className="w-[20%] text-white text-center">Meal</Th>
+              <Th className="w-[50%] text-white text-center">Ideas</Th>
+              <Th className="w-[30%] text-white text-center">Avoid</Th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((r, idx) => (
-              <tr key={idx} style={{ background: idx % 2 ? BRAND.zebra : "#fff" }}>
-                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
-                  {r.label}
-                </td>
-                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
-                  {r.ideas}
-                </td>
-                <td className="px-4 py-3 align-top border-t" style={{ borderColor: BRAND.border }}>
-                  {r.avoid}
-                </td>
+          <tbody className="text-gray-800">
+            {(meals.length ? meals : fallbackMeals).map((row, idx) => (
+              <tr
+                key={idx}
+                className={
+                  (idx % 2 === 0 ? "bg-gray-50 " : "bg-white ") +
+                  "align-top hover:bg-emerald-50/50 transition-colors"
+                }
+              >
+                <Td className="text-center font-medium">{row.label || "-"}</Td>
+                <Td>
+                  <Wrap text={row.ideas?.join(", ") || "-"} />
+                </Td>
+                <Td>
+                  <Wrap text={row.avoid?.join(", ") || "-"} />
+                </Td>
               </tr>
             ))}
           </tbody>
+        </Table>
+        <p className="mt-3 text-xs text-gray-500">
+          This page provides non-clinical, general wellness guidance only.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- UI primitives ---------- */
+
+function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
+      <div className="px-4 py-3">{children}</div>
+    </section>
+  );
+}
+
+function List({
+  bullets,
+  size = "base",
+  className = "",
+}: {
+  bullets?: string[];
+  size?: "base" | "sm";
+  className?: string;
+}) {
+  if (!bullets || bullets.length === 0) {
+    return <p className="text-gray-600 text-sm">—</p>;
+  }
+  const textSize = size === "sm" ? "text-sm" : "text-base";
+  return (
+    <ul className={`space-y-2 ${textSize} ${className}`}>
+      {bullets.map((b, i) => (
+        <li key={i} className="flex gap-2">
+          <span className="select-none mt-[6px] h-[6px] w-[6px] rounded-full bg-emerald-500" />
+          <span className="leading-relaxed">{b}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Table({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-separate [border-spacing:0]">
+          {children}
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 
-export default function PlanView({ plan }: { plan: Plan }) {
-  const { hydration, movement, mealRows } = useSections(plan);
-
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="space-y-5">
-      {/* Top cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card title="Hydration" items={hydration} />
-        <Card title="Movement" items={movement} />
-      </div>
-
-      {/* Meals table */}
-      <MealsTable rows={mealRows} />
-
-      {/* Friendly disclaimer (matches PDF language) */}
-      <p className="text-xs text-gray-600">
-        This page provides non-clinical, general wellness guidance only. For medical concerns, please consult a qualified professional.
-      </p>
-    </div>
+    <th
+      className={`px-3 py-3 text-sm font-semibold border-b border-emerald-700/40 ${className}`}
+    >
+      {children}
+    </th>
   );
 }
+
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  // extra vertical space for readability; align-top handled on <tr>
+  return <td className={`px-3 py-3 border-b border-gray-200 ${className}`}>{children}</td>;
+}
+
+function Wrap({ text }: { text: string }) {
+  // naive line-wrap helper for long comma-separated lists
+  if (!text) return <span>-</span>;
+  return <span className="whitespace-pre-wrap break-words leading-relaxed">{text}</span>;
+}
+
+/* ---------- sensible fallback meals ---------- */
+const fallbackMeals: Required<Required<PlanData>["meals"]> = [
+  { label: "Breakfast", ideas: ["Whole grains, protein, fruit"], avoid: ["Heavy fried"] },
+  { label: "Lunch", ideas: ["Dal/beans, veg, brown rice/roti"], avoid: ["Sugary drinks"] },
+  { label: "Evening", ideas: ["Fruit or nuts (small)"], avoid: ["Packaged snacks"] },
+  { label: "Dinner (light)", ideas: ["Veg + protein"], avoid: ["Very late meals"] },
+];
