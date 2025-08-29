@@ -1,7 +1,7 @@
 /* mho/plugins/exporters/pdf.ts
    English-only PDF export with:
    - Portrait + Landscape
-   - Header shows custom plan title (plan.meta.title)
+   - Header shows custom plan title (plan.meta.title) with robust fallbacks
    - Optional subtitle: "Prepared for <FirstName>"
    - Correct footer: "Page X of Y"
 */
@@ -23,7 +23,7 @@ const UI = {
   logoPath: "/og.png",
   logoWidth: 34,
   showLogoOnEveryPage: true,
-  titleFallback: "GloWell — Daily Wellness Plan", // used if meta.title is empty
+  titleFallback: "GloWell — Daily Wellness Plan",
   titleOtherPages: "Daily Wellness Plan",
 };
 
@@ -53,18 +53,15 @@ async function fetchAsDataURL(path: string): Promise<string | null> {
       fr.onerror = () => r(null);
       fr.readAsDataURL(blob);
     });
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-/** Get saved first name for "Prepared for …" */
+/** Find first name for the subtitle */
 function getFirstName(): string | null {
   try {
     const w: any = window as any;
     const fromWindow = w?.__USER__?.firstName || w?.__USER__?.name?.split?.(" ")?.[0];
     if (fromWindow) return String(fromWindow);
-
     const raw = localStorage.getItem("glowell:user");
     if (raw) {
       const obj = JSON.parse(raw);
@@ -72,6 +69,29 @@ function getFirstName(): string | null {
     }
   } catch {}
   return null;
+}
+
+/** NEW: Robust title fetch (param → window.__PLAN__ → localStorage) */
+function getPlanTitleFromAnywhere(plan: any): string {
+  const fromParam = plan?.meta?.title;
+  if (fromParam && String(fromParam).trim()) return String(fromParam).trim();
+
+  try {
+    const w: any = window as any;
+    const fromWin = w?.__PLAN__?.meta?.title;
+    if (fromWin && String(fromWin).trim()) return String(fromWin).trim();
+  } catch {}
+
+  try {
+    const raw = localStorage.getItem("glowell:plan");
+    if (raw) {
+      const obj = JSON.parse(raw);
+      const fromLS = obj?.meta?.title;
+      if (fromLS && String(fromLS).trim()) return String(fromLS).trim();
+    }
+  } catch {}
+
+  return "";
 }
 
 /* ---------------- header + footer ---------------- */
@@ -86,9 +106,7 @@ function addHeader(doc: any, opts: { logo?: string | null; title: string; subtit
   const lw = UI.logoWidth;
 
   if (opts.logo) {
-    try {
-      doc.addImage(opts.logo, "PNG", M, y - lw * 0.33, lw, lw);
-    } catch {}
+    try { doc.addImage(opts.logo, "PNG", M, y - lw * 0.33, lw, lw); } catch {}
   }
 
   // Title
@@ -97,12 +115,12 @@ function addHeader(doc: any, opts: { logo?: string | null; title: string; subtit
   doc.setTextColor(0, 0, 0);
   doc.text(opts.title, W / 2, y, { align: "center" });
 
-  // Date (right)
+  // Date
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.small);
   doc.text(new Date().toLocaleDateString(), W - M, y, { align: "right" });
 
-  // Subtitle (Prepared for …)
+  // Subtitle
   if (opts.subtitle) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(TYPE.small);
@@ -139,7 +157,7 @@ function wrap(doc: any, text: string[], width: number, lineH = SPACE.line) {
   return { lines: out, height: out.length * lineH };
 }
 
-/** Add a new page when needed (footers come at the end) */
+/** Page break helper */
 function ensureSpace(
   doc: any,
   need: number,
@@ -181,7 +199,7 @@ function renderCard(doc: any, x: number, y: number, w: number, card: SectionCard
   doc.setDrawColor(210);
   doc.rect(x, y, w, headerH, "F");
 
-  // Heading text
+  // Heading
   doc.setFont("helvetica", "bold");
   doc.setFontSize(TYPE.h1);
   doc.setTextColor(255, 255, 255);
@@ -193,7 +211,7 @@ function renderCard(doc: any, x: number, y: number, w: number, card: SectionCard
   doc.setTextColor(35, 35, 35);
   doc.rect(x, y + headerH, w, bodyH, "F");
 
-  // Body text
+  // Text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.body);
   let ty = y + headerH + pad + 2;
@@ -271,20 +289,11 @@ function renderMealsTable(
 
     // text
     let ty = yy + 14;
-    l1.forEach(line => {
-      doc.text(line, x + cellPad, ty);
-      ty += lineH;
-    });
+    l1.forEach(line => { doc.text(line, x + cellPad, ty); ty += lineH; });
     ty = yy + 14;
-    l2.forEach(line => {
-      doc.text(line, x + col1 + cellPad, ty);
-      ty += lineH;
-    });
+    l2.forEach(line => { doc.text(line, x + col1 + cellPad, ty); ty += lineH; });
     ty = yy + 14;
-    l3.forEach(line => {
-      doc.text(line, x + col1 + col2 + cellPad, ty);
-      ty += lineH;
-    });
+    l3.forEach(line => { doc.text(line, x + col1 + col2 + cellPad, ty); ty += lineH; });
 
     yy += rowH;
   });
@@ -294,8 +303,8 @@ function renderMealsTable(
 
 /* ---------------- core builder with orientation ---------------- */
 async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promise<Blob> {
-  // IMPORTANT: capture the raw title BEFORE filtering (filters may drop it)
-  const rawTitle = plan?.meta?.title || "";
+  // NEW: capture title from multiple sources BEFORE any filtering
+  const rawTitle = getPlanTitleFromAnywhere(plan);
 
   const mod: any = await import("jspdf");
   const JSPDFClass = mod.jsPDF || mod.default;
@@ -305,11 +314,11 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   const logo = await fetchAsDataURL(UI.logoPath);
 
   // Title & subtitle
-  const planTitle: string = rawTitle ? `GloWell — ${String(rawTitle)}` : UI.titleFallback;
+  const planTitle: string = rawTitle ? `GloWell — ${rawTitle}` : UI.titleFallback;
   const firstName = getFirstName();
   const subtitle = firstName ? `Prepared for ${firstName}` : null;
 
-  // First page header
+  // Header
   addHeader(doc, { logo, title: planTitle, subtitle });
 
   const W = doc.internal.pageSize.getWidth();
