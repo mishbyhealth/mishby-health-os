@@ -1,4 +1,4 @@
-﻿// src/pages/PlanView.tsx
+﻿// src/pages/PlanView.tsx — original clean look (solid emerald headers)
 import React from "react";
 
 type PlanData = {
@@ -16,7 +16,7 @@ export default function PlanView({ data }: { data: PlanData }) {
 
   return (
     <div className="space-y-6">
-      {/* Top cards: Hydration + Movement */}
+      {/* Hydration + Movement cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card title="Hydration">
           <List bullets={hydration.tips} />
@@ -44,32 +44,25 @@ export default function PlanView({ data }: { data: PlanData }) {
         </Card>
       </div>
 
-      {/* Meals table (polished zebra + theme classes) */}
+      {/* Meals table */}
       <div>
         <Table title="Meals">
           <thead>
-            <tr className="text-white bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
-                <Th className="text-center">Meal</Th>
-                <Th className="text-center">Ideas</Th>
-                <Th className="text-center">Avoid</Th>
+            <tr className="bg-emerald-600/90">
+              <Th className="w-[20%] text-white text-center">Meal</Th>
+              <Th className="w-[50%] text-white text-center">Ideas</Th>
+              <Th className="w-[30%] text-white text-center">Avoid</Th>
             </tr>
           </thead>
           <tbody className="text-gray-800">
             {(meals.length ? meals : fallbackMeals).map((row, idx) => (
               <tr
                 key={idx}
-                className={
-                  (idx % 2 === 0 ? "bg-[var(--zebra)] " : "bg-white ") +
-                  "align-top hover:bg-emerald-50/50 transition-colors"
-                }
+                className={(idx % 2 === 0 ? "bg-gray-50 " : "bg-white ") + "align-top"}
               >
                 <Td className="text-center font-medium">{row.label || "-"}</Td>
-                <Td>
-                  <Wrap text={row.ideas?.join(", ") || "-"} />
-                </Td>
-                <Td>
-                  <Wrap text={row.avoid?.join(", ") || "-"} />
-                </Td>
+                <Td><Wrap text={row.ideas?.join(", ") || "-"} /></Td>
+                <Td><Wrap text={row.avoid?.join(", ") || "-"} /></Td>
               </tr>
             ))}
           </tbody>
@@ -83,45 +76,27 @@ export default function PlanView({ data }: { data: PlanData }) {
   );
 }
 
-/* ---------- UI primitives (theme-aware) ---------- */
+/* ---------- simple UI primitives (original look) ---------- */
 
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="card overflow-hidden">
-      {/* gradient header from the global theme */}
-      <div className="px-4 py-2 font-semibold text-white bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
-  {title}
-</div>
-
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
       <div className="px-4 py-3">{children}</div>
     </section>
   );
 }
 
 function List({
-  bullets,
-  size = "base",
-  className = "",
-}: {
-  bullets?: string[];
-  size?: "base" | "sm";
-  className?: string;
-}) {
-  if (!bullets || bullets.length === 0) {
-    return <p className="text-gray-600 text-sm">—</p>;
-  }
+  bullets, size = "base", className = "",
+}: { bullets?: string[]; size?: "base" | "sm"; className?: string }) {
+  if (!bullets || bullets.length === 0) return <p className="text-gray-600 text-sm">—</p>;
   const textSize = size === "sm" ? "text-sm" : "text-base";
   return (
     <ul className={`space-y-2 ${textSize} ${className}`}>
       {bullets.map((b, i) => (
         <li key={i} className="flex gap-2">
-          <span className="select-none mt-[6px] h-[6px] w-[6px] rounded-full bg-[var(--primary)]" />
+          <span className="mt-[6px] h-[6px] w-[6px] rounded-full bg-emerald-500" />
           <span className="leading-relaxed">{b}</span>
         </li>
       ))}
@@ -129,19 +104,12 @@ function List({
   );
 }
 
-function Table({
-  children,
-  title,
-}: {
-  children: React.ReactNode;
-  title: string;
-}) {
+function Table({ children, title }: { children: React.ReactNode; title: string }) {
   return (
-    <section className="card overflow-hidden">
-      {/* gradient header */}
-      <div className="section-header px-4 py-2 font-semibold">{title}</div>
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">{title}</div>
       <div className="overflow-x-auto">
-        <table className="table">
+        <table className="w-full border-separate [border-spacing:0]">
           {children}
         </table>
       </div>
@@ -149,35 +117,17 @@ function Table({
   );
 }
 
-function Th({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <th className={`px-3 py-3 text-sm font-semibold ${className}`}>{children}</th>
-  );
+function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <th className={`px-3 py-3 text-sm font-semibold ${className}`}>{children}</th>;
 }
-
-function Td({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  // extra vertical space for readability; align-top handled on <tr>
-  return <td className={`px-3 py-3 border-b border-[var(--line)] ${className}`}>{children}</td>;
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`px-3 py-3 border-b border-gray-200 ${className}`}>{children}</td>;
 }
-
 function Wrap({ text }: { text: string }) {
-  if (!text) return <span>-</span>;
-  return <span className="whitespace-pre-wrap break-words leading-relaxed">{text}</span>;
+  return <span className="whitespace-pre-wrap break-words leading-relaxed">{text || "-"}</span>;
 }
 
-/* ---------- sensible fallback meals ---------- */
+/* ---------- fallback meals ---------- */
 const fallbackMeals: Required<Required<PlanData>["meals"]> = [
   { label: "Breakfast", ideas: ["Whole grains, protein, fruit"], avoid: ["Heavy fried"] },
   { label: "Lunch", ideas: ["Dal/beans, veg, brown rice/roti"], avoid: ["Sugary drinks"] },
