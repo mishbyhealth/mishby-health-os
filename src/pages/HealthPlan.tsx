@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import PlanView from "./PlanView";
 import { toast } from "../utils/toast";
-// NOTE: mho is at PROJECT ROOT (../.. from src/pages)
 import { exportPlanPDF } from "../../mho/plugins/exporters/pdf";
 
 const LS_PLAN = "glowell:plan";
@@ -15,37 +14,22 @@ type PlanMeta = { title?: string };
 type UserInfo = { firstName?: string };
 type PlanData = {
   meta?: PlanMeta;
-  hydration?: { tips?: string[] };
-  movement?: { routines?: string[] };
+  hydration?: { tips?: string[]; notes?: string[]; target?: string };
+  movement?: { routines?: string[]; notes?: string[] };
   meals?: Array<{ label: string; ideas?: string[]; avoid?: string[] }>;
   mind?: { practices?: string[] };
 };
 
 function readJSON<T>(key: string, fallback: T): T {
-  try {
-    const s = localStorage.getItem(key);
-    return s ? (JSON.parse(s) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+  try { const s = localStorage.getItem(key); return s ? (JSON.parse(s) as T) : fallback; } catch { return fallback; }
 }
-function writeJSON<T>(key: string, val: T) {
-  localStorage.setItem(key, JSON.stringify(val));
-}
-function random6(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+function writeJSON<T>(key: string, val: T) { localStorage.setItem(key, JSON.stringify(val)); }
+function random6(): string { return Math.floor(100000 + Math.random() * 900000).toString(); }
 
 export default function HealthPlan() {
-  const [plan, setPlan] = useState<PlanData>(() =>
-    readJSON<PlanData>(LS_PLAN, { meta: { title: "" } })
-  );
+  const [plan, setPlan] = useState<PlanData>(() => readJSON<PlanData>(LS_PLAN, { meta: { title: "" } }));
   const [user, setUser] = useState<UserInfo>(() => readJSON<UserInfo>(LS_USER, {}));
-  const [orientation, setOrientation] = useState<Orientation>(() =>
-    readJSON<Orientation>(LS_ORIENTATION, "portrait")
-  );
-
-  // NEW: help panel state
+  const [orientation, setOrientation] = useState<Orientation>(() => readJSON<Orientation>(LS_ORIENTATION, "portrait"));
   const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => { writeJSON(LS_PLAN, plan); }, [plan]);
@@ -55,9 +39,7 @@ export default function HealthPlan() {
   const planTitle = plan?.meta?.title?.trim() || "";
   const pageTitle = useMemo(() => `GloWell — ${planTitle || "Health Plan"}`, [planTitle]);
 
-  const setPlanTitle = (title: string) => {
-    setPlan((p) => ({ ...p, meta: { ...(p.meta || {}), title } }));
-  };
+  const setPlanTitle = (title: string) => setPlan((p) => ({ ...p, meta: { ...(p.meta || {}), title } }));
 
   const ensureFirstName = async () => {
     if (!user.firstName || !user.firstName.trim()) {
@@ -73,19 +55,14 @@ export default function HealthPlan() {
       const fileDate = new Date().toISOString().slice(0, 10);
       const suffixName = user.firstName ? `_${user.firstName}` : "";
       const suffixOrient = orient === "landscape" ? `_Landscape` : "";
-      const safeTitle = (plan?.meta?.title || "Plan")
-        .replace(/[^\w\- ]+/g, "")
-        .replace(/\s+/g, "_");
+      const safeTitle = (plan?.meta?.title || "Plan").replace(/[^\w\- ]+/g, "").replace(/\s+/g, "_");
       const filename = `GloWell_${safeTitle}_${fileDate}${suffixName}${suffixOrient}.pdf`;
 
       const blob = await exportPlanPDF({ ...plan, meta: { ...(plan.meta || {}), orientation: orient } });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
+      a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-
       toast("PDF ready to download");
     } catch (e) {
       console.error(e);
@@ -96,12 +73,8 @@ export default function HealthPlan() {
   const handleCopyShare = async () => {
     const v = random6();
     const link = `https://mishbyhealth.com/health-plan?v=${v}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      toast("Link copied!");
-    } catch {
-      alert("Unable to copy link. Please copy manually:\n" + link);
-    }
+    try { await navigator.clipboard.writeText(link); toast("Link copied!"); }
+    catch { alert("Unable to copy link. Please copy manually:\n" + link); }
   };
 
   const handleReset = () => {
@@ -109,13 +82,29 @@ export default function HealthPlan() {
       localStorage.removeItem(LS_PLAN);
       localStorage.removeItem(LS_USER);
       localStorage.removeItem(LS_ORIENTATION);
-      setPlan({ meta: { title: "" } });
-      setUser({});
-      setOrientation("portrait");
+      setPlan({ meta: { title: "" } }); setUser({}); setOrientation("portrait");
       toast("Cleared!");
-    } catch {
-      alert("Could not clear data. Please hard-refresh if needed (Ctrl+Shift+R).");
-    }
+    } catch { alert("Could not clear data. Please hard-refresh if needed (Ctrl+Shift+R)."); }
+  };
+
+  // NEW: load a ready sample plan (no color changes)
+  const handleLoadSample = () => {
+    const sample: PlanData = {
+      meta: { title: "4-Week Wellness Plan" },
+      hydration: {
+        tips: ["Start day with 1 glass warm water", "6–8 glasses through the day", "Add electrolytes post-walk (optional)"],
+        target: "2–2.5 L / day"
+      },
+      movement: {
+        routines: ["Morning: 15–25 min brisk walk", "Evening: 5–10 min gentle stretches", "2× week: light bodyweight (optional)"]
+      },
+      meals: [
+        { label: "Balanced Plate", ideas: ["Veg + whole grains + protein"], avoid: ["Sugary drinks", "Ultra-processed snacks"] },
+      ],
+      mind: { practices: ["2–3 min deep breathing", "5 min gratitude journaling (optional)"] }
+    };
+    setPlan(sample);
+    toast("Loaded sample plan");
   };
 
   return (
@@ -142,26 +131,11 @@ export default function HealthPlan() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowHelp(true)}
-              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
-              title="Help & Deploy Guide"
-            >
-              Help
-            </button>
-            <button
-              onClick={handleCopyShare}
-              className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700"
-            >
-              Copy share link
-            </button>
-            <button
-              onClick={handleReset}
-              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
-            >
-              Reset (Clear Data)
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={() => setShowHelp(true)} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50" title="Help & Deploy Guide">Help</button>
+            <button onClick={handleCopyShare} className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700">Copy share link</button>
+            <button onClick={handleLoadSample} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">Load sample plan</button>
+            <button onClick={handleReset} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">Reset (Clear Data)</button>
           </div>
         </div>
 
@@ -170,40 +144,16 @@ export default function HealthPlan() {
           <span className="text-sm text-gray-700 mr-2">PDF Orientation:</span>
           <button
             onClick={() => setOrientation("portrait")}
-            className={
-              "rounded-full px-3 py-1 border shadow-sm " +
-              (orientation === "portrait"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-800 border-gray-200")
-            }
-          >
-            Portrait
-          </button>
+            className={"rounded-full px-3 py-1 border shadow-sm " + (orientation === "portrait" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-800 border-gray-200")}
+          >Portrait</button>
           <button
             onClick={() => setOrientation("landscape")}
-            className={
-              "rounded-full px-3 py-1 border shadow-sm " +
-              (orientation === "landscape"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-800 border-gray-200")
-            }
-          >
-            Landscape
-          </button>
+            className={"rounded-full px-3 py-1 border shadow-sm " + (orientation === "landscape" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-800 border-gray-200")}
+          >Landscape</button>
 
           <div className="ml-auto flex gap-2">
-            <button
-              onClick={() => handleExport("portrait")}
-              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
-            >
-              Download (Portrait)
-            </button>
-            <button
-              onClick={() => handleExport("landscape")}
-              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
-            >
-              Download (Landscape)
-            </button>
+            <button onClick={() => handleExport("portrait")} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">Download (Portrait)</button>
+            <button onClick={() => handleExport("landscape")} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">Download (Landscape)</button>
           </div>
         </div>
 
@@ -213,56 +163,26 @@ export default function HealthPlan() {
         </div>
       </div>
 
-      {/* HELP PANEL (simple modal) */}
+      {/* HELP PANEL */}
       {showHelp && (
-        <div
-          className="fixed inset-0 z-[10000] bg-black/40 flex items-center justify-center p-4"
-          onClick={() => setShowHelp(false)}
-        >
-          <div
-            className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-200 p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[10000] bg-black/40 flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
+          <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-200 p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold text-gray-800">Help &amp; Deploy Guide</h2>
-              <button
-                onClick={() => setShowHelp(false)}
-                className="rounded-lg px-2 py-1 border border-gray-200 hover:bg-gray-50"
-                aria-label="Close help"
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowHelp(false)} className="rounded-lg px-2 py-1 border border-gray-200 hover:bg-gray-50" aria-label="Close help">✕</button>
             </div>
-
             <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-800">
-              <li>
-                <span className="font-medium">Deploy (Netlify):</span> Netlify → <em>Deploys</em> → <strong>Trigger deploy</strong> → <strong>Deploy project without cache</strong>.
-              </li>
-              <li>
-                <span className="font-medium">Test fresh build:</span> Open Incognito and add <code>?v=123456</code> to the URL.
-              </li>
-              <li>
-                <span className="font-medium">Share link:</span> Use <em>Copy share link</em> (you’ll see “Link copied!” toast).
-              </li>
-              <li>
-                <span className="font-medium">Reset data:</span> Use <em>Reset (Clear Data)</em> (you’ll see “Cleared!” toast).
-              </li>
-              <li>
-                <span className="font-medium">PDF export:</span> Choose orientation (Portrait/Landscape) → Download — PDF matches the on-screen design.
-              </li>
+              <li><span className="font-medium">Deploy (Netlify):</span> Netlify → <em>Deploys</em> → <strong>Trigger deploy</strong> → <strong>Deploy project without cache</strong>.</li>
+              <li><span className="font-medium">Test fresh build:</span> Incognito + add <code>?v=123456</code> to the URL.</li>
+              <li><span className="font-medium">Share link:</span> Use <em>Copy share link</em>.</li>
+              <li><span className="font-medium">Reset data:</span> Use <em>Reset (Clear Data)</em>.</li>
+              <li><span className="font-medium">PDF export:</span> Choose orientation → Download. PDF matches on-screen design.</li>
             </ol>
-
             <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700">
-              For full details, see <code>docs/README_DEPLOY.md</code> and <code>docs/PASTE_MAP.md</code> in your repo.
+              See <code>docs/README_DEPLOY.md</code> and <code>docs/PASTE_MAP.md</code> in your repo.
             </div>
-
             <div className="mt-4 text-right">
-              <button
-                onClick={() => setShowHelp(false)}
-                className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700"
-              >
-                Close
-              </button>
+              <button onClick={() => setShowHelp(false)} className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700">Close</button>
             </div>
           </div>
         </div>
