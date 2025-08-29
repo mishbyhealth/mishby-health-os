@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import PlanView from "./PlanView";
 import { exportPlanPDF, exportPlanPDFLandscape } from "../../mho/plugins/exporters/pdf";
 
@@ -155,70 +156,93 @@ export default function HealthPlan() {
 
   const portraitPrimary = pref === "portrait";
 
+  // --------- SEO: dynamic per-page tags ---------
+  const planTitle = (plan?.meta?.title || "").trim();
+  const pageTitle = planTitle ? `GloWell — ${planTitle}` : "GloWell — Health Plan";
+  const pageDesc =
+    "Build simple, sustainable health habits with a calm, privacy-first app. Download your personalized daily wellness plan.";
+
   return (
-    <div className="p-4 space-y-5">
-      {/* Title + actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Health Plan</h1>
+    <HelmetProvider>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        {/* OpenGraph */}
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:image" content="/og.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mishbyhealth.com/health-plan" />
+        {/* Theme color (brand teal) */}
+        <meta name="theme-color" content="#1fb6ae" />
+      </Helmet>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownloadPortrait}
-            disabled={downloadingPortrait}
-            className={[
-              "px-3 py-2 rounded-lg border transition",
-              "border-[#1fb6ae]/30",
-              (portraitPrimary
-                ? (downloadingPortrait ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed" : "bg-[#1fb6ae] text-white hover:bg-[#18a299]")
-                : (downloadingPortrait ? "bg-[#1fb6ae]/20 text-[#1fb6ae] cursor-not-allowed" : "bg-white text-[#1fb6ae] hover:bg-[#e9f7f6]"))
-            ].join(" ")}
-            title="Download as PDF (Portrait)"
-          >
-            {downloadingPortrait ? "Downloading…" : "⬇️ Download PDF"}
-          </button>
+      <div className="p-4 space-y-5">
+        {/* Title + actions */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Health Plan</h1>
 
-          <button
-            onClick={handleDownloadLandscape}
-            disabled={downloadingLandscape}
-            className={[
-              "px-3 py-2 rounded-lg border transition",
-              "border-[#1fb6ae]/30",
-              (!portraitPrimary
-                ? (downloadingLandscape ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed" : "bg-[#1fb6ae] text-white hover:bg-[#18a299]")
-                : (downloadingLandscape ? "bg-[#1fb6ae]/20 text-[#1fb6ae] cursor-not-allowed" : "bg-white text-[#1fb6ae] hover:bg-[#e9f7f6]"))
-            ].join(" ")}
-            title="Download as PDF (Landscape)"
-          >
-            {downloadingLandscape ? "Preparing…" : "⬇️ Download (Landscape)"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadPortrait}
+              disabled={downloadingPortrait}
+              className={[
+                "px-3 py-2 rounded-lg border transition",
+                "border-[#1fb6ae]/30",
+                (portraitPrimary
+                  ? (downloadingPortrait ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed" : "bg-[#1fb6ae] text-white hover:bg-[#18a299]")
+                  : (downloadingPortrait ? "bg-[#1fb6ae]/20 text-[#1fb6ae] cursor-not-allowed" : "bg-white text-[#1fb6ae] hover:bg-[#e9f7f6]"))
+              ].join(" ")}
+              title="Download as PDF (Portrait)"
+            >
+              {downloadingPortrait ? "Downloading…" : "⬇️ Download PDF"}
+            </button>
+
+            <button
+              onClick={handleDownloadLandscape}
+              disabled={downloadingLandscape}
+              className={[
+                "px-3 py-2 rounded-lg border transition",
+                "border-[#1fb6ae]/30",
+                (!portraitPrimary
+                  ? (downloadingLandscape ? "bg-[#1fb6ae]/40 text-white cursor-not-allowed" : "bg-[#1fb6ae] text-white hover:bg-[#18a299]")
+                  : (downloadingLandscape ? "bg-[#1fb6ae]/20 text-[#1fb6ae] cursor-not-allowed" : "bg-white text-[#1fb6ae] hover:bg-[#e9f7f6]"))
+              ].join(" ")}
+              title="Download as PDF (Landscape)"
+            >
+              {downloadingLandscape ? "Preparing…" : "⬇️ Download (Landscape)"}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Plan Title input (auto-saves) + Reset */}
-      <div className="grid gap-2">
-        <label className="text-sm text-gray-600">Plan Title (used in file name; optional)</label>
-        <div className="flex items-center gap-2">
-          <input
-            value={plan?.meta?.title ?? ""}
-            onChange={(e) =>
-              setPlan((prev: any) => ({ ...prev, meta: { ...(prev?.meta || {}), title: e.target.value } }))
-            }
-            onBlur={() => savePlan(plan)}
-            placeholder="e.g., 4-Week Wellness Plan"
-            className="w-full max-w-xl px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1fb6ae]"
-          />
-          <button
-            onClick={handleReset}
-            className="px-3 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50"
-            title="Clear saved data"
-          >
-            Reset (Clear Data)
-          </button>
+        {/* Plan Title input (auto-saves) + Reset */}
+        <div className="grid gap-2">
+          <label className="text-sm text-gray-600">Plan Title (used for SEO title & file name; optional)</label>
+          <div className="flex items-center gap-2">
+            <input
+              value={plan?.meta?.title ?? ""}
+              onChange={(e) =>
+                setPlan((prev: any) => ({ ...prev, meta: { ...(prev?.meta || {}), title: e.target.value } }))
+              }
+              onBlur={() => savePlan(plan)}
+              placeholder="e.g., 4-Week Wellness Plan"
+              className="w-full max-w-xl px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1fb6ae]"
+            />
+            <button
+              onClick={handleReset}
+              className="px-3 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50"
+              title="Clear saved data"
+            >
+              Reset (Clear Data)
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            Tip: Changing the Plan Title updates the browser page title and social preview meta tags.
+          </p>
         </div>
-        <p className="text-xs text-gray-500">Reset clears your saved title, name, and orientation preference.</p>
-      </div>
 
-      <PlanView plan={plan} />
-    </div>
+        <PlanView plan={plan} />
+      </div>
+    </HelmetProvider>
   );
 }
