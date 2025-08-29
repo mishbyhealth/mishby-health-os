@@ -1,4 +1,4 @@
-// src/pages/HealthPlan.tsx
+// src/pages/HealthPlan.tsx — clean layout per v7 blueprint
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import PlanView from "./PlanView";
@@ -127,7 +127,7 @@ export default function HealthPlan() {
     }
   };
 
-  // NEW: load a ready sample plan
+  // Load a ready sample plan
   const handleLoadSample = () => {
     const sample: PlanData = {
       meta: { title: "4-Week Wellness Plan" },
@@ -159,7 +159,7 @@ export default function HealthPlan() {
     toast("Loaded sample plan");
   };
 
-  // NEW: Export JSON of current plan
+  // Export JSON of current plan
   const handleExportJSON = () => {
     try {
       const pretty = JSON.stringify(plan, null, 2);
@@ -180,7 +180,7 @@ export default function HealthPlan() {
     }
   };
 
-  // NEW: Import JSON into current plan
+  // Import JSON into current plan
   const handleImportJSON = () => {
     fileInputRef.current?.click();
   };
@@ -196,7 +196,6 @@ export default function HealthPlan() {
       console.error(err);
       alert("Invalid JSON file.");
     } finally {
-      // reset input so selecting the same file again still triggers change
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -213,9 +212,10 @@ export default function HealthPlan() {
       </Helmet>
 
       <div className="mx-auto max-w-5xl p-4 md:p-6 space-y-6">
-        {/* Header / Title + Actions */}
-        <div className="flex flex-col md:flex-row md:items-end gap-3">
-          <div className="flex-1">
+        {/* Header / Title + Actions (fixed layout) */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          {/* Left: Plan Title (fixed width so it doesn't squash) */}
+          <div className="flex-1 max-w-md">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Plan Title
             </label>
@@ -226,11 +226,11 @@ export default function HealthPlan() {
               className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Tip: Title appears in browser tab &amp; PDF filename (not printed
-              inside the PDF by design).
+              Tip: Title appears in browser tab &amp; PDF filename (not printed inside the PDF by design).
             </p>
           </div>
 
+          {/* Right: Buttons cluster (wraps nicely on smaller widths) */}
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setShowHelp(true)}
@@ -251,8 +251,6 @@ export default function HealthPlan() {
             >
               Load sample plan
             </button>
-
-            {/* NEW: Import / Export JSON */}
             <button
               onClick={handleImportJSON}
               className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
@@ -274,7 +272,6 @@ export default function HealthPlan() {
               className="hidden"
               onChange={onImportFileChange}
             />
-
             <button
               onClick={handleReset}
               className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
@@ -343,9 +340,7 @@ export default function HealthPlan() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Help &amp; Deploy Guide
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-800">Help &amp; Deploy Guide</h2>
               <button
                 onClick={() => setShowHelp(false)}
                 className="rounded-lg px-2 py-1 border border-gray-200 hover:bg-gray-50"
@@ -357,31 +352,25 @@ export default function HealthPlan() {
 
             <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-800">
               <li>
-                <span className="font-medium">Deploy (Netlify):</span> Netlify →{" "}
-                <em>Deploys</em> → <strong>Trigger deploy</strong> →{" "}
-                <strong>Deploy project without cache</strong>.
+                <span className="font-medium">Deploy (Netlify):</span> Netlify → <em>Deploys</em> →{" "}
+                <strong>Trigger deploy</strong> → <strong>Deploy project without cache</strong>.
               </li>
               <li>
-                <span className="font-medium">Test fresh build:</span> Incognito
-                + add <code>?v=123456</code> to the URL.
+                <span className="font-medium">Test fresh build:</span> Incognito + add <code>?v=123456</code> to the URL.
               </li>
               <li>
-                <span className="font-medium">Share link:</span> Use{" "}
-                <em>Copy share link</em>.
+                <span className="font-medium">Share link:</span> Use <em>Copy share link</em>.
               </li>
               <li>
-                <span className="font-medium">Reset data:</span> Use{" "}
-                <em>Reset (Clear Data)</em>.
+                <span className="font-medium">Reset data:</span> Use <em>Reset (Clear Data)</em>.
               </li>
               <li>
-                <span className="font-medium">PDF export:</span> Choose
-                orientation → Download. PDF matches on-screen design.
+                <span className="font-medium">PDF export:</span> Choose orientation → Download. PDF matches on-screen design.
               </li>
             </ol>
 
             <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700">
-              See <code>docs/README_DEPLOY.md</code> and{" "}
-              <code>docs/PASTE_MAP.md</code> in your repo.
+              See <code>docs/README_DEPLOY.md</code> and <code>docs/PASTE_MAP.md</code> in your repo.
             </div>
 
             <div className="mt-4 text-right">
