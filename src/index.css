@@ -61,10 +61,10 @@ body {
   backdrop-filter: blur(2px);
 }
 
+/* Ensure section-header gradient is not purged */
 .section-header {
-  /* Gradient bar for section titles (catchy but classy) */
-  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
-  color: #fff !important;
+  @apply text-white font-semibold;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%) !important;
 }
 
 /* For components that used a solid emerald header previously */
