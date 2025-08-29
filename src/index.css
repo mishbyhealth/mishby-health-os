@@ -160,3 +160,9 @@ body {
 
 /* Headings polish */
 h1, h2, h3 { @apply tracking-tight; }
+
+/* Ensure section-header gradient is not purged */
+.section-header {
+  @apply text-white font-semibold;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%) !important;
+}
