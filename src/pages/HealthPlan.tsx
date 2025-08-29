@@ -37,9 +37,16 @@ function random6(): string {
 }
 
 export default function HealthPlan() {
-  const [plan, setPlan] = useState<PlanData>(() => readJSON<PlanData>(LS_PLAN, { meta: { title: "" } }));
+  const [plan, setPlan] = useState<PlanData>(() =>
+    readJSON<PlanData>(LS_PLAN, { meta: { title: "" } })
+  );
   const [user, setUser] = useState<UserInfo>(() => readJSON<UserInfo>(LS_USER, {}));
-  const [orientation, setOrientation] = useState<Orientation>(() => readJSON<Orientation>(LS_ORIENTATION, "portrait"));
+  const [orientation, setOrientation] = useState<Orientation>(() =>
+    readJSON<Orientation>(LS_ORIENTATION, "portrait")
+  );
+
+  // NEW: help panel state
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => { writeJSON(LS_PLAN, plan); }, [plan]);
   useEffect(() => { writeJSON(LS_USER, user); }, [user]);
@@ -66,7 +73,9 @@ export default function HealthPlan() {
       const fileDate = new Date().toISOString().slice(0, 10);
       const suffixName = user.firstName ? `_${user.firstName}` : "";
       const suffixOrient = orient === "landscape" ? `_Landscape` : "";
-      const safeTitle = (plan?.meta?.title || "Plan").replace(/[^\w\- ]+/g, "").replace(/\s+/g, "_");
+      const safeTitle = (plan?.meta?.title || "Plan")
+        .replace(/[^\w\- ]+/g, "")
+        .replace(/\s+/g, "_");
       const filename = `GloWell_${safeTitle}_${fileDate}${suffixName}${suffixOrient}.pdf`;
 
       const blob = await exportPlanPDF({ ...plan, meta: { ...(plan.meta || {}), orientation: orient } });
@@ -118,6 +127,7 @@ export default function HealthPlan() {
       </Helmet>
 
       <div className="mx-auto max-w-5xl p-4 md:p-6 space-y-6">
+        {/* Header / Title + Actions */}
         <div className="flex flex-col md:flex-row md:items-end gap-3">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Plan Title</label>
@@ -133,22 +143,38 @@ export default function HealthPlan() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={handleCopyShare} className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
+              title="Help & Deploy Guide"
+            >
+              Help
+            </button>
+            <button
+              onClick={handleCopyShare}
+              className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700"
+            >
               Copy share link
             </button>
-            <button onClick={handleReset} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">
+            <button
+              onClick={handleReset}
+              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
+            >
               Reset (Clear Data)
             </button>
           </div>
         </div>
 
+        {/* Orientation toggle + export */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-700 mr-2">PDF Orientation:</span>
           <button
             onClick={() => setOrientation("portrait")}
             className={
               "rounded-full px-3 py-1 border shadow-sm " +
-              (orientation === "portrait" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-800 border-gray-200")
+              (orientation === "portrait"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white text-gray-800 border-gray-200")
             }
           >
             Portrait
@@ -157,26 +183,90 @@ export default function HealthPlan() {
             onClick={() => setOrientation("landscape")}
             className={
               "rounded-full px-3 py-1 border shadow-sm " +
-              (orientation === "landscape" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-800 border-gray-200")
+              (orientation === "landscape"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white text-gray-800 border-gray-200")
             }
           >
             Landscape
           </button>
 
           <div className="ml-auto flex gap-2">
-            <button onClick={() => handleExport("portrait")} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">
+            <button
+              onClick={() => handleExport("portrait")}
+              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
+            >
               Download (Portrait)
             </button>
-            <button onClick={() => handleExport("landscape")} className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50">
+            <button
+              onClick={() => handleExport("landscape")}
+              className="rounded-xl px-3 py-2 bg-white border border-gray-200 shadow hover:bg-gray-50"
+            >
               Download (Landscape)
             </button>
           </div>
         </div>
 
+        {/* Plan view */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6">
           <PlanView data={plan} />
         </div>
       </div>
+
+      {/* HELP PANEL (simple modal) */}
+      {showHelp && (
+        <div
+          className="fixed inset-0 z-[10000] bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setShowHelp(false)}
+        >
+          <div
+            className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-200 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">Help &amp; Deploy Guide</h2>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="rounded-lg px-2 py-1 border border-gray-200 hover:bg-gray-50"
+                aria-label="Close help"
+              >
+                ✕
+              </button>
+            </div>
+
+            <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-800">
+              <li>
+                <span className="font-medium">Deploy (Netlify):</span> Netlify → <em>Deploys</em> → <strong>Trigger deploy</strong> → <strong>Deploy project without cache</strong>.
+              </li>
+              <li>
+                <span className="font-medium">Test fresh build:</span> Open Incognito and add <code>?v=123456</code> to the URL.
+              </li>
+              <li>
+                <span className="font-medium">Share link:</span> Use <em>Copy share link</em> (you’ll see “Link copied!” toast).
+              </li>
+              <li>
+                <span className="font-medium">Reset data:</span> Use <em>Reset (Clear Data)</em> (you’ll see “Cleared!” toast).
+              </li>
+              <li>
+                <span className="font-medium">PDF export:</span> Choose orientation (Portrait/Landscape) → Download — PDF matches the on-screen design.
+              </li>
+            </ol>
+
+            <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700">
+              For full details, see <code>docs/README_DEPLOY.md</code> and <code>docs/PASTE_MAP.md</code> in your repo.
+            </div>
+
+            <div className="mt-4 text-right">
+              <button
+                onClick={() => setShowHelp(false)}
+                className="rounded-xl px-3 py-2 bg-emerald-600 text-white shadow hover:bg-emerald-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
