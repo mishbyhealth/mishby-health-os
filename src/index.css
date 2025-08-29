@@ -64,7 +64,7 @@ body {
 .section-header {
   /* Gradient bar for section titles (catchy but classy) */
   background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
-  color: #fff;
+  color: #fff !important;
 }
 
 /* For components that used a solid emerald header previously */
