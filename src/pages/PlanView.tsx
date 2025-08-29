@@ -48,10 +48,10 @@ export default function PlanView({ data }: { data: PlanData }) {
       <div>
         <Table title="Meals">
           <thead>
-            <tr>
-              <Th className="text-center">Meal</Th>
-              <Th className="text-center">Ideas</Th>
-              <Th className="text-center">Avoid</Th>
+            <tr className="text-white bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
+                <Th className="text-center">Meal</Th>
+                <Th className="text-center">Ideas</Th>
+                <Th className="text-center">Avoid</Th>
             </tr>
           </thead>
           <tbody className="text-gray-800">
@@ -95,7 +95,10 @@ function Card({
   return (
     <section className="card overflow-hidden">
       {/* gradient header from the global theme */}
-      <div className="section-header px-4 py-2 font-semibold">{title}</div>
+      <div className="px-4 py-2 font-semibold text-white bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
+  {title}
+</div>
+
       <div className="px-4 py-3">{children}</div>
     </section>
   );
