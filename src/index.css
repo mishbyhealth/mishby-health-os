@@ -4,56 +4,48 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────
-   BRAND PALETTE (Astrology/Numerology aligned)
-   - Capricorn (Earth): Jade/Forest Green
-   - Life Path 7: Indigo/Violet accent
-   - Moon/Lo Shu metals: Pearl/Silver/Gold trims
-   - Catchy + modern gradients
-
-   Tweak shades here only; the rest of the app uses these tokens.
+   BRAND PALETTE
+   - Pearl/Ivory base (Moon), Jade primary (Capricorn/Earth)
+   - Indigo/Violet accent (Life Path 7), Silver/Gold trims (Lo Shu)
    ───────────────────────────────────────────────────────────── */
-
 :root {
-  /* Base surfaces */
-  --bg:        #FAF9F6; /* Pearl/Ivory base (Moon) */
-  --surface:   #FFFFFF; /* Card surface */
-  --muted:     #F3F4F6; /* Subtle gray surface */
+  /* Surfaces */
+  --bg:        #FAF9F6;   /* Pearl/Ivory base */
+  --surface:   #FFFFFF;   /* Card surface */
+  --muted:     #F3F4F6;   /* Subtle gray surface */
 
-  /* Brand core */
-  --primary:       #0FAF84; /* Jade (Capricorn) ~ emerald-500 */
-  --primary-dark:  #0B8F6C; /* Darker jade for hovers */
-  --primary-ink:   #064E3B; /* Deep green for text on light */
+  /* Brand */
+  --primary:       #0FAF84; /* Jade */
+  --primary-dark:  #0B8F6C; /* Hover jade */
+  --primary-ink:   #064E3B; /* Deep green text */
 
-  /* Accents (Life Path 7) */
-  --accent:     #6366F1; /* Indigo-500 */
-  --accent-2:   #7C3AED; /* Violet-600 */
+  /* Accents */
+  --accent:   #6366F1;  /* Indigo-500 */
+  --accent-2: #7C3AED;  /* Violet-600 */
 
-  /* Metal trims (Lo Shu / Moon) */
+  /* Metals */
   --silver: #C0C6CF;
   --gold:   #D4AF37;
 
-  /* Text */
-  --ink:      #1F2937; /* Slate-800 */
-  --ink-dim:  #374151; /* Slate-700 */
-
-  /* Feedback & borders */
-  --line:   #E5E7EB;   /* Gray-200 */
-  --zebra:  #F7F7FA;   /* Very light striping */
+  /* Text + lines */
+  --ink:      #1F2937;  /* Slate-800 */
+  --ink-dim:  #374151;  /* Slate-700 */
+  --line:     #E5E7EB;  /* Gray-200 */
+  --zebra:    #F7F7FA;  /* Very light striping */
 }
 
 html, body, #root { height: 100%; }
-
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
-               "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* ─────────────────────────────────────────────────────────────
    Cards & Sections
    ───────────────────────────────────────────────────────────── */
-
 .card {
   @apply rounded-2xl border shadow-sm p-4;
   background: var(--surface);
@@ -61,41 +53,29 @@ body {
   backdrop-filter: blur(2px);
 }
 
-/* Ensure section-header gradient is not purged */
+/* FORCE gradient header for section titles */
 .section-header {
   @apply text-white font-semibold;
   background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%) !important;
+  color: #fff !important;
 }
 
-/* For components that used a solid emerald header previously */
-.header-solid {
-  background: var(--primary);
-  color: #fff;
-}
+/* Solid header option (if needed anywhere) */
+.header-solid { background: var(--primary); color: #fff; }
 
-/* Zebra tables (screen) */
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
+/* Tables (screen) */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .table thead th {
   background: var(--primary);
   color: #fff;
   border-bottom: 1px solid rgba(0,0,0,0.12);
 }
-.table tbody tr:nth-child(even) {
-  background: var(--zebra);
-}
-.table td, .table th {
-  border-bottom: 1px solid var(--line);
-  padding: 0.75rem 0.75rem;
-}
+.table td, .table th { border-bottom: 1px solid var(--line); padding: .75rem; }
+.table tbody tr:nth-child(even) { background: var(--zebra); }
 
 /* ─────────────────────────────────────────────────────────────
-   Buttons (primary / secondary / ghost)
+   Buttons
    ───────────────────────────────────────────────────────────── */
-
 .btn {
   @apply rounded-xl px-3 py-2 shadow;
   border: 1px solid transparent;
@@ -103,23 +83,13 @@ body {
 }
 .btn:active { transform: translateY(1px); }
 
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-}
+.btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); }
 
-.btn-secondary {
-  background: var(--surface);
-  color: var(--ink);
-  border-color: var(--line);
-}
+.btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
 .btn-secondary:hover { background: #FDFDFC; }
 
-.btn-ghost {
-  background: transparent;
-  color: var(--primary-ink);
-}
+.btn-ghost { background: transparent; color: var(--primary-ink); }
 .btn-ghost:hover { background: rgba(15,175,132,0.08); }
 
 /* Accent outline (for special CTAs) */
@@ -134,10 +104,7 @@ body {
               linear-gradient(90deg, var(--accent), var(--accent-2)) border-box;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Utility tokens (use in components)
-   ───────────────────────────────────────────────────────────── */
-
+/* Utility tokens */
 .bg-brand      { background: var(--primary); }
 .text-brand    { color: var(--primary); }
 .text-accent   { color: var(--accent); }
@@ -145,7 +112,7 @@ body {
 .border-silver { border-color: var(--silver); }
 .border-gold   { border-color: var(--gold); }
 
-/* Optional badges/chips */
+/* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: .375rem;
   padding: .25rem .5rem; border-radius: 9999px;
@@ -153,16 +120,5 @@ body {
   border: 1px solid rgba(99,102,241,.25);
 }
 
-/* Toast container fix (if any custom styles needed) */
-#gw-toast-container .toast {
-  /* you can target our DOM toasts if you add a class in utils later */
-}
-
-/* Headings polish */
+/* Headings */
 h1, h2, h3 { @apply tracking-tight; }
-
-/* Ensure section-header gradient is not purged */
-.section-header {
-  @apply text-white font-semibold;
-  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%) !important;
-}
