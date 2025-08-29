@@ -5,6 +5,7 @@ import { exportPlanPDF, exportPlanPDFLandscape } from "../../mho/plugins/exporte
 /* ---------- storage helpers ---------- */
 const PLAN_KEY = "glowell:plan";
 const USER_KEY = "glowell:user";
+const ORIENT_KEY = "glowell:pdfOrientation";
 
 function loadPlan(): any {
   const fromWindow = (window as any).__PLAN__;
@@ -39,7 +40,7 @@ function savePlan(p: any) {
   try { localStorage.setItem(PLAN_KEY, JSON.stringify(p)); } catch {}
 }
 
-/* ---------- name helpers (for filename & “Prepared for …”) ---------- */
+/* ---------- name helpers (for filename) ---------- */
 function getUserFirstName(plan: any): string | null {
   const wUser = (window as any).__USER__;
   const fromWindow = wUser?.firstName || wUser?.name?.split?.(" ")?.[0];
@@ -89,7 +90,7 @@ export default function HealthPlan() {
   const [plan, setPlan] = React.useState<any>(() => loadPlan());
   const [pref, setPref] = React.useState<Orientation>(() => {
     try {
-      const v = localStorage.getItem("glowell:pdfOrientation");
+      const v = localStorage.getItem(ORIENT_KEY);
       return v === "landscape" || v === "portrait" ? (v as Orientation) : "portrait";
     } catch { return "portrait"; }
   });
@@ -100,9 +101,9 @@ export default function HealthPlan() {
   React.useEffect(() => { savePlan(plan); }, [plan]);
 
   // persist orientation preference
-  React.useEffect(() => { try { localStorage.setItem("glowell:pdfOrientation", pref); } catch {} }, [pref]);
+  React.useEffect(() => { try { localStorage.setItem(ORIENT_KEY, pref); } catch {} }, [pref]);
 
-  // handlers
+  // handlers: downloads
   async function handleDownloadPortrait() {
     if (downloadingPortrait) return;
     setDownloadingPortrait(true);
@@ -134,6 +135,22 @@ export default function HealthPlan() {
       console.error("PDF export (landscape) failed:", e);
       alert("PDF export failed — see Console for details.");
     } finally { setDownloadingLandscape(false); }
+  }
+
+  // handler: reset everything
+  function handleReset() {
+    const ok = window.confirm(
+      "Reset will clear Plan Title, saved name, and orientation.\nYou can’t undo this. Continue?"
+    );
+    if (!ok) return;
+    try {
+      localStorage.removeItem(PLAN_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(ORIENT_KEY);
+    } catch {}
+    setPlan(loadPlan());
+    setPref("portrait");
+    alert("Reset complete. Please refresh the page.");
   }
 
   const portraitPrimary = pref === "portrait";
@@ -177,19 +194,28 @@ export default function HealthPlan() {
         </div>
       </div>
 
-      {/* Plan Title input (auto-saves) */}
+      {/* Plan Title input (auto-saves) + Reset */}
       <div className="grid gap-2">
-        <label className="text-sm text-gray-600">Plan Title (shows in PDF header)</label>
-        <input
-          value={plan?.meta?.title ?? ""}
-          onChange={(e) =>
-            setPlan((prev: any) => ({ ...prev, meta: { ...(prev?.meta || {}), title: e.target.value } }))
-          }
-          onBlur={() => savePlan(plan)}
-          placeholder="e.g., 4-Week Wellness Plan"
-          className="w-full max-w-xl px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1fb6ae]"
-        />
-        <p className="text-xs text-gray-500">Tip: This title will appear beneath the logo in your PDF.</p>
+        <label className="text-sm text-gray-600">Plan Title (used in file name; optional)</label>
+        <div className="flex items-center gap-2">
+          <input
+            value={plan?.meta?.title ?? ""}
+            onChange={(e) =>
+              setPlan((prev: any) => ({ ...prev, meta: { ...(prev?.meta || {}), title: e.target.value } }))
+            }
+            onBlur={() => savePlan(plan)}
+            placeholder="e.g., 4-Week Wellness Plan"
+            className="w-full max-w-xl px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1fb6ae]"
+          />
+          <button
+            onClick={handleReset}
+            className="px-3 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50"
+            title="Clear saved data"
+          >
+            Reset (Clear Data)
+          </button>
+        </div>
+        <p className="text-xs text-gray-500">Reset clears your saved title, name, and orientation preference.</p>
       </div>
 
       <PlanView plan={plan} />
