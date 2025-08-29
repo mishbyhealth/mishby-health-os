@@ -97,6 +97,7 @@ export default function HealthPlan() {
   });
   const [downloadingPortrait, setDownloadingPortrait] = React.useState(false);
   const [downloadingLandscape, setDownloadingLandscape] = React.useState(false);
+  const [copied, setCopied] = React.useState(false); // for Copy share link feedback
 
   // auto-persist plan when it changes
   React.useEffect(() => { savePlan(plan); }, [plan]);
@@ -152,6 +153,30 @@ export default function HealthPlan() {
     setPlan(loadPlan());
     setPref("portrait");
     alert("Reset complete. Please refresh the page.");
+  }
+
+  // handler: copy share link
+  async function handleCopyShareLink() {
+    // Use custom domain in production; use current origin on localhost
+    const isLocal = location.hostname.includes("localhost");
+    const base = isLocal ? location.origin : "https://mishbyhealth.com";
+    // Short cache-buster so previews refresh (last 6 digits of ms timestamp)
+    const v = Date.now().toString().slice(-6);
+    const url = `${base}/health-plan?v=${v}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback: create a temporary textarea
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch {}
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
   }
 
   const portraitPrimary = pref === "portrait";
@@ -211,6 +236,16 @@ export default function HealthPlan() {
               title="Download as PDF (Landscape)"
             >
               {downloadingLandscape ? "Preparing…" : "⬇️ Download (Landscape)"}
+            </button>
+
+            {/* Copy share link */}
+            <button
+              onClick={handleCopyShareLink}
+              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+              title="Copy shareable link"
+              aria-live="polite"
+            >
+              {copied ? "✅ Copied!" : "🔗 Copy share link"}
             </button>
           </div>
         </div>
