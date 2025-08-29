@@ -1,12 +1,13 @@
-/* src/index.css — Tailwind enable + small theme tweaks */
+/* src/index.css — Tailwind enable + theme tweaks */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Optional: app-wide look matching calm theme */
+/* Brand Theme (calm + catchy) */
 :root {
-  --bg: #f6f7fb;          /* soft gray */
-  --ink: #1f2937;         /* slate-800 */
+  --bg: #f7f5ed;          /* soft beige background */
+  --ink: #1f2937;         /* slate-800 (text) */
+  --accent: #059669;      /* emerald-600 */
 }
 
 html, body, #root {
@@ -16,10 +17,21 @@ html, body, #root {
 body {
   background: var(--bg);
   color: var(--ink);
+  font-family: system-ui, sans-serif;
 }
 
-/* Card + headings polish (optional) */
+/* Card polish */
 .card {
-  @apply rounded-2xl border bg-white/70 backdrop-blur p-4;
+  @apply rounded-2xl border bg-white shadow-sm p-4;
+  backdrop-filter: blur(2px);
 }
-h1,h2,h3 { @apply tracking-tight; }
+
+/* Headings polish */
+h1, h2, h3 {
+  @apply tracking-tight;
+}
+
+/* Optional utility: accent text */
+.text-accent {
+  color: var(--accent);
+}
