@@ -8,7 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      "mho": path.resolve(__dirname, "mho"),
+      // mho और mho2 => REPO ROOT पर (src के अंदर नहीं!)
+      mho: path.resolve(__dirname, "mho"),
+      mho2: path.resolve(__dirname, "mho2"),
     },
   },
 });

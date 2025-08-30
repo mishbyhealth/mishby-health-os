@@ -1,6 +1,0 @@
-{
-  "symptomCombos": [
-    { "any": ["chest_pain","fainting","shortness_of_breath"], "action": "suppress_plan_and_banner" },
-    { "any": ["severe_dizziness","vision_changes"], "action": "banner_only" }
-  ]
-}

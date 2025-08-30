@@ -1,116 +1,54 @@
-import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+// src/components/Header.tsx
+import React from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/health-plan", label: "Plans" },
-  { to: "/profile", label: "Profile" },
-  { to: "/learn", label: "Learn" },
+function cx(...a: (string | false | null | undefined)[]) {
+  return a.filter(Boolean).join(" ");
+}
+
+const links = [
+  { label: "New Plan",     to: "/health-form",       match: "/health-form" },
+  { label: "Current Plan", to: "/health-plan",       match: "/health-plan" },
+  { label: "History",      to: "/plans-v2/history",  match: "/plans-v2" },
+  { label: "Donate",       to: "/donate",            match: "/donate" },
+  { label: "About",        to: "/about",             match: "/about" },
 ];
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 glass">
-      {/* Taller bar to fit larger logo */}
-      <div className="gw-container h-[6.75rem] md:h-[7.75rem] flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur border-b border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-3" aria-label="GloWell Home">
-          <img
-            src="/logo.png"
-            alt="GloWell"
-            className="h-[6rem] md:h-[7rem] w-auto object-contain"
-            draggable={false}
-          />
-          <span className="sr-only">GloWell</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-emerald-600" aria-hidden />
+          <div className="text-lg font-semibold text-emerald-900">GloWell</div>
+        </div>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {nav.map((item) => (
+        {/* Nav */}
+        <nav className="flex items-center gap-2">
+          {links.map((l) => (
             <NavLink
-              key={item.to}
-              to={item.to}
+              key={l.to}
+              to={l.to}
+              // NavLink खुद isActive देता है; नीचे हम pathname के "startsWith" से भी guard कर रहे हैं
               className={({ isActive }) =>
-                `nav-link ${isActive ? "nav-link-active" : ""}`
+                cx(
+                  "px-3 py-1.5 rounded-lg border text-sm transition",
+                  (isActive || pathname.startsWith(l.match))
+                    ? "bg-emerald-600 text-white border-emerald-600"
+                    : "bg-white text-emerald-800 border-gray-300 hover:bg-gray-50"
+                )
               }
+              end={l.to === "/health-plan" || l.to === "/donate" || l.to === "/about"} 
+              // end=true ⇒ exact match; history/health-form के लिए partial match चाहिए इसलिए default false
             >
-              {item.label}
+              {l.label}
             </NavLink>
           ))}
         </nav>
-
-        {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/mho/test" className="btn btn-primary">
-            Build Plan
-          </Link>
-        </div>
-
-        {/* Mobile menu button */}
-        <button
-          className="md:hidden btn btn-ghost"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <path d="M3 6h18M3 12h18M3 18h18" />
-          </svg>
-        </button>
       </div>
-
-      {/* Mobile Drawer */}
-      {open && (
-        <div className="md:hidden">
-          <div
-            className="fixed inset-0 bg-black/30"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div className="fixed top-0 right-0 h-full w-[80%] max-w-xs bg-white shadow-xl p-4 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <img
-                  src="/logo.png"
-                  alt="GloWell"
-                  className="h-[6rem] w-auto object-contain"
-                />
-                <span className="sr-only">GloWell</span>
-              </div>
-              <button
-                className="btn btn-ghost"
-                onClick={() => setOpen(false)}
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 border-t pt-3 flex flex-col">
-              {nav.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    `nav-link ${isActive ? "nav-link-active" : ""}`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-              <Link
-                to="/mho/test"
-                onClick={() => setOpen(false)}
-                className="mt-2 btn btn-primary"
-              >
-                Build Plan
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
