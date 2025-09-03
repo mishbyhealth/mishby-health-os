@@ -189,3 +189,4 @@ Purpose: 5‑step intake; connects to generator on submit (we’ll wire this lat
 - Toast notifications on copy/reset (non‑breaking enhancement)
 - Optional: header title inside the PDF (currently only in filename by design)
 - Add 512×512 PNG icon to `site.webmanifest` for PWA install
+

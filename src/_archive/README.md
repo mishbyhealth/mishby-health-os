@@ -8,3 +8,4 @@ This folder stores old/duplicate modules kept for reference.
 
 Contents:
 - `features-v2/` – older duplicate of `src/features/*` (moved intact).
+
