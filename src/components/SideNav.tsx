@@ -1,23 +1,41 @@
-// File: src/components/SideNav.tsx
+// src/components/SideNav.tsx
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+
+function cx(...a: (string | false | null | undefined)[]) {
+  return a.filter(Boolean).join(" ");
+}
+
+const items = [
+  { label: "Dashboard", to: "/dashboard", match: "/dashboard" },
+  { label: "Health Form", to: "/health-form", match: "/health-form" },
+  { label: "Health Plan", to: "/health-plan", match: "/health-plan" },
+  { label: "Plans History", to: "/plans-v2/history", match: "/plans-v2" },
+  { label: "Donate", to: "/donate", match: "/donate" },
+  { label: "About", to: "/about", match: "/about" },
+];
 
 export default function SideNav() {
-  const cls = ({ isActive }: { isActive: boolean }) =>
-    "block px-4 py-2 rounded-lg mb-1 transition-colors " +
-    (isActive ? "bg-emerald-600 text-white" : "text-gray-700 hover:bg-emerald-100");
-
+  const { pathname } = useLocation();
   return (
-    <aside className="w-60 shrink-0 bg-white border-r min-h-screen p-4">
-      <h1 className="text-lg font-bold text-emerald-700 mb-3">GloWell</h1>
-      <nav>
-        <NavLink to="/dashboard" className={cls}>Dashboard</NavLink>
-        <NavLink to="/health-form" className={cls}>Health Form</NavLink>
-        <NavLink to="/health-plan" className={cls}>Health Plan</NavLink>
-        <NavLink to="/plans-v2/history" className={cls}>Plans History</NavLink>
-        <NavLink to="/donate" className={cls}>Donate</NavLink>
-        <NavLink to="/about" className={cls}>About</NavLink>
-      </nav>
-    </aside>
+    <nav className="p-3 space-y-1">
+      {items.map((it) => (
+        <NavLink
+          key={it.to}
+          to={it.to}
+          className={({ isActive }) =>
+            cx(
+              "block px-3 py-2 rounded-lg text-sm",
+              (isActive || pathname.startsWith(it.match))
+                ? "bg-emerald-600 text-white"
+                : "text-emerald-900 hover:bg-emerald-50"
+            )
+          }
+          end={["/dashboard","/donate","/about","/health-plan"].includes(it.to)}
+        >
+          {it.label}
+        </NavLink>
+      ))}
+    </nav>
   );
 }

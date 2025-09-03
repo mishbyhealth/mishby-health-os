@@ -195,7 +195,7 @@ export default function MultiStepHealthForm({ onSubmit }: { onSubmit: (data: For
 
       {step === 3 && (
         <Card
-          title="Problems & Symptoms (Non-Clinical)"
+          title="Problems & Symptoms (Non-wellness)"
           subtitle="Free text is okay — we’ll only use this to shape neutral wellness suggestions."
         >
           <label className="block space-y-1">

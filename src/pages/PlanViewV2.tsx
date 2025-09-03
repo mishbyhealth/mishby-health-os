@@ -59,7 +59,7 @@ export default function PlanViewV2({ plan }: { plan: any }) {
           )}
           <p className="text-xs text-gray-500 mt-2 muted">Generated: {generated}</p>
           <p className="text-gray-600 mt-1 muted">
-            {plan?.meta?.disclaimerText || "General wellness suggestions only (non-clinical)."}
+            {plan?.meta?.disclaimerText || "General wellness suggestions only (non-wellness)."}
           </p>
 
           <div className="no-print mt-4 flex items-center justify-center gap-3 flex-wrap">

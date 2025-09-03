@@ -60,7 +60,7 @@
 
 ---
 
-## 1) Critical files and *exact* locations
+## 1) serious files and *exact* locations
 
 ### A) SPA Routing (avoid 404 on refresh)
 **Path:** `/netlify.toml`
@@ -85,11 +85,11 @@
 
 ---
 
-### C) Compliance (non‑clinical guard)
+### C) Compliance (non‑wellness guard)
 **Path:** `mho/compliance/ComplianceGuard.ts`  
 **Path:** `mho/compliance/nonClinical.rules.json`  
 **Path:** `mho/compliance/strings.ts`  
-Purpose: Redacts clinical terms and injects disclaimers *everywhere* the plan text goes.
+Purpose: Redacts wellness terms and injects disclaimers *everywhere* the plan text goes.
 
 ---
 

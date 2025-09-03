@@ -1,13 +1,18 @@
-// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "@/routes/AppRoutes";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
+import AppRoutes from "@/routes/AppRoutes";
+import "./index.css"; // <-- make sure Tailwind is loaded
+
+const rootEl = document.getElementById("root");
+if (!rootEl) {
+  const el = document.createElement("div");
+  el.innerText = "Root container #root not found in index.html";
+  document.body.appendChild(el);
+} else {
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
       <AppRoutes />
-    </BrowserRouter>
-  </React.StrictMode>
-);
+    </React.StrictMode>
+  );
+}

@@ -1,92 +1,75 @@
+// src/pages/About.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 
-export default function About() {
+export default function AboutPage() {
   return (
-    <section className="space-y-6">
-      <Helmet>
-        <title>About GloWell</title>
-        <meta
-          name="description"
-          content="GloWell helps people improve mental and physical health through simple, safe and sustainable habits."
-        />
-        <link rel="canonical" href="https://mishbyhealth.netlify.app/about" />
-
-        <meta property="og:site_name" content="GloWell" />
-        <meta property="og:title" content="About GloWell" />
-        <meta
-          property="og:description"
-          content="Learn our mission and promise: calm, privacy-first health habits that last."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://mishbyhealth.netlify.app/about" />
-        <meta property="og:image" content="https://mishbyhealth.netlify.app/og.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="About GloWell" />
-        <meta
-          name="twitter:description"
-          content="Our mission: simple, sustainable health habits—calm, respectful, ad-free."
-        />
-        <meta name="twitter:image" content="https://mishbyhealth.netlify.app/og.png" />
-      </Helmet>
-
-      <header className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">About GloWell</h2>
-        <Link
-          to="/health-plan"
-          className="px-4 py-2 rounded-xl bg-slate-800 text-white shadow hover:opacity-90"
-        >
-          Build Your Plan
-        </Link>
-      </header>
-
-      <div className="grid gap-4">
-        <Card title="Our Mission">
-          <p className="text-slate-700">
-            GloWell helps people improve their <strong>mental and physical health</strong> through
-            simple, safe and sustainable habits—away from noise, closer to nature. We want every
-            person to live with calm, compassion, and clarity.
+    <div className="min-h-[80vh] bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 py-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Hero */}
+        <header className="text-center">
+          <h1 className="text-3xl md:text-4xl font-semibold text-emerald-900">About GloWell</h1>
+          <p className="mt-2 text-gray-600">
+            Simple, sustainable, <span className="font-medium">non-clinical</span> wellness guidance to build calm daily habits.
           </p>
-        </Card>
+        </header>
 
-        <Card title="What You’ll Find">
-          <ul className="list-disc ml-5 text-slate-700 space-y-1">
-            <li>Evidence-informed daily routines (water, meals, movement, sleep)</li>
-            <li>Clear language and small, actionable steps</li>
-            <li>Beautiful PDF export and share-friendly plans</li>
-            <li>Privacy-first design (your data stays yours)</li>
+        {/* Mission */}
+        <section className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-emerald-900">Our Mission</h2>
+          <p className="mt-2 text-gray-700">
+            Help anyone create gentle routines—hydration, movement, sleep, and mindful pauses—without overwhelm.
+          </p>
+          <ul className="mt-4 list-disc pl-6 text-gray-700 space-y-1">
+            <li>Keep it practical and lightweight.</li>
+            <li>Privacy by default—plans live on your device unless you share.</li>
+            <li>Clear, non-clinical language with safety guardrails.</li>
           </ul>
-        </Card>
+        </section>
 
-        <Card title="Our Promise">
-          <p className="text-slate-700">
-            GloWell is not a substitute for medical advice. It supports you in building healthy,
-            everyday habits. We are committed to a safe, respectful, and ad-free experience.
-          </p>
-        </Card>
+        {/* What you can do */}
+        <section className="grid md:grid-cols-3 gap-4">
+          {[
+            { title: "New Plan", desc: "Generate a neutral daily plan in minutes.", to: "/health-form" },
+            { title: "Current Plan", desc: "Open your saved plan and follow along.", to: "/health-plan" },
+            { title: "History", desc: "Browse recent plans and reuse what worked.", to: "/plans-v2/history" },
+          ].map((c) => (
+            <div key={c.title} className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-5">
+              <h3 className="text-lg font-semibold text-emerald-900">{c.title}</h3>
+              <p className="mt-1 text-gray-600">{c.desc}</p>
+              <Link to={c.to} className="inline-block mt-3 px-3 py-1.5 rounded-lg border hover:bg-gray-50">
+                Open
+              </Link>
+            </div>
+          ))}
+        </section>
 
-        <Card title="Contact">
-          <p className="text-slate-700">
-            Suggestions or questions:{" "}
-            <a className="underline" href="mailto:hello@mishbyhealth.com">
-              hello@mishbyhealth.com
-            </a>
+        {/* Donate */}
+        <section className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-emerald-900">Support GloWell</h2>
+          <p className="mt-2 text-gray-700">
+            Your contribution helps keep GloWell simple and accessible for everyone.
           </p>
-        </Card>
+          <Link
+            to="/donate"
+            className="inline-block mt-3 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            Go to Donate
+          </Link>
+        </section>
+
+        {/* Contact / Legal */}
+        <section className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-emerald-900">Contact & Legal</h2>
+          <p className="mt-2 text-gray-700">
+            Feedback or ideas? Reach us via the Donate page note or your usual channel.
+          </p>
+          <ul className="mt-3 text-sm text-gray-600 space-y-1">
+            <li><span className="font-medium">Disclaimer:</span> GloWell shares general wellness suggestions only. It is not medical advice.</li>
+            <li><Link to="/about#privacy" className="underline">Privacy</Link> • <Link to="/about#terms" className="underline">Terms</Link></li>
+          </ul>
+        </section>
       </div>
-    </section>
-  );
-}
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="p-4 rounded-2xl shadow bg-white/90 border border-black/5">
-      <h3 className="font-medium mb-2">{title}</h3>
-      {children}
     </div>
   );
 }

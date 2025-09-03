@@ -7,7 +7,7 @@ const steps = [
   { key: "profile",   title: "Profile",      desc: "Your basic details & locale" },
   { key: "lifestyle", title: "Lifestyle",    desc: "Diet, culture, preferences" },
   { key: "schedule",  title: "Schedule",     desc: "Wake, sleep & work blocks" },
-  { key: "medical",   title: "Health Info",  desc: "Conditions, symptoms (optional)" },
+  { key: "wellness",   title: "Health Info",  desc: "Conditions, symptoms (optional)" },
   { key: "uploads",   title: "Uploads",      desc: "Reports/notes (optional)" },
   { key: "review",    title: "Review",       desc: "Confirm, label & generate" }
 ];

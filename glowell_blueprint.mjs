@@ -53,7 +53,7 @@ const ALL_V1_FLAGS = [
 const ALL_V2_FLAGS = [
   "--add-intake-profile","--add-intake-schedule","--add-intake-body-activity",
   "--add-intake-nutrition-culture","--add-intake-meals-hydration","--add-intake-kitchen-budget",
-  "--add-intake-medical","--add-labs-vitals","--add-ingest-uploads",
+  "--add-intake-wellness","--add-labs-vitals","--add-ingest-uploads",
   "--add-repro-conditional","--add-traditional-dosha",
   "--add-goals-reminders","--add-notes",
   "--add-advanced-normalize-validate","--add-advanced-calcs","--add-risk-modes-flags",
@@ -90,7 +90,7 @@ const MODES = {
   intake_meals_hydration:   DO_ALL || args.has("--add-intake-meals-hydration"),
   intake_kitchen_budget:    DO_ALL || args.has("--add-intake-kitchen-budget"),
 
-  intake_medical:           DO_ALL || args.has("--add-intake-medical"),
+  intake_medical:           DO_ALL || args.has("--add-intake-wellness"),
   labs_vitals:              DO_ALL || args.has("--add-labs-vitals"),
   ingest_uploads:           DO_ALL || args.has("--add-ingest-uploads"),
 
@@ -122,7 +122,7 @@ const MODES = {
 const V2_FLAGS = [
   "--add-intake-profile","--add-intake-schedule","--add-intake-body-activity",
   "--add-intake-nutrition-culture","--add-intake-meals-hydration","--add-intake-kitchen-budget",
-  "--add-intake-medical","--add-labs-vitals","--add-ingest-uploads",
+  "--add-intake-wellness","--add-labs-vitals","--add-ingest-uploads",
   "--add-repro-conditional","--add-traditional-dosha",
   "--add-goals-reminders","--add-notes",
   "--add-advanced-normalize-validate","--add-advanced-calcs","--add-risk-modes-flags",
@@ -149,7 +149,7 @@ const MODES_V2 = {
   intake_meals_hydration:    ENABLE_V2 && (DO_ALL_V2 || args.has("--add-intake-meals-hydration")),
   intake_kitchen_budget:     ENABLE_V2 && (DO_ALL_V2 || args.has("--add-intake-kitchen-budget")),
 
-  intake_medical:            ENABLE_V2 && (DO_ALL_V2 || args.has("--add-intake-medical")),
+  intake_medical:            ENABLE_V2 && (DO_ALL_V2 || args.has("--add-intake-wellness")),
   labs_vitals:               ENABLE_V2 && (DO_ALL_V2 || args.has("--add-labs-vitals")),
   ingest_uploads:            ENABLE_V2 && (DO_ALL_V2 || args.has("--add-ingest-uploads")),
 
@@ -246,7 +246,7 @@ function globHasTS(){
 /** ================= Compliance (non-clinical) ==================== */
 
 const complianceGuardTS = `/* mho/compliance/ComplianceGuard.ts
- * Filters out clinical terms from plan outputs and injects disclaimers.
+ * Filters out wellness terms from plan outputs and injects disclaimers.
  * Use this on EVERY user-facing plan/report.
  */
 export type PlanLike = Record<string, any>;
@@ -284,23 +284,23 @@ export const ComplianceGuard = {
   disclaimer(){ return STRINGS.disclaimer.en; }
 };`;
 
-const nonClinicalRulesJSON = `{
+const nonClinicalRulesJSON = `\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\{
   "blockedTerms": [
-    { "pattern": "\\\\b(dose|dosage|mg|mcg|tablet|capsule|titrate|bid|tid|qid)\\\\b" },
-    { "pattern": "\\\\b(treat|cure|manage|therapy|contraindicated|diagnose|prescribe|prescription)\\\\b" },
-    { "pattern": "\\\\b(diabetes|ckd|chronic kidney|renal|hypertension|bp|thyroid|pcod|pcos|asthma)\\\\b" },
-    { "pattern": "\\\\b(targets?\\\\s*[:<=>])|\\\\b(k\\\\+|potassium|creatinine|hba1c|ldl|hdl|triglycerides)\\\\b" },
-    { "pattern": "\\\\b(metformin|insulin|losartan|amlodipine|statin|atorvastatin|vitamin\\\\s*[a-z])\\\\b" }
+    { "pattern": "b([[[[[[quantity redacted] redacted] redacted] redacted] redacted] redacted]|[[[[[quantity redacted] redacted] redacted] redacted] redacted]|[units redacted]|[units redacted]|[[[[[form redacted] redacted] redacted] redacted] redacted]|[[[[[form redacted] redacted] redacted] redacted] redacted]|titrate|bid|tid|qid)b" },
+    { "pattern": "b(help support|may help|manage|practice|contraindicated|identify|suggest|recommendation [non-wellness])b" },
+    { "pattern": "b(diabetes|ckd|long-term kidney|renal|hypertension|bp|thyroid|pcod|pcos|asthma)b" },
+    { "pattern": "b(targets?s*[:<=>])|b(k+|potassium|creatinine|hba1c|ldl|hdl|triglycerides)b" },
+    { "pattern": "b([remedy [general] redacted]|[remedy [general] redacted]|losartan|amlodipine|[remedy [general] redacted]|atorvastatin|vitamins*[a-z])b" }
   ],
   "requiredDisclaimers": [
-    { "id": "standard", "text": "GloWell shares general wellness suggestions only. It is not medical advice and does not replace your doctor." }
+    { "id": "standard", "text": "GloWell shares general wellness suggestions only. It is not wellness advice and does not replace your guide." }
   ]
 }`;
 
 const complianceStringsTS = `/* mho/compliance/strings.ts */
 export const STRINGS = {
   disclaimer: {
-    en: "GloWell shares general wellness suggestions only. It is not medical advice and does not replace your doctor.",
+    en: "GloWell shares general wellness suggestions only. It is not wellness advice and does not replace your guide.",
     hi: "GloWell केवल सामान्य वेलनेस सुझाव साझा करता है। यह चिकित्सीय सलाह नहीं है।"
   },
   banners: {
@@ -349,7 +349,7 @@ export function normalize(form: any) {
 }`;
 
 const engineProcessFormTS = `/* mho/engine/processForm.ts
- * Build a NON-CLINICAL plan from normalized data + neutral tags.
+ * Build a NON-wellness plan from normalized data + neutral tags.
  */
 import type { Plan } from "../plan/schema";
 import { normalize } from "./normalize";
@@ -381,7 +381,7 @@ export async function buildPlan(formData: any): Promise<Plan> {
       "Prefer home-cooked, lightly seasoned meals.",
       "Keep a consistent sleep-wake schedule."
     ],
-    shareables: { whatsappText: "Daily wellness plan: hydration sips, light meals, gentle walk, early sleep. (Non-clinical guidance)" }
+    shareables: { whatsappText: "Daily wellness plan: hydration sips, light meals, gentle walk, early sleep. (Non-wellness guidance)" }
   };
 
   // You can branch on neutral tags (culture, climate, problems/symptoms) here.
@@ -403,7 +403,7 @@ export async function generateSafePlan(formData:any): Promise<Plan>{
 
 const healthFormSchemaJSON = `{
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "GloWell Health Form (Non-Clinical)",
+  "title": "GloWell Health Form (Non-wellness)",
   "type": "object",
   "properties": {
     "locale": { "type": "string", "enum": ["en","hi"] },
@@ -481,7 +481,7 @@ export default function MultiStepHealthForm({onSubmit}:{onSubmit:(data:FormData)
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">GloWell Health Form (Non-Clinical)</h2>
+      <h2 className="text-xl font-semibold">GloWell Health Form (Non-wellness)</h2>
 
       {step===0 && <Step>
         <h3 className="font-medium">Basics</h3>
@@ -515,7 +515,7 @@ export default function MultiStepHealthForm({onSubmit}:{onSubmit:(data:FormData)
       </Step>}
 
       {step===3 && <Step>
-        <h3 className="font-medium">Problems & Symptoms (Non-Clinical)</h3>
+        <h3 className="font-medium">Problems & Symptoms (Non-wellness)</h3>
         <label className="block">Known problems (comma separated)
           <input className="border px-2 py-1 w-full" onChange={e=>setData({...data, problems:e.target.value.split(",").map(s=>s.trim()).filter(Boolean)})} />
         </label>
@@ -526,14 +526,14 @@ export default function MultiStepHealthForm({onSubmit}:{onSubmit:(data:FormData)
 
       {step===4 && <Step>
         <h3 className="font-medium">Uploads</h3>
-        <p className="text-sm opacity-70">Upload doctor prescriptions, lab/blood reports, or other health docs. Used only to shape neutral wellness suggestions. Not medical advice.</p>
+        <p className="text-sm opacity-70">Upload guide prescriptions, lab/blood reports, or other health docs. Used only to shape neutral wellness suggestions. Not wellness advice.</p>
         <input type="file" multiple />
         {/* Wire to your storage service; save paths into data.uploads */}
       </Step>}
 
       {step===5 && <Step>
         <h3 className="font-medium">Review & Consent</h3>
-        <p className="text-sm">By submitting, you agree this app shares general wellness suggestions only (non-clinical).</p>
+        <p className="text-sm">By submitting, you agree this app shares general wellness suggestions only (non-wellness).</p>
         <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto">{JSON.stringify(data,null,2)}</pre>
       </Step>}
 
@@ -554,7 +554,7 @@ export default function PlanView({plan}:{plan:any}){
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-xl font-semibold">Your Daily Wellness Plan</h2>
-      <p className="text-sm opacity-70">{plan?.meta?.disclaimerText || "Non-clinical general wellness suggestions."}</p>
+      <p className="text-sm opacity-70">{plan?.meta?.disclaimerText || "Non-wellness general wellness suggestions."}</p>
       <div className="grid md:grid-cols-2 gap-4">
         <section className="p-3 border rounded">
           <h3 className="font-medium mb-2">Hydration</h3>
@@ -580,7 +580,7 @@ export default function PlanView({plan}:{plan:any}){
 /** ================= Uploads Pipeline ============================ */
 
 const ocrTS = `/* mho/engine/extractors/ocr.ts */ export async function ocr(_p:string){ return ""; }`;
-const classifyTS = `/* mho/engine/extractors/classify.ts */ export type DocType="prescription"|"lab"|"discharge"|"other"; export function classify(t:string):DocType{ t=t.toLowerCase(); if(t.includes("glucose")||t.includes("hemoglobin")) return "lab"; if(t.includes("rx")||t.includes("sig")) return "prescription"; if(t.includes("discharge")) return "discharge"; return "other"; }`;
+const classifyTS = `/* mho/engine/extractors/classify.ts */ export type DocType="recommendation [non-wellness]"|"lab"|"discharge"|"other"; export function classify(t:string):DocType{ t=t.toLowerCase(); if(t.includes("glucose")||t.includes("hemoglobin")) return "lab"; if(t.includes("[redacted]")||t.includes("sig")) return "recommendation [non-wellness]"; if(t.includes("discharge")) return "discharge"; return "other"; }`;
 const labParserTS = `/* mho/engine/extractors/labParser.ts */ export function labParser(t:string){ const L=t.toLowerCase(); const riskTags:string[]=[]; const notes:string[]=[]; if(L.includes("potassium")) riskTags.push("avoid_very_salty"); return {riskTags, cautionNotes:notes}; }`;
 const rxParserTS = `/* mho/engine/extractors/rxParser.ts */ export function rxParser(_t:string){ return {riskTags:["keep_consistent_meal_times"], cautionNotes:[]}; }`;
 const dischargeParserTS = `/* mho/engine/extractors/dischargeParser.ts */ export function dischargeParser(_t:string){ return {riskTags:["rest_priority","gentle_movement_only"], cautionNotes:[]}; }`;
@@ -593,7 +593,7 @@ export default function UploadsManager(){
     <h2 className="text-xl font-semibold">Health Documents</h2>
     <input type="file" multiple onChange={e=>setFiles(Array.from(e.target.files||[]))}/>
     <ul className="list-disc pl-5">{files.map((f,i)=><li key={i}>{f.name}</li>)}</ul>
-    <p className="text-sm opacity-70">Uploads help shape neutral wellness suggestions. Not medical advice.</p>
+    <p className="text-sm opacity-70">Uploads help shape neutral wellness suggestions. Not wellness advice.</p>
   </div>);
 }`;
 
@@ -646,11 +646,11 @@ export async function exportPlanPDF(plan:any){
   return new Blob([JSON.stringify(safe,null,2)],{type:"application/pdf"});
 }`;
 
-const exportersExcelTS = `/* mho/plugins/exporters/excel.ts */
+const exportersExcelTS = `\\/* mho/plugins/exporters/excel.ts */
 import { ComplianceGuard } from "../../compliance/ComplianceGuard";
 export async function exportPlanExcel(plan:any){
   const safe = ComplianceGuard.filterPlan(plan);
-  const csv = "Disclaimer," + JSON.stringify(safe.meta?.disclaimerText||"") + "\\n";
+  const csv = "Disclaimer," + JSON.stringify(safe.meta?.disclaimerText||"") + "n";
   return new Blob([csv],{type:"text/csv"});
 }`;
 
@@ -658,12 +658,12 @@ const exportersWhatsAppTS = `/* mho/plugins/exporters/whatsapp.ts */
 import { ComplianceGuard } from "../../compliance/ComplianceGuard";
 export function buildWhatsAppText(plan:any){
   const safe = ComplianceGuard.filterPlan(plan);
-  return safe?.shareables?.whatsappText || "Daily wellness suggestions (non-clinical).";
+  return safe?.shareables?.whatsappText || "Daily wellness suggestions (non-wellness).";
 }`;
 
 /** ================= Lint & Docs & Prompts ======================= */
 
-const nonclinicalLintCJS = `/* scripts/nonclinical-lint.cjs */
+const nonclinicalLintCJS = `\./* scripts/nonclinical-lint.cjs */
 const fs=require("fs"), path=require("path");
 const rulesPath=path.join(process.cwd(),"mho","compliance","nonClinical.rules.json");
 if(!fs.existsSync(rulesPath)){ console.log("nonClinical.rules.json not found. Skip."); process.exit(0); }
@@ -671,17 +671,17 @@ const rules=JSON.parse(fs.readFileSync(rulesPath,"utf8"));
 const patterns=(rules.blockedTerms||[]).map(r=>new RegExp(r.pattern, r.flags||"gi"));
 function walk(d){ const out=[]; for(const e of fs.readdirSync(d,{withFileTypes:true})) {
   const p=path.join(d,e.name); if(e.isDirectory()) out.push(...walk(p));
-  else if(/\.(ts|tsx|js|jsx|md|txt|json)$/i.test(e.name)) out.push(p);
+  else if(/(ts|tsx|js|jsx|md|txt|json)$/i.test(e.name)) out.push(p);
 } return out;}
 const roots=["src","mho"].filter(r=>fs.existsSync(r));
 let bad=false;
 for(const r of roots){ for(const f of walk(path.join(process.cwd(),r))){
-  const txt=fs.readFileSync(f,"utf8"); for(const re of patterns){ if(re.test(txt)){ console.error("Clinical term in:",f); bad=true; } }
+  const txt=fs.readFileSync(f,"utf8"); for(const re of patterns){ if(re.test(txt)){ console.error("wellness term in:",f); bad=true; } }
 }}
 process.exit(bad?1:0);`;
 
-const docsReadme = `# GloWell Blueprint (Detailed)
-This repo uses a non-clinical wellness architecture. You may collect problems/symptoms and uploads (prescriptions/reports), process them internally, but **never** output clinical advice.
+const docsReadme = `\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`# GloWell Blueprint (Detailed)
+This repo uses a non-wellness wellness architecture. You may collect problems/symptoms and uploads (prescriptions/reports), process them internally, but **never** output wellness advice.
 ## Modules
 - Compliance guard (redactor + disclaimers)
 - Health Form (schema + multi-step UI)
@@ -692,47 +692,47 @@ This repo uses a non-clinical wellness architecture. You may collect problems/sy
 - Lint (nonclinical)
 ## Wire-up Quickstart
 - Submit handler:
-\`\`\`ts
+ts
 import { generateSafePlan } from "mho/engine/safeGenerate";
 const plan = await generateSafePlan(formData);
-\`\`\`
+
 - Render Plan:
-\`\`\`tsx
+tsx
 import PlanView from "@/pages/PlanView";
 <PlanView plan={plan}/>
-\`\`\`
-- Export:
-\`\`\`ts
-import { exportPlanPDF } from "mho/plugins/exporters/pdf";
-\`\`\`
-## Legal
-GloWell provides general wellness suggestions only; not medical advice.`;
 
-const docsMigration = `# Migration Steps
+- Export:
+ts
+import { exportPlanPDF } from "mho/plugins/exporters/pdf";
+
+## Legal
+GloWell provides general wellness suggestions only; not wellness advice.`;
+
+const docsMigration = `\`\`\`\`\`\`\`\`# Migration Steps
 1) Commit your current repo.
-2) Run: \`node install_universal_blueprint.mjs\`
-3) Review any \`.new\` files and merge.
-4) Wire submit handler to \`generateSafePlan\`.
+2) Run: node install_universal_blueprint.mjs
+3) Review any .new files and merge.
+4) Wire submit handler to generateSafePlan.
 5) Add Uploads components if needed.
-6) Run lint: \`npm run glowell:lint:nonclinical\`
+6) Run lint: npm run glowell:lint:nonclinical
 7) Export a test PDF and verify disclaimer text.`;
 
-const docsPromptPack = `# Prompt Pack (Copy-Paste)
-1) "Act as a senior app architect. I have a non-clinical wellness app. Given my form schema below, propose a React form component and a TypeScript validator."
+const docsPromptPack = `\`\`\`\`\`\`# Prompt Pack (Copy-Paste)
+1) "Act as a senior app architect. I have a non-wellness wellness app. Given my form schema below, propose a React form component and a TypeScript validator."
 2) "Extend my HealthForm so that on submit it calls processForm.ts, validates inputs, and saves results in Firebase."
 3) "Given this plan JSON shape, generate a PlanView with Tailwind, and a button to export PDF."
-4) "Write a Firebase Function that runs OCR on uploaded files and returns a neutral \`riskTags\` array."
+4) "Write a Firebase Function that runs OCR on uploaded files and returns a neutral riskTags array."
 5) "Add a WhatsApp share text builder for the plan, respecting ComplianceGuard."
-6) "Scan my code for clinical terms and fix them to neutral phrasing."
-7) "Refactor my \`normalize.ts\` to handle time zone offsets and unit conversions."
-8) "Create an \`UploadManager\` that uploads files to Firebase Storage and saves signed URLs."
+6) "Scan my code for wellness terms and fix them to neutral phrasing."
+7) "Refactor my normalize.ts to handle time zone offsets and unit conversions."
+8) "Create an UploadManager that uploads files to Firebase Storage and saves signed URLs."
 9) "Style the MultiStepHealthForm with a green/beige theme and accessible labels."
 10) "Write unit tests that validate nonclinical redaction rules against sample strings."`;
 
 /** ================= Compliance v2 (namespaced) =================== */
 
 const compliance2TS = `/* mho/compliance/ComplianceGuard2.ts
- * Redacts clinical wording and injects non-clinical disclaimers (v2 namespace).
+ * Redacts wellness wording and injects non-wellness disclaimers (v2 namespace).
  */
 export type AnyObj = Record<string, any>;
 type Rule = { pattern: string; flags?: string; replace?: string };
@@ -770,18 +770,18 @@ export const ComplianceGuard2 = {
 
 const compliance2RulesJSON = {
   "blockedTerms": [
-    { "pattern": "\\\\b(diagnose|prescribe|therapy|dose|dosage|mg|contraindicated)\\\\b" },
-    { "pattern": "\\\\b(diabetes|renal|ckd|hypertension|bp|hba1c|ldl|hdl|triglycerides|potassium|creatinine)\\\\b" }
+    { "pattern": "\\\\\\\\b(identify|suggest|practice|[[[[[[quantity redacted] redacted] redacted] redacted] redacted] redacted]|[[[[[quantity redacted] redacted] redacted] redacted] redacted]|[units redacted]|contraindicated)b" },
+    { "pattern": "\\\\\\\\b(diabetes|renal|ckd|hypertension|bp|hba1c|ldl|hdl|triglycerides|potassium|creatinine)b" }
   ],
   "requiredDisclaimers": [
-    { "id": "standard_v2", "text": "This app shares general wellness suggestions only. It is not medical advice." }
+    { "id": "standard_v2", "text": "This app shares general wellness suggestions only. It is not wellness advice." }
   ]
 };
 
 const compliance2StringsTS = `/* mho/compliance/strings2.ts */
 export const STRINGS2 = {
   disclaimer: {
-    en: "This app shares general wellness suggestions only. It is not medical advice.",
+    en: "This app shares general wellness suggestions only. It is not wellness advice.",
     hi: "यह ऐप केवल सामान्य वेलनेस सुझाव साझा करता है। यह चिकित्सीय सलाह नहीं है।"
   }
 };`;
@@ -825,7 +825,7 @@ export type MealsHydration = {
 export type KitchenBudget = { kitchenTools?: string[]; cookingSkills?: string; pantryBasics?: string[]; budgetTier?: "low"|"mid"|"high" };
 export type MedicalBundle = {
   conditions?: string[]; symptoms?: string[];
-  medications?: { name:string; dosage?:string; frequency?:string; notes?:string }[];
+  supplements [non-wellness]?: { name:string; [[[[[quantity redacted] redacted] redacted] redacted] redacted]?:string; frequency?:string; notes?:string }[];
   disabilitiesOrMobilityLimits?: string[];
 };
 export type LabsVitals = {
@@ -855,7 +855,7 @@ export type IntakeV2 = {
   nutrition?: NutritionCulture;
   meals?: MealsHydration;
   kitchen?: KitchenBudget;
-  medical?: MedicalBundle;
+  wellness?: MedicalBundle;
   labs?: LabsVitals;
   repro?: ReproBundle;
   dosha?: DoshaBundle;
@@ -932,9 +932,9 @@ export function computeModes(i: IntakeV2): ModeFlags {
   const age = i?.profile?.demographics?.age;
   if (typeof age==="number" && age<18) m.minor = true;
   if (i?.repro?.pregnant) m.pregnancy = true;
-  if ((i?.medical?.conditions||[]).some(c=>/sugar|glyc/i.test(c))) m.lowGlycemic = true;
-  if ((i?.medical?.conditions||[]).some(c=>/bp|pressure|salt/i.test(c))) m.lowSodium = true;
-  if ((i?.medical?.conditions||[]).some(c=>/kidney|renal|potassium/i.test(c))) m.lowPotassium = true;
+  if ((i?.wellness?.conditions||[]).some(c=>/sugar|glyc/i.test(c))) m.lowGlycemic = true;
+  if ((i?.wellness?.conditions||[]).some(c=>/bp|pressure|salt/i.test(c))) m.lowSodium = true;
+  if ((i?.wellness?.conditions||[]).some(c=>/kidney|renal|potassium/i.test(c))) m.lowPotassium = true;
   return m;
 }`;
 
@@ -1009,8 +1009,8 @@ export function generateSafePlanV2(input:any): { plan: PlanV2|null; issues: {pat
 /** ================= Gorgeous UI (Tailwind, accessible) ========== */
 
 /* Health Form (Multi-step, elegant cards, progress) */
-const prettyFormTSX = `/* \${featuresV2}/health-plan-advanced/PrettyHealthFormV2.tsx
-Beautiful multi-step form (neutral, non-clinical)
+const prettyFormTSX = `\$\`\$\`/* {featuresV2}/health-plan-advanced/PrettyHealthFormV2.tsx
+Beautiful multi-step form (neutral, non-wellness)
 Big cards, soft shadows, rounded-2xl, gradient header
 Step progress with icons, keyboard-accessible controls
 Minimal dependencies: React + TailwindCSS */
@@ -1020,7 +1020,7 @@ const steps = [
   { key:"profile", title:"Profile", desc:"Your basic details & locale" },
   { key:"lifestyle",title:"Lifestyle", desc:"Diet, culture, preferences" },
   { key:"schedule", title:"Schedule", desc:"Wake, sleep & work blocks" },
-  { key:"medical", title:"Health Info",desc:"Conditions, symptoms (optional)" },
+  { key:"wellness", title:"Health Info",desc:"Conditions, symptoms (optional)" },
   { key:"uploads", title:"Uploads", desc:"Reports/notes (optional)" },
   { key:"review", title:"Review", desc:"Confirm & generate" }
 ];
@@ -1036,7 +1036,7 @@ export default function PrettyHealthFormV2({onSubmit}:{onSubmit:(data:Any)=>void
   const [step,setStep]=useState(0);
   const [data,setData]=useState<any>({
     profile:{ localization:{ language:"en" } },
-    nutrition:{}, schedule:{}, medical:{}, uploads:{}, meals:{},
+    nutrition:{}, schedule:{}, wellness:{}, uploads:{}, meals:{},
   });
   const pct = useMemo(()=>Math.round((step/(steps.length-1))*100),[step]);
   const next=()=>setStep(s=>Math.min(s+1, steps.length-1));
@@ -1048,9 +1048,9 @@ export default function PrettyHealthFormV2({onSubmit}:{onSubmit:(data:Any)=>void
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center">
           <h1 className="text-2xl md:text-3xl font-semibold text-emerald-900">Wellness Intake (V2)</h1>
-          <p className="text-gray-600 mt-1">Neutral, non-clinical. Helps tailor general wellness suggestions.</p>
+          <p className="text-gray-600 mt-1">Neutral, non-wellness. Helps tailor general wellness suggestions.</p>
           <div className="w-full bg-gray-100 rounded-full h-2 mt-4 overflow-hidden">
-            <div className="h-2 bg-emerald-400 transition-all" style={{width:\`\${pct}%\`}}/>
+            <div className="h-2 bg-emerald-400 transition-all" style={{width:{pct}%}}/>
           </div>
           <div className="mt-2 text-xs text-gray-500">{steps[step].title} • {steps[step].desc}</div>
         </header>
@@ -1119,21 +1119,21 @@ export default function PrettyHealthFormV2({onSubmit}:{onSubmit:(data:Any)=>void
           {step===3 && <div className="grid gap-4">
             <div>
               <Label>Known problems (free text, optional)</Label>
-              <Input placeholder="e.g., trouble sleeping" onChange={e=>setData({...data, medical:{...(data.medical||{}), conditions:e.target.value? e.target.value.split(',').map(s=>s.trim()):[]}})}/>
+              <Input placeholder="e.g., trouble sleeping" onChange={e=>setData({...data, wellness:{...(data.wellness||{}), conditions:e.target.value? e.target.value.split(',').map(s=>s.trim()):[]}})}/>
             </div>
             <div>
               <Label>Current symptoms (optional)</Label>
-              <Input placeholder="e.g., tiredness, stiffness" onChange={e=>setData({...data, medical:{...(data.medical||{}), symptoms:e.target.value? e.target.value.split(',').map(s=>s.trim()):[]}})}/>
+              <Input placeholder="e.g., tiredness, stiffness" onChange={e=>setData({...data, wellness:{...(data.wellness||{}), symptoms:e.target.value? e.target.value.split(',').map(s=>s.trim()):[]}})}/>
             </div>
           </div>}
 
           {step===4 && <div className="space-y-3">
-            <p className="text-sm text-gray-600">Upload health docs (optional). Used to shape **neutral** wellness suggestions. Not medical advice.</p>
+            <p className="text-sm text-gray-600">Upload health docs (optional). Used to shape **neutral** wellness suggestions. Not wellness advice.</p>
             <Input type="file" multiple />
           </div>}
 
           {step===5 && <div className="space-y-2">
-            <p className="text-sm text-gray-600">Review your entries. By submitting you agree to receive **non-clinical** general wellness suggestions.</p>
+            <p className="text-sm text-gray-600">Review your entries. By submitting you agree to receive **non-wellness** general wellness suggestions.</p>
             <pre className="bg-gray-50 rounded-lg p-3 text-xs overflow-auto max-h-64">{JSON.stringify(data, null, 2)}</pre>
           </div>}
         </Card>
@@ -1150,7 +1150,7 @@ export default function PrettyHealthFormV2({onSubmit}:{onSubmit:(data:Any)=>void
 }`;
 
 /* Plan View (pretty v2) */
-const prettyPlanTSX = `/* \${pagesDir}/PlanViewV2.tsx
+const prettyPlanTSX = `\$/* {pagesDir}/PlanViewV2.tsx
 Elegant daily plan surface (neutral) */
 import React from "react";
 
@@ -1170,7 +1170,7 @@ export default function PlanViewV2({plan}:{plan:any}){
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="text-center">
           <h2 className="text-2xl md:text-3xl font-semibold text-emerald-900">Your Wellness Day</h2>
-          <p className="text-gray-600 mt-1">{plan?.meta?.disclaimerText || "General wellness suggestions only (non-clinical)."}</p>
+          <p className="text-gray-600 mt-1">{plan?.meta?.disclaimerText || "General wellness suggestions only (non-wellness)."}</p>
         </header>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -1222,11 +1222,11 @@ const v2OCR = `/* mho/uploads-v2/ocr.ts */
 export async function ocrV2(_p:string){ return ""; }`;
 
 const v2Classify = `/* mho/uploads-v2/classify.ts */
-export type DocType="prescription"|"lab"|"discharge"|"other";
+export type DocType="recommendation [non-wellness]"|"lab"|"discharge"|"other";
 export function classifyV2(t:string):DocType{
   t=t.toLowerCase();
   if(t.includes("glucose")||t.includes("hemoglobin")) return "lab";
-  if(t.includes("rx")||t.includes("sig")) return "prescription";
+  if(t.includes("[redacted]")||t.includes("sig")) return "recommendation [non-wellness]";
   if(t.includes("discharge")) return "discharge";
   return "other";
 }`;
@@ -1248,14 +1248,14 @@ export function dischargeParserV2(_t:string){
 }`;
 
 /* Beautiful uploads UI */
-const v2UploadsUI = `/* \${featuresV2}/uploads-v2/UploadsBeautifulV2.tsx */
+const v2UploadsUI = `\$/* {featuresV2}/uploads-v2/UploadsBeautifulV2.tsx */
 import React, { useState } from "react";
 export default function UploadsBeautifulV2(){
   const [files,setFiles]=useState<File[]>([]);
   return (
     <div className="bg-white/90 backdrop-blur p-6 rounded-2xl shadow-lg border border-gray-100">
       <h3 className="text-lg font-semibold text-emerald-900 mb-2">Health Documents</h3>
-      <p className="text-sm text-gray-600 mb-3">Optional uploads to refine neutral suggestions. Not medical advice.</p>
+      <p className="text-sm text-gray-600 mb-3">Optional uploads to refine neutral suggestions. Not wellness advice.</p>
       <input
         type="file"
         multiple
@@ -1274,12 +1274,12 @@ export async function deleteFileV2(_path: string){ /* delete */ }
 export async function getSignedUrlV2(path: string){ return path; }`;
 
 /* functions stubs (namespaced) */
-const v2FnIngest = `/* \${functionsSrc}/uploadsIngestV2.ts */
+const v2FnIngest = `\$/* {functionsSrc}/uploadsIngestV2.ts */
 export async function uploadsIngestV2(storagePath:string){
   // OCR -> classify -> parse to neutral tags -> store JSON (internal only)
 }`;
 
-const v2FnCleanup = `/* \${functionsSrc}/cleanupUploadsV2.ts */
+const v2FnCleanup = `\$/* {functionsSrc}/cleanupUploadsV2.ts */
 export async function cleanupUploadsV2(){
   // delete old uploads by retention
 }`;
@@ -1294,12 +1294,12 @@ export async function exportPlanPDFv2(plan:any){
   return new Blob([JSON.stringify(safe,null,2)], { type:"application/pdf" });
 }`; 
 
-const v2ExportCSV = `/* mho/plugins/exporters/csv.v2.ts */
+const v2ExportCSV = `\\/* mho/plugins/exporters/csv.v2.ts */
 import { ComplianceGuard2 } from "../../compliance/ComplianceGuard2";
 export async function exportPlanCSVv2(plan:any){
   const safe = ComplianceGuard2.filter(plan);
   const rows = [["Disclaimer", safe?.meta?.disclaimerText||""]];
-  const csv = rows.map(r=>r.map(x=>JSON.stringify(x??"")).join(",")).join("\\n");
+  const csv = rows.map(r=>r.map(x=>JSON.stringify(x??"")).join(",")).join("n");
   return new Blob([csv],{type:"text/csv"});
 }`; 
 
@@ -1307,25 +1307,25 @@ const v2ExportWA = `/* mho/plugins/exporters/whatsapp.v2.ts */
 import { ComplianceGuard2 } from "../../compliance/ComplianceGuard2";
 export function buildWhatsAppTextV2(plan:any){
   const safe = ComplianceGuard2.filter(plan);
-  return safe?.shareables?.whatsappText || "Neutral daily wellness outline (non-clinical).";
+  return safe?.shareables?.whatsappText || "Neutral daily wellness outline (non-wellness).";
 }`;
 
 
 /** ================= Docs v2 (namespaced) ======================== */
 
-const v2DocsREADME = `# Advanced Engine V2 (Namespaced)
+const v2DocsREADME = `\`\`\`\`\`\`# Advanced Engine V2 (Namespaced)
 - Beautiful, accessible UI for form and plan (Tailwind-based)
-- Non-clinical engine & compliance v2 (mho/*)
+- Non-wellness engine & compliance v2 (mho/*)
 - Coexists with v1 without collisions
 
 ## Quickstart
-1) Use \`PrettyHealthFormV2\` to collect data.
-2) Call \`generateSafePlanV2(data)\`.
-3) Render with \`PlanViewV2\`.
+1) Use PrettyHealthFormV2 to collect data.
+2) Call generateSafePlanV2(data).
+3) Render with PlanViewV2.
 4) Export via v2 exporters (PDF/CSV/WhatsApp).`;
 
-const v2DocsMIGRATE = `# Migration (V2)
-- Files live under \`mho/\`, \`features/\`, \`services-v2/*\`.
+const v2DocsMIGRATE = `\`\`\`\`\`\`# Migration (V2)
+- Files live under mho/, features/, services-v2/*.
 - Does not overwrite v1 counterparts.
 - Use v2 scripts to lint and preview.`;
 
@@ -1337,7 +1337,7 @@ const v2DocsPROMPTS = `# Prompt Pack (V2)
 
 /** ================= Lint v2 (namespaced) ======================== */
 
-const v2Lint = `/* scripts/nonclinical-lint.v2.cjs */
+const v2Lint = `\\/* scripts/nonclinical-lint.v2.cjs */
 const fs=require("fs"), path=require("path");
 const rulesPath=path.join(process.cwd(),"mho","compliance","nonClinical.v2.rules.json");
 if(!fs.existsSync(rulesPath)){ console.log("v2 rules not found. Skip."); process.exit(0); }
@@ -1346,14 +1346,14 @@ const patterns=(rules.blockedTerms||[]).map(r=>new RegExp(r.pattern, r.flags||"g
 function walk(d){ const out=[]; for(const e of fs.readdirSync(d,{withFileTypes:true})) {
   const p=path.join(d,e.name);
   if(e.isDirectory()) out.push(...walk(p));
-  else if(/\\.(ts|tsx|js|jsx|md|txt|json)$/i.test(e.name)) out.push(p);
+  else if(/.(ts|tsx|js|jsx|md|txt|json)$/i.test(e.name)) out.push(p);
 } return out;}
 const roots=["src","mho","features"].filter(r=>fs.existsSync(r));
 let bad=false;
 for(const r of roots){
   for(const f of walk(path.join(process.cwd(),r))){
     const txt=fs.readFileSync(f,"utf8");
-    for(const re of patterns){ if(re.test(txt)){ console.error("Clinical term in:",f); bad=true; } }
+    for(const re of patterns){ if(re.test(txt)){ console.error("wellness term in:",f); bad=true; } }
   }
 }
 process.exit(bad?1:0);`;
@@ -1517,7 +1517,7 @@ function writeScripts(){
   patchPackageJson((pkg)=>{
     pkg.scripts = pkg.scripts || {};
     pkg.scripts["glowell:lint:nonclinical"] = pkg.scripts["glowell:lint:nonclinical"] || "node scripts/nonclinical-lint.cjs";
-    pkg.scripts["glowell:plan:demo"] = pkg.scripts["glowell:plan:demo"] || "echo \"Use generateSafePlan(formData) to preview output.\"";
+    pkg.scripts["glowell:plan:demo"] = pkg.scripts["glowell:plan:demo"] || "\"\"echo Use generateSafePlan(formData) to preview output.";
   });
   ok("Dev scripts patched.");
 }

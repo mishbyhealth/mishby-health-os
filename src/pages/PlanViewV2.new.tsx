@@ -18,7 +18,7 @@ export default function PlanViewV2({plan}:{plan:any}){
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="text-center">
           <h2 className="text-2xl md:text-3xl font-semibold text-emerald-900">Your Wellness Day</h2>
-          <p className="text-gray-600 mt-1">{plan?.meta?.disclaimerText || "General wellness suggestions only (non-clinical)."}</p>
+          <p className="text-gray-600 mt-1">{plan?.meta?.disclaimerText || "General wellness suggestions only (non-wellness)."}</p>
         </header>
 
         <div className="grid md:grid-cols-2 gap-6">

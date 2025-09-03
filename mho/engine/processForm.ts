@@ -31,7 +31,7 @@ export async function buildPlan(formData: any): Promise<Plan> {
       "Prefer home-cooked, lightly seasoned meals.",
       "Keep a consistent sleep-wake schedule."
     ],
-    shareables: { whatsappText: "Daily wellness plan: hydration sips, light meals, gentle walk, early sleep. (Non-clinical guidance)" }
+    shareables: { whatsappText: "Daily wellness plan: hydration sips, light meals, gentle walk, early sleep. (Non-wellness guidance)" }
   };
 
   // You can branch on neutral tags (culture, climate, problems/symptoms) here.

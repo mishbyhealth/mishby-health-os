@@ -32,3 +32,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# GloWell exports (prevent accidental commits)
+glowell-plans-backup.json
+glowell-plan-*.json
+glowell-plan-*-schedule.csv
+glowell-plan-*-hydration.csv
+glowell-plan-*-meals.csv
+
+# Diagnostics created during setup
+repo-tree.txt

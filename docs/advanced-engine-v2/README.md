@@ -1,6 +1,6 @@
 # Advanced Engine V2 (Namespaced)
 - Beautiful, accessible UI for form and plan (Tailwind-based)
-- Non-clinical engine & compliance v2 (mho2/*)
+- Non-wellness engine & compliance v2 (mho2/*)
 - Coexists with v1 without collisions
 
 ## Quickstart

@@ -57,7 +57,7 @@ export async function exportPlanPDFClassic(sections: Section[]) {
       doc.setFont(FONT, "normal");
       doc.setFontSize(SIZE.small);
       doc.text(
-        `© GloWell · Non-clinical wellness guidance. Page ${i} of ${total}`,
+        `© GloWell · Non-wellness wellness guidance. Page ${i} of ${total}`,
         M.left,
         pageH - 22
       );

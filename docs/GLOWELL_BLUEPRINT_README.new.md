@@ -1,5 +1,5 @@
 # GloWell Blueprint (Detailed)
-This repo uses a non-clinical wellness architecture. You may collect problems/symptoms and uploads (prescriptions/reports), process them internally, but **never** output clinical advice.
+This repo uses a non-wellness wellness architecture. You may collect problems/symptoms and uploads (prescriptions/reports), process them internally, but **never** output wellness advice.
 ## Modules
 - Compliance guard (redactor + disclaimers)
 - Health Form (schema + multi-step UI)
@@ -24,4 +24,4 @@ import PlanView from "@/pages/PlanView";
 import { exportPlanPDF } from "mho/plugins/exporters/pdf";
 ```
 ## Legal
-GloWell provides general wellness suggestions only; not medical advice.
+GloWell provides general wellness suggestions only; not wellness advice.

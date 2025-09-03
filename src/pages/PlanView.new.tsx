@@ -5,7 +5,7 @@ export default function PlanView({plan}:{plan:any}){
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-xl font-semibold">Your Daily Wellness Plan</h2>
-      <p className="text-sm opacity-70">{plan?.meta?.disclaimerText || "Non-clinical general wellness suggestions."}</p>
+      <p className="text-sm opacity-70">{plan?.meta?.disclaimerText || "Non-wellness general wellness suggestions."}</p>
       <div className="grid md:grid-cols-2 gap-4">
         <section className="p-3 border rounded">
           <h3 className="font-medium mb-2">Hydration</h3>

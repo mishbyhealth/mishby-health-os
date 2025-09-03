@@ -1,45 +1,39 @@
+// src/layouts/MainLayout.tsx
 import React from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
-import logo from "@/assets/Logo.png";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import PrintHeader from "@/components/PrintHeader";
 
-export default function MainLayout() {
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <header className="sticky-nav">
-        <div
-          style={{
-            maxWidth: 1080,
-            margin: "0 auto",
-            padding: "10px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-            <img src={logo} alt="GloWell" style={{ height: "40px", width: "auto" }} />
-            <strong style={{ fontSize: 24, color: "var(--ink)" }}>GloWell</strong>
-          </Link>
-
-          <nav style={{ display: "flex", gap: 8 }}>
-            <NavLink to="/" className={({isActive}) => `nav-link${isActive?' active':''}`}>Home</NavLink>
-            <NavLink to="/health-plan" className={({isActive}) => `nav-link${isActive?' active':''}`}>Build Plan</NavLink>
-            <NavLink to="/dashboard" className={({isActive}) => `nav-link${isActive?' active':''}`}>Dashboard</NavLink>
-            <NavLink to="/profile" className={({isActive}) => `nav-link${isActive?' active':''}`}>Profile</NavLink>
-          </nav>
+    <div className="min-h-screen bg-[#f6f5ef] text-gray-900">
+      {/* Sticky screen header (hidden in print via PrintHeader's CSS) */}
+      <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+        <div className="max-w-6xl mx-auto px-4">
+          <Header />
         </div>
       </header>
 
-      <main style={{ maxWidth: 1080, margin: "0 auto", padding: "20px 16px 40px" }}>
-        <Outlet />
+      {/* Print-only header (hidden on screen, shown in print) */}
+      <div className="screen-only">
+        {/* This wrapper gets hidden in print;
+           inside, PrintHeader injects CSS and renders only for print */}
+        <PrintHeader />
+      </div>
+
+      {/* Page content */}
+      <main className="max-w-6xl mx-auto px-4 py-4">
+        {children}
       </main>
 
-      <footer style={{ borderTop: "1px solid var(--line)", padding: "12px 16px", color: "var(--muted)" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", fontSize: 12 }}>
-          © {new Date().getFullYear()} GloWell • Non-clinical wellness guidance.
+      {/* Screen footer (hidden in print via PrintHeader's CSS) */}
+      <footer className="mt-10 border-t">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <Footer />
         </div>
       </footer>
     </div>
   );
-}
+};
+
+export default MainLayout;

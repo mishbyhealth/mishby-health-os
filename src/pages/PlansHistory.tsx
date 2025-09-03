@@ -1,240 +1,168 @@
-// src/pages/PlansHistory.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-/** v9 keys: glowell:plan_history_v2 (array), glowell:plan_v2 (current) */
-const LS_HISTORY_KEY = "glowell:plan_history_v2";
-const LS_CURRENT_KEY = "glowell:plan_v2";
+type Snapshot = {
+  id: string;
+  version?: string;
+  createdAt?: string; // ISO
+  plan?: { metrics?: { bmi?: number; energyEstimateKcal?: number } };
+};
+type PlansMap = Record<string, Snapshot>;
 
-type Any = any;
+const PLANS_KEY = "glowell:plans";
 
-function readHistory(): Any[] {
+function loadPlans(): PlansMap {
   try {
-    const raw = localStorage.getItem(LS_HISTORY_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    }
-  } catch {}
-  // fallback: if only a single plan exists, show it as a "history of one"
-  try {
-    const one = localStorage.getItem(LS_CURRENT_KEY);
-    if (one) return [JSON.parse(one)];
-  } catch {}
-  return [];
+    const raw = localStorage.getItem(PLANS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function formatDateTime(iso?: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const HH = String(d.getHours()).padStart(2, "0");
+  const MM = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${HH}:${MM}`;
 }
 
 export default function PlansHistory() {
-  const nav = useNavigate();
-  const [history, setHistory] = useState<Any[]>([]);
+  const navigate = useNavigate();
+  const [plansMap, setPlansMap] = useState<PlansMap>({});
   const [q, setQ] = useState("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [selectedTag, setSelectedTag] = useState<string>("");
 
   useEffect(() => {
-    setHistory(readHistory());
+    setPlansMap(loadPlans());
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PLANS_KEY) setPlansMap(loadPlans());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Collect top tags from meals[].tags (if present)
-  const topTags = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of history) {
-      const meals = p?.day?.meals || [];
-      for (const m of meals) {
-        const tags: string[] = Array.isArray(m?.tags) ? m.tags : [];
-        for (const t of tags) counts.set(t, (counts.get(t) || 0) + 1);
-      }
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([t]) => t);
-  }, [history]);
-
-  const filtered = useMemo(() => {
-    const qn = q.trim().toLowerCase();
-    const from = dateFrom ? new Date(dateFrom) : null;
-    const to = dateTo ? new Date(dateTo) : null;
-
-    return history.filter((p) => {
-      // date window
-      const when = p?.meta?.generatedAtISO ? new Date(p.meta.generatedAtISO) : null;
-      if (from && when && when < from) return false;
-      if (to && when && when > to) return false;
-
-      // tag filter
-      if (selectedTag) {
-        const meals = p?.day?.meals || [];
-        const has = meals.some((m: Any) =>
-          Array.isArray(m?.tags) && m.tags.includes(selectedTag)
-        );
-        if (!has) return false;
-      }
-
-      // text search across a compact string
-      if (qn) {
-        const str = JSON.stringify(
-          {
-            meta: p?.meta,
-            day: {
-              hydration: p?.day?.hydration,
-              meals: (p?.day?.meals || []).map((m: Any) => ({
-                label: m?.label,
-                ideas: m?.ideas,
-                tags: m?.tags,
-              })),
-              movement: p?.day?.movement,
-              mind: p?.day?.mind,
-            },
-          },
-          null,
-          0
-        ).toLowerCase();
-        if (!str.includes(qn)) return false;
-      }
-      return true;
-    });
-  }, [history, q, dateFrom, dateTo, selectedTag]);
-
-  function openAsCurrent(p: Any) {
+  const rows = useMemo(() => {
     try {
-      localStorage.setItem(LS_CURRENT_KEY, JSON.stringify(p));
-    } catch {}
-    nav("/health-plan");
+      const list = Object.values(plansMap);
+      list.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+      if (!q.trim()) return list;
+      const s = q.toLowerCase();
+      return list.filter(r => {
+        const bmi = r?.plan?.metrics?.bmi ?? "";
+        const kcal = r?.plan?.metrics?.energyEstimateKcal ?? "";
+        return (
+          String(r.id).toLowerCase().includes(s) ||
+          String(r.version ?? "").toLowerCase().includes(s) ||
+          String(formatDateTime(r.createdAt)).toLowerCase().includes(s) ||
+          String(bmi).toLowerCase().includes(s) ||
+          String(kcal).toLowerCase().includes(s)
+        );
+      });
+    } catch {
+      return [];
+    }
+  }, [plansMap, q]);
+
+  function handleOpen(id: string) {
+    navigate(`/plans/${id}`);
+  }
+  function handleDelete(id: string) {
+    if (!confirm(`Delete plan ${id}?`)) return;
+    const next = { ...plansMap };
+    delete next[id];
+    localStorage.setItem(PLANS_KEY, JSON.stringify(next));
+    setPlansMap(next);
+  }
+  function handleClearAll() {
+    if (!confirm("Clear ALL saved plans?")) return;
+    localStorage.removeItem(PLANS_KEY);
+    setPlansMap({});
+  }
+  function handleExportAll() {
+    const blob = new Blob([JSON.stringify(plansMap, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "plans-export.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  async function handleImportAll(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const imported = JSON.parse(await file.text()) as PlansMap;
+      const merged: PlansMap = { ...plansMap, ...imported };
+      localStorage.setItem(PLANS_KEY, JSON.stringify(merged));
+      setPlansMap(merged);
+      alert("Imported.");
+    } catch {
+      alert("Invalid file.");
+    } finally {
+      e.currentTarget.value = "";
+    }
   }
 
   return (
-    <div className="min-h-[80vh] bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header>
-          <h1 className="text-2xl md:text-3xl font-semibold text-emerald-900">Plans History</h1>
-          <p className="text-gray-600 mt-1">
-            Browse your saved non-clinical wellness plans; filter by date, search text, or tags.
-          </p>
-        </header>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">Plans History</h1>
 
-        {/* Filters */}
-        <div className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-5">
-          <div className="grid md:grid-cols-4 gap-3">
-            <div className="md:col-span-2">
-              <label className="text-sm text-gray-700">Search</label>
-              <input
-                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
-                placeholder="e.g., breakfast, hydration, walk"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-700">From</label>
-              <input
-                type="date"
-                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-700">To</label>
-              <input
-                type="date"
-                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-2">
+        <button className="border rounded px-3 py-1" onClick={() => navigate("/health-plan")}>+ New Plan</button>
+        <button className="border rounded px-3 py-1" onClick={handleExportAll}>Export All (JSON)</button>
+        <label className="border rounded px-3 py-1 cursor-pointer">
+          Import (JSON)
+          <input type="file" accept="application/json" className="hidden" onChange={handleImportAll} />
+        </label>
+        <button className="border rounded px-3 py-1" onClick={handleClearAll}>Clear All</button>
+      </div>
 
-          {/* Tag chips */}
-          {topTags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {topTags.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTag((s) => (s === t ? "" : t))}
-                  className={
-                    "px-3 py-1 rounded-full border text-sm " +
-                    (selectedTag === t
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "border-gray-300 hover:bg-gray-50")
-                  }
-                >
-                  #{t}
-                </button>
-              ))}
-              {selectedTag && (
-                <button
-                  onClick={() => setSelectedTag("")}
-                  className="px-3 py-1 rounded-full border text-sm border-gray-300 hover:bg-gray-50"
-                >
-                  Clear tag
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+      <input
+        className="border rounded px-3 py-2 w-full md:w-1/2"
+        placeholder="Search by ID, date/time, version, BMI, kcal…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
 
-        {/* Results */}
-        <div className="grid gap-4">
-          {filtered.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-6 text-gray-600">
-              No saved plans yet. Generate a plan from <b>New Plan</b>, it will appear here.
-            </div>
-          ) : (
-            filtered.map((p, idx) => {
-              const when = p?.meta?.generatedAtISO
-                ? new Date(p.meta.generatedAtISO).toLocaleString()
-                : "Unknown";
-              const tags =
-                (p?.day?.meals || [])
-                  .flatMap((m: Any) => (Array.isArray(m?.tags) ? m.tags : []))
-                  .slice(0, 5) || [];
-              return (
-                <div
-                  key={idx}
-                  className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-5"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium text-emerald-900">Plan #{idx + 1}</div>
-                      <div className="text-xs text-gray-500">{when}</div>
-                      {tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {tags.map((t: string, i: number) => (
-                            <span key={i} className="px-2 py-0.5 rounded-full border text-xs">
-                              #{t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 rounded border"
-                        onClick={() => openAsCurrent(p)}
-                        title="Open as current plan"
-                      >
-                        View
-                      </button>
-                      <button
-                        className="px-3 py-1 rounded border"
-                        onClick={() => {
-                          try {
-                            navigator.clipboard.writeText(JSON.stringify(p, null, 2));
-                            alert("Plan JSON copied");
-                          } catch {}
-                        }}
-                      >
-                        Copy
-                      </button>
-                    </div>
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left border-b">
+              <th className="py-2 pr-3">Created</th>
+              <th className="py-2 pr-3">ID</th>
+              <th className="py-2 pr-3">Version</th>
+              <th className="py-2 pr-3">BMI</th>
+              <th className="py-2 pr-3">Kcal</th>
+              <th className="py-2 pr-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td className="py-3 opacity-70" colSpan={6}>No plans found.</td></tr>
+            ) : rows.map((p) => (
+              <tr key={p.id} className="border-b last:border-b-0">
+                <td className="py-2 pr-3">{formatDateTime(p.createdAt)}</td>
+                <td className="py-2 pr-3">{p.id}</td>
+                <td className="py-2 pr-3">{p.version ?? "—"}</td>
+                <td className="py-2 pr-3">{p.plan?.metrics?.bmi ?? "—"}</td>
+                <td className="py-2 pr-3">{p.plan?.metrics?.energyEstimateKcal ?? "—"}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex gap-2">
+                    <button className="border rounded px-2 py-1" onClick={() => handleOpen(p.id)}>Open</button>
+                    <button className="border rounded px-2 py-1" onClick={() => handleDelete(p.id)}>Delete</button>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

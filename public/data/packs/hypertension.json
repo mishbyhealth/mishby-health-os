@@ -1,0 +1,20 @@
+{
+  "id": "hypertension",
+  "title": "Hypertension (High BP) — Pack v1",
+  "priority": 2,
+  "hydrationCapMlPerDay": 2500,
+  "nutrientBounds": {
+    "sodium_mg": { "max": 1500 }
+  },
+  "allowTags": [],
+  "limitTags": ["cheese", "bread", "processed"],
+  "avoidTags": ["salted", "pickle", "papad", "high-sodium", "canned-soup"],
+  "activityCaveats": [
+    "Avoid heavy isometrics; prefer moderate-paced walks.",
+    "Check BP before vigorous activity."
+  ],
+  "tips": [
+    "Prefer fresh, home-cooked; use lemon/herbs instead of extra salt.",
+    "Rinse canned foods; choose 'low sodium' options."
+  ]
+}

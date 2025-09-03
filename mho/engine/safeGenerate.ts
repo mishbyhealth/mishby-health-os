@@ -73,7 +73,7 @@ export function generateSafePlan(form: FormInput): SafePlan {
   return {
     title: typeof name === "string" ? name : "Your Daily Wellness Plan",
     notes:
-      "Non-clinical general wellness suggestions. Adjust gently to your routine.",
+      "Non-wellness general wellness suggestions. Adjust gently to your routine.",
     hydration,
     movement,
     meals,

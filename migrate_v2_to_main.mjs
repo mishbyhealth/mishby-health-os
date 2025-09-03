@@ -42,11 +42,11 @@ const CODE_EXT = new Set([
 
 const REPLACERS = [
   // @ alias and direct paths
-  { from: /(['"`])@\/features-v2\//g, to: "$1@/features/" },
+  { from: /(['\/\/"`])@features-v2/g, to: "$1@/features/" },
   { from: /(['"`])features-v2(['"`])/g, to: "$1features$2" },
   { from: /(['"`])features-v2\//g, to: "$1features/" },
 
-  { from: /(['"`])@\/mho2\//g, to: "$1@/mho/" },
+  { from: /(['\/\/"`])@mho2/g, to: "$1@/mho/" },
   { from: /(['"`])mho2(['"`])/g, to: "$1mho$2" },
   { from: /(['"`])mho2\//g, to: "$1mho/" },
 ];
@@ -154,7 +154,7 @@ async function replaceInFile(file, replacers) {
 
 async function main() {
   log(`Root: ${root}`);
-  log(DRY ? "Mode: DRY-RUN (no changes will be written)" : "Mode: APPLY");
+  log(DRY ? "Mode: DRY-RUN (no changes may be written)" : "Mode: APPLY");
 
   // 1) Move/Rename Folders
   for (const pair of MOVE_PAIRS) {

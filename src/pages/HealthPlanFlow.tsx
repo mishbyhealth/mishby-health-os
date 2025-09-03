@@ -27,13 +27,13 @@ function buildFallbackPlan(profile: Profile): Plan {
   const ls = (profile.lifestyle || "moderate").toLowerCase();
   const goal = (profile.goal || "wellness").toLowerCase();
 
-  const water = ls === "active" || ls === "athlete" ? "2800 ml" : ls === "moderate" ? "2400 ml" : "2000 ml";
+  const water = ls === "active" || ls === "athlete" ? "[units redacted]" : ls === "moderate" ? "[units redacted]" : "[units redacted]";
   const steps = ls === "athlete" ? 12000 : ls === "active" ? 10000 : ls === "moderate" ? 8000 : 6000;
 
   const hydrate: string[] = [
-    `Morning: 300 ml warm water`,
-    `Before lunch: 300 ml`,
-    `Evening: 300 ml`,
+    `Morning: [units redacted] warm water`,
+    `Before lunch: [units redacted]`,
+    `Evening: [units redacted]`,
     `Total target: ${water} (adjust by climate/activity)`,
   ];
 

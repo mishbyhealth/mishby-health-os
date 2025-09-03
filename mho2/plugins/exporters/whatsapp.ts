@@ -2,7 +2,7 @@
 export function buildWhatsAppText(plan: any) {
   const d = plan?.day || {};
   const lines = [
-    "Daily wellness (non-clinical):",
+    "Daily wellness (non-wellness):",
     `Wake: ${d.wake || "-"}`,
     `Sleep: ${d.sleep || "-"}`,
     `Hydration: ${(d.hydration?.schedule || []).join(", ") || "-"}`,

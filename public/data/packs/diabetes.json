@@ -1,0 +1,19 @@
+{
+  "id": "diabetes",
+  "title": "Type 2 Diabetes — Pack v1",
+  "priority": 2,
+  "nutrientBounds": {
+    "carbs_g_per_meal": { "max": 45 }
+  },
+  "allowTags": ["low-glycemic", "high-fiber", "legumes"],
+  "limitTags": ["white-rice", "refined-flour", "sweets"],
+  "avoidTags": ["sugary-drinks"],
+  "activityCaveats": [
+    "If safe, walk 10–15 minutes after meals.",
+    "Discuss hypoglycemia risk with your clinician if on insulin/secretagogues."
+  ],
+  "tips": [
+    "Pair carbs with protein/fiber.",
+    "Prefer whole grains; split fruit portions across meals."
+  ]
+}

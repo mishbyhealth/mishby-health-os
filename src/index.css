@@ -1,21 +1,37 @@
-/* src/index.css — Tailwind enable + small theme tweaks (original simple) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Calm app-wide look (unchanged) */
-:root {
-  --bg: #f7f5ed;       /* soft beige page bg */
-  --ink: #1f2937;      /* slate-800 text */
+/* App background */
+.app-bg {
+  @apply bg-gradient-to-br from-[#f8fafc] via-[#f9fafb] to-[#f3f4f6];
 }
 
-html, body, #root { height: 100%; }
+/* Tables */
+table th, table td { @apply align-top; }
+table thead th { @apply font-semibold text-gray-700; }
+table tbody td { @apply text-gray-800; }
 
-body {
-  background: var(--bg);
-  color: var(--ink);
+/* Hide chrome for print */
+.site-header, .site-footer {}
+
+/* Print helpers */
+.print-only { display: none; }
+.no-print {}
+
+@media print {
+  .site-header, .site-footer, .print\\:hidden { display: none !important; }
+  .print-only { display: block !important; }
+  .no-print { display: none !important; }
+
+  /* Compact spacing for print */
+  .p-4, .p-6, .py-6, .px-4 { padding: 0.5rem !important; }
+  .mb-4 { margin-bottom: 0.5rem !important; }
+  .mb-6 { margin-bottom: 0.75rem !important; }
+
+  /* Tables: denser print */
+  table th, table td { padding: 0.35rem 0.5rem !important; }
+  table { border-collapse: collapse !important; }
+  table thead { border-bottom: 1px solid #e5e7eb !important; }
+  table tr { page-break-inside: avoid !important; }
 }
-
-/* Card + headings polish */
-.card { @apply rounded-2xl border bg-white shadow-sm p-4; }
-h1,h2,h3 { @apply tracking-tight; }

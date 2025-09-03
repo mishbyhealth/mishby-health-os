@@ -190,7 +190,7 @@ export default function PlansHistoryV2() {
             );
           })}
           {tagFilter && (
-            <button className="ml-2 text-xs px-2 py-1 rounded border hover:bg-gray-50" onClick={() => {
+            <button className="[units redacted]-2 text-xs px-2 py-1 rounded border hover:bg-gray-50" onClick={() => {
               setTagFilter("");
               const url = new URL(window.location.href);
               url.searchParams.delete("tag");

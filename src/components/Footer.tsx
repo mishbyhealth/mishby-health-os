@@ -1,20 +1,27 @@
-// File: src/components/Footer.tsx
+// src/components/Footer.tsx
 import React from "react";
-import { Link } from "react-router-dom";
+import { APP_META } from "@/constants/appMeta";
 
-export default function Footer() {
+const Footer: React.FC = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="mt-10 border-t bg-white">
-      <div className="max-w-6xl mx-auto px-4 py-4 text-sm text-gray-600 flex items-center justify-between">
-        <div>© {new Date().getFullYear()} GloWell — all rights reserved.</div>
-        <div className="flex items-center gap-4">
-          <Link to="/donate" className="text-emerald-700 hover:underline">Donate</Link>
-          <Link to="/about" className="text-emerald-700 hover:underline">About GloWell</Link>
-          <span className="hidden md:inline">
-            Non-clinical, general wellness guidance. Not medical advice.
-          </span>
+    <div className="max-w-6xl mx-auto">
+      <div className="mt-4 rounded-xl border bg-white/70 px-4 py-2 text-sm text-gray-700">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="font-semibold">GloWell</span>
+          <span>•</span>
+          <span>{APP_META.versionLabel}</span>
+          <span>•</span>
+          <span>{APP_META.contextDate}</span>
+          <span>•</span>
+          <span>© {year} GloWell</span>
+          <span>•</span>
+          <span>Neutral wellness guidance (non-clinical)</span>
         </div>
       </div>
-    </footer>
+    </div>
   );
-}
+};
+
+export default Footer;

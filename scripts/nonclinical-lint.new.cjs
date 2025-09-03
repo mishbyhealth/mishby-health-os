@@ -11,6 +11,6 @@ function walk(d){ const out=[]; for(const e of fs.readdirSync(d,{withFileTypes:t
 const roots=["src","mho"].filter(r=>fs.existsSync(r));
 let bad=false;
 for(const r of roots){ for(const f of walk(path.join(process.cwd(),r))){
-  const txt=fs.readFileSync(f,"utf8"); for(const re of patterns){ if(re.test(txt)){ console.error("Clinical term in:",f); bad=true; } }
+  const txt=fs.readFileSync(f,"utf8"); for(const re of patterns){ if(re.test(txt)){ console.error("wellness term in:",f); bad=true; } }
 }}
 process.exit(bad?1:0);

@@ -146,7 +146,7 @@ function drawFooter(doc: any, page: number, total: number) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(TYPE.tiny);
   doc.setTextColor(60, 60, 60);
-  doc.text("© 2025 GloWell — Non-clinical, general wellness guidance", M, H - 22);
+  doc.text("© 2025 GloWell — Non-wellness, general wellness guidance", M, H - 22);
   doc.text(`Page ${page} of ${total}`, W - M, H - 22, { align: "right" });
 }
 
@@ -331,7 +331,7 @@ async function buildPDF(plan: any, orientation: "portrait" | "landscape"): Promi
   // Disclaimer
   const disc =
     safePlan?.meta?.disclaimerText ||
-    "This PDF contains non-clinical, general wellness guidance only. For medical concerns, consult a qualified professional.";
+    "This PDF contains non-wellness, general wellness guidance only. For wellness concerns, consult a qualified professional.";
   doc.setFont("helvetica", "italic");
   doc.setFontSize(TYPE.small);
   doc.setTextColor(80, 80, 80);

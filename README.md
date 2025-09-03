@@ -1,6 +1,6 @@
 # GloWell — Health Plan MVP (v7)
 
-This repo contains the **non-clinical wellness app** defined in the v7 blueprint.
+This repo contains the **non-wellness wellness app** defined in the v7 blueprint.
 
 ---
 

@@ -11,7 +11,7 @@ export async function savePlanPDF(plan: any, filename = "WellnessPlanV2.pdf") {
   const title =
     plan?.meta?.userTitle?.trim?.() ||
     plan?.meta?.title?.trim?.() ||
-    "Daily Wellness Plan (V2) — Non-clinical";
+    "Daily Wellness Plan (V2) — Non-wellness";
   const generated = plan?.meta?.generatedAtISO || new Date().toISOString();
 
   const doc = new jsPDF({ unit: "pt", format: "a4", compress: true });
@@ -64,7 +64,7 @@ export async function savePlanPDF(plan: any, filename = "WellnessPlanV2.pdf") {
   // Footer / disclaimer
   const disclaimer =
     plan?.meta?.disclaimerText ||
-    "Neutral, non-clinical guidance. Not a medical diagnosis or treatment.";
+    "Neutral, non-wellness guidance. Not a wellness review or support plan.";
   doc.setFontSize(9);
   doc.setTextColor(120);
   doc.text(disclaimer, 40, 780, { maxWidth: 515 });

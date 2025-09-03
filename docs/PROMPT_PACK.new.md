@@ -1,10 +1,10 @@
 # Prompt Pack (Copy-Paste)
-1) "Act as a senior app architect. I have a non-clinical wellness app. Given my form schema below, propose a React form component and a TypeScript validator."
+1) "Act as a senior app architect. I have a non-wellness wellness app. Given my form schema below, propose a React form component and a TypeScript validator."
 2) "Extend my HealthForm so that on submit it calls processForm.ts, validates inputs, and saves results in Firebase."
 3) "Given this plan JSON shape, generate a PlanView with Tailwind, and a button to export PDF."
 4) "Write a Firebase Function that runs OCR on uploaded files and returns a neutral `riskTags` array."
 5) "Add a WhatsApp share text builder for the plan, respecting ComplianceGuard."
-6) "Scan my code for clinical terms and fix them to neutral phrasing."
+6) "Scan my code for wellness terms and fix them to neutral phrasing."
 7) "Refactor my `normalize.ts` to handle time zone offsets and unit conversions."
 8) "Create an `UploadManager` that uploads files to Firebase Storage and saves signed URLs."
 9) "Style the MultiStepHealthForm with a green/beige theme and accessible labels."

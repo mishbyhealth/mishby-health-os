@@ -95,7 +95,7 @@ export default function PDFExporter({ plan, fileName = "Health-Plan.pdf", onBack
         </div>
 
         <p style={{ marginTop: 0, marginBottom: 16, opacity: 0.85 }}>
-          {plan?.notes || "Non-clinical general wellness suggestions. Adjust gently to your routine."}
+          {plan?.notes || "Non-wellness general wellness suggestions. Adjust gently to your routine."}
         </p>
 
         <Section name="Hydration" items={plan?.hydration} />

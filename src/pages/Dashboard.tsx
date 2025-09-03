@@ -1,74 +1,87 @@
-// src/pages/Dashboard.tsx
-import React from "react";
-import SupportGloWellCard from "@/components/SupportGloWellCard";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white/90 backdrop-blur border border-gray-100 rounded-2xl shadow p-5">
-      <h3 className="text-lg font-semibold text-emerald-900">{title}</h3>
-      <div className="mt-3">{children}</div>
-    </div>
-  );
+type Snapshot = {
+  id: string;
+  createdAt?: string;
+  plan?: { metrics?: { bmi?: number; energyEstimateKcal?: number } };
+};
+type PlansMap = Record<string, Snapshot>;
+
+const PLANS_KEY = "glowell:plans";
+
+function loadPlans(): PlansMap {
+  try {
+    const raw = localStorage.getItem(PLANS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function formatDateTime(iso?: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const HH = String(d.getHours()).padStart(2, "0");
+  const MM = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${HH}:${MM}`;
 }
 
 export default function Dashboard() {
-  // TODO: Wire with your real data (v9: Recent Plans V2, analytics widgets):contentReference[oaicite:6]{index=6}
-  const recentPlans = []; // placeholder
-  const totalPlans = 0;   // placeholder
+  const navigate = useNavigate();
+  const [plansMap, setPlansMap] = useState<PlansMap>({});
+
+  useEffect(() => {
+    setPlansMap(loadPlans());
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PLANS_KEY) setPlansMap(loadPlans());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const { count, last } = useMemo(() => {
+    const list = Object.values(plansMap);
+    list.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+    return {
+      count: list.length,
+      last: list[0],
+    };
+  }, [plansMap]);
 
   return (
-    <div className="min-h-[80vh] bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header>
-          <h1 className="text-2xl md:text-3xl font-semibold text-emerald-900">Dashboard</h1>
-          <p className="text-gray-600">Build simple, sustainable wellness habits — non-clinical guidance.</p>
-        </header>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-        {/* Top row: Analytics + Support card */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card title="Total Plans (V2)">
-            <div className="text-3xl font-semibold">{totalPlans}</div>
-            <p className="text-sm text-gray-600 mt-1">Last ~5 weeks trend (CSS bars planned):contentReference[oaicite:7]{index=7}</p>
-          </Card>
-
-          <Card title="Top Tags">
-            <p className="text-sm text-gray-600">Clickable chips to filter history (planned):contentReference[oaicite:8]{index=8}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="px-3 py-1 rounded-full border text-sm">hydration</span>
-              <span className="px-3 py-1 rounded-full border text-sm">sleep</span>
-            </div>
-          </Card>
-
-          {/* New: Support / Donate */}
-          <SupportGloWellCard />
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="border rounded p-4">
+          <div className="text-sm opacity-70">Saved Plans</div>
+          <div className="text-2xl font-bold">{count}</div>
         </div>
-
-        {/* Recent Plans */}
-        <div className="grid gap-6">
-          <Card title="Recent Plans (V2)">
-            {recentPlans.length === 0 ? (
-              <p className="text-sm text-gray-600">No plans yet. Create a new plan from Health Form.</p>
-            ) : (
-              <ul className="space-y-2">
-                {recentPlans.map((p: any, idx: number) => (
-                  <li key={idx} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Plan #{idx + 1}</div>
-                      <div className="text-xs text-gray-500">{p?.meta?.generatedAtISO}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 rounded border">View</button>
-                      <button className="px-3 py-1 rounded border">PDF</button>
-                      <button className="px-3 py-1 rounded border">WhatsApp</button>
-                      <button className="px-3 py-1 rounded border">Copy</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+        <div className="border rounded p-4">
+          <div className="text-sm opacity-70">Last Saved At</div>
+          <div className="text-lg">{formatDateTime(last?.createdAt)}</div>
+        </div>
+        <div className="border rounded p-4">
+          <div className="text-sm opacity-70">Last Plan — BMI / kcal</div>
+          <div className="text-lg">
+            {last?.plan?.metrics?.bmi ?? "—"} / {last?.plan?.metrics?.energyEstimateKcal ?? "—"}
+          </div>
         </div>
       </div>
+
+      <div className="flex gap-2">
+        <button className="border rounded px-3 py-1" onClick={() => navigate("/health-plan")}>+ New Plan</button>
+        <button className="border rounded px-3 py-1" onClick={() => navigate("/plans")}>Open Plans</button>
+      </div>
+
+      <p className="text-xs opacity-70">
+        Note: Data is stored only in your browser (localStorage). Clearing site data or switching browsers will remove it.
+      </p>
     </div>
   );
 }

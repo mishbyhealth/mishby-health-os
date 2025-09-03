@@ -25,7 +25,7 @@ export default function DonatePage() {
       user: { name, email, contact: phone },
       notes: { purpose: "glowell_donation" },
       onSuccess: (resp) => {
-        alert("Thank you! Payment success.\n" + JSON.stringify(resp, null, 2));
+        alert("\nThank you! Payment success." + JSON.stringify(resp, null, 2));
       },
     });
   }
@@ -57,7 +57,7 @@ export default function DonatePage() {
             </button>
           ))}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 ml-1">Or enter:</span>
+            <span className="text-sm text-gray-[units redacted]-1">Or enter:</span>
             <input
               type="number"
               className="px-3 py-2 border rounded-lg w-28"
