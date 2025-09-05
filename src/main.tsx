@@ -1,23 +1,28 @@
-// src/main.tsx
 import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { applyTheme, loadTheme, loadLock, saveLock } from "./utils/theme";
+import { applyTheme, loadTheme, loadLock } from "@/utils/theme";
 
-(function initThemeAndLock(){
-  applyTheme(loadTheme());
-  const locked = loadLock();
-  document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
-  // ensure lock is persisted format
-  saveLock(locked);
-})();
+function boot() {
+  try {
+    // apply persisted theme + lock before first paint
+    applyTheme(loadTheme());
+    const locked = loadLock();
+    document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
+  } catch {
+    // noop
+  }
+}
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
+const mount =
+  document.getElementById("root") ??
+  (() => {
+    const el = document.createElement("div");
+    el.id = "root";
+    document.body.appendChild(el);
+    return el;
+  })();
+
+boot();
+createRoot(mount).render(<App />);

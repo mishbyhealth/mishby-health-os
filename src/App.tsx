@@ -8,7 +8,7 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const HealthForm = lazy(() => import("@/pages/HealthForm"));
 const IntakeReview = lazy(() => import("@/pages/IntakeReview"));
 const HealthPlan = lazy(() => import("@/pages/HealthPlan"));
-const Plans = lazy(() => import("@/pages/Plans"));
+const Plans = lazy(() => import("@/pages/Plans"));           // you created this
 const Subscription = lazy(() => import("@/pages/Subscription"));
 const Ping = lazy(() => import("@/pages/Ping"));
 const Settings = lazy(() => import("@/pages/Settings"));
@@ -18,12 +18,10 @@ export default function App() {
     <BrowserRouter>
       <MainLayout>
         <Suspense fallback={<div className="p-6">Loading…</div>}>
-          {/* Wrap route content with an error boundary so a page crash never blanks the whole app */}
           <ErrorBoundary name="Routes">
             <Routes>
               <Route path="/" element={<Welcome />} />
 
-              {/* Each major page sits behind its own light boundary */}
               <Route
                 path="/dashboard"
                 element={

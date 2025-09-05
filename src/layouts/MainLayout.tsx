@@ -22,7 +22,7 @@ const Chip = ({ to, label }: { to: string; label: string }) => (
 export default function MainLayout({ children }: Props) {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      {/* Owner Lock banner via data-locked on <html> (handled in theme.ts) */}
+      {/* Sticky header with chip nav + theme/lock */}
       <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
         <div className="mx-auto max-w-7xl px-3 md:px-6 py-3 flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 mr-1">
