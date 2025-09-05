@@ -1,5 +1,11 @@
 // src/constants/appMeta.ts
-export const APP_META = {
-  versionLabel: "GloWell Master Context v6",
-  contextDate: "02-Sep-2025, 20:47 IST", // from v6 context
+const APP_META = {
+  brand: "GloWell",
+  versionLabel: "GloWell Master Context v7",
+  dateLabel: "03-Sep-2025, 18:17 IST",
+  tagline: "Neutral wellness guidance (non-clinical)",
+  copyrightYear: 2025,
 };
+
+export default APP_META;
+export { APP_META, APP_META as appMeta };

@@ -1,18 +1,23 @@
+// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import "./index.css";
+import { applyTheme, loadTheme, loadLock, saveLock } from "./utils/theme";
 
-import AppRoutes from "@/routes/AppRoutes";
-import "./index.css"; // <-- make sure Tailwind is loaded
+(function initThemeAndLock(){
+  applyTheme(loadTheme());
+  const locked = loadLock();
+  document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
+  // ensure lock is persisted format
+  saveLock(locked);
+})();
 
-const rootEl = document.getElementById("root");
-if (!rootEl) {
-  const el = document.createElement("div");
-  el.innerText = "Root container #root not found in index.html";
-  document.body.appendChild(el);
-} else {
-  ReactDOM.createRoot(rootEl).render(
-    <React.StrictMode>
-      <AppRoutes />
-    </React.StrictMode>
-  );
-}
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);

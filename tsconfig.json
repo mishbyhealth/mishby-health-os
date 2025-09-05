@@ -1,32 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2020",
+    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "esModuleInterop": true,
-    "allowJs": false,
-    "types": ["vite/client"],
-    "baseUrl": ".",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // ✅ Alias setup
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["src/*"],
-      "mho/*": ["mho/*"]
+      "@/*": ["*"]
     }
   },
-  "include": ["src", "mho", "core", "vite-env.d.ts"],
-  "exclude": [
-  "node_modules",
-  "dist",
-  "features",
-  "**/*.test.*",
-  "**/__tests__/**",
-  "src/_archive",
-  "public/_mho_trial_archive",
-  "src/pages/__backup_*",
-  "**/*.bak"
-]
-
+  "include": ["src"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

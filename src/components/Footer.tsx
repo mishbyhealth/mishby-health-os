@@ -1,27 +1,19 @@
-// src/components/Footer.tsx
 import React from "react";
-import { APP_META } from "@/constants/appMeta";
+import APP_META from "@/constants/appMeta";
 
-const Footer: React.FC = () => {
-  const year = new Date().getFullYear();
-
+export default function Footer() {
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mt-4 rounded-xl border bg-white/70 px-4 py-2 text-sm text-gray-700">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="font-semibold">GloWell</span>
-          <span>•</span>
-          <span>{APP_META.versionLabel}</span>
-          <span>•</span>
-          <span>{APP_META.contextDate}</span>
-          <span>•</span>
-          <span>© {year} GloWell</span>
-          <span>•</span>
-          <span>Neutral wellness guidance (non-clinical)</span>
-        </div>
-      </div>
-    </div>
+    <footer
+      role="contentinfo"
+      className="mt-8 border-t px-4 py-3 text-sm text-gray-700 flex items-center justify-between gw-hide-on-print"
+      aria-label="App footer"
+    >
+      <span>
+        {APP_META.versionLabel} • {APP_META.dateLabel}
+      </span>
+      <span className="opacity-75">
+        © {APP_META.copyrightYear} {APP_META.brand}
+      </span>
+    </footer>
   );
-};
-
-export default Footer;
+}

@@ -1,79 +1,60 @@
-// src/components/PrintHeader.tsx
 import React from "react";
-import Logo from "@/assets/Logo.png";
+import APP_META from "@/constants/appMeta";
 
 /**
- * PrintHeader
- * - Hidden on screen, visible in print
- * - Injects print CSS (A4, margins, hide screen header/footer/nav, tidy tables)
- * - Shows brand + timestamp
+ * PrintHeader — inline SVG logo (no external asset), safe for PDF/Print.
+ * Shown only in print. Keeps brand + version/date label.
  */
-const PrintHeader: React.FC = () => {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const yyyy = now.getFullYear();
-  const HH = String(now.getHours()).padStart(2, "0");
-  const MM = String(now.getMinutes()).padStart(2, "0");
-  const stamp = `${dd}/${mm}/${yyyy} ${HH}:${MM} IST`;
+function nowLabel() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
-  const css = `
-  /* Hide this block on screen; show only in print */
-  @media screen {
-    .print-only { display: none !important; }
-  }
-  @media print {
-    /* Page setup for A4 PDFs */
-    @page { size: A4; margin: 12mm; }
-    html, body { background: #fff !important; color: #111 !important; }
-
-    /* Hide screen chrome (header/footer/nav etc.) */
-    header, nav, footer,
-    .no-print, .screen-only {
-      display: none !important;
-    }
-
-    /* Show the print header block */
-    .print-only { display: block !important; }
-
-    /* Tidy tables and avoid weird page breaks */
-    table { border-collapse: collapse; width: 100%; }
-    thead { display: table-header-group; }
-    tfoot { display: table-footer-group; }
-    tr, img { page-break-inside: avoid; }
-
-    /* Compact spacing */
-    .print-container { margin-bottom: 8mm; }
-    .print-title { font-size: 18px; font-weight: 700; margin: 0 0 2mm 0; }
-    .print-sub { font-size: 12px; color: #555; margin: 0; }
-    .print-meta { font-size: 11px; color: #333; margin-top: 1mm; }
-    .print-divider { border-top: 1px solid #ddd; margin-top: 3mm; }
-  }
-  `;
-
+export default function PrintHeader() {
   return (
     <>
-      {/* Inject print CSS */}
-      <style>{css}</style>
+      <style>{`
+        @media print {
+          .gw-print-header { 
+            display: block !important;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+          }
+          .gw-hide-on-print { display: none !important; }
+          @page { size: A4; margin: 12mm; }
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border-bottom: 1px solid #eee; padding: 6px 8px; }
+        }
+        @media screen { .gw-print-header { display: none; } }
+      `}</style>
 
-      {/* Visible only in print */}
-      <div className="print-only print-container">
+      <div className="gw-print-header">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img
-            src={Logo}
-            alt="GloWell"
-            style={{ height: 36, width: "auto", objectFit: "contain" }}
-          />
-          <div>
-            <h1 className="print-title">GloWell — Live Naturally</h1>
-            <p className="print-sub">Personal Health Plan (print view)</p>
-            <div className="print-meta">Printed on: {stamp}</div>
+          {/* Inline SVG logo — no external file dependency */}
+          <svg width="36" height="36" viewBox="0 0 48 48" aria-hidden="true">
+            <defs>
+              <linearGradient id="gwg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#22c55e" />
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="24" r="22" fill="url(#gwg)" />
+            <text x="24" y="28" textAnchor="middle" fontSize="16" fontFamily="system-ui, sans-serif" fill="#fff">G</text>
+          </svg>
+
+          <div style={{ lineHeight: 1.2 }}>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>{APP_META.brand}</div>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
+              {APP_META.versionLabel} • {APP_META.dateLabel}
+            </div>
+            <div style={{ fontSize: 11, opacity: 0.7 }}>
+              Printed: {nowLabel()}
+            </div>
           </div>
         </div>
-        <div className="print-divider" />
       </div>
     </>
   );
-};
-
-export default PrintHeader;
+}
