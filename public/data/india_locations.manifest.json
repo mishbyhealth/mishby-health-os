@@ -1,0 +1,12 @@
+{
+  "Andhra Pradesh": "/data/locations/Andhra_Pradesh.json",
+  "Delhi (NCT)": "/data/locations/Delhi_NCT.json",
+  "Gujarat": "/data/locations/Gujarat.json",
+  "Karnataka": "/data/locations/Karnataka.json",
+  "Maharashtra": "/data/locations/Maharashtra.json",
+  "Rajasthan": "/data/locations/Rajasthan.json",
+  "Tamil Nadu": "/data/locations/Tamil_Nadu.json",
+  "Telangana": "/data/locations/Telangana.json",
+  "Uttar Pradesh": "/data/locations/Uttar_Pradesh.json",
+  "West Bengal": "/data/locations/West_Bengal.json"
+}

@@ -1,202 +1,149 @@
 // src/pages/Dashboard.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const PLANS_KEY = "glowell:plans";         // map: { [id]: PlanSnapshot }
-const INDEX_KEY = "glowell:plans:index";   // array: newest-first ids
-const INTAKE_V2_KEY = "glowell:intake.v2"; // to show quick summary
-
-type PlanSnapshot = {
+type PlanIndexItem = {
   id: string;
   createdAt?: string;
   version?: string | number;
-  metrics?: { bmi?: number | null; energyEstimateKcal?: number | null };
-  packsApplied?: string[];
-  readme?: string;
-  // other fields ignored safely
+  bmi?: number;
+  energyEstimateKcal?: number;
 };
 
-function loadJSON<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    const val = JSON.parse(raw);
-    return val ?? fallback;
-  } catch {
-    return fallback;
+const INDEX_KEY = "glowell:plans:index";
+
+// Helper: robustly discover plan IDs if index is missing
+function discoverPlanIdsFromLocalStorage(): string[] {
+  const ids = new Set<string>();
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (k.startsWith("PLN-")) {
+      ids.add(k.replace(/^PLN-/, ""));
+    }
+    // some old saves looked like "plan_<timestamp>Z"
+    if (/^plan_/.test(k)) ids.add(k);
   }
+  return Array.from(ids);
 }
 
-function usePlans() {
-  const [index, setIndex] = useState<string[]>([]);
-  const [plans, setPlans] = useState<Record<string, PlanSnapshot>>({});
+function loadIndex(): PlanIndexItem[] {
+  try {
+    const raw = localStorage.getItem(INDEX_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    }
+  } catch {}
+  // synthesize minimal index if not present
+  return discoverPlanIdsFromLocalStorage().map((id) => ({ id }));
+}
 
-  useEffect(() => {
-    const idx = loadJSON<any>(INDEX_KEY, []);
-    setIndex(Array.isArray(idx) ? idx : []);
-    const map = loadJSON<Record<string, PlanSnapshot>>(PLANS_KEY, {});
-    setPlans(map && typeof map === "object" ? map : {});
-  }, []);
-
-  const latestId = useMemo(() => (Array.isArray(index) && index.length ? index[0] : ""), [index]);
-  const latestPlan = latestId && plans ? (plans[latestId] as PlanSnapshot | undefined) : undefined;
-
-  const stats = useMemo(() => {
-    const ids = Array.isArray(index) ? index : [];
-    const total = ids.length;
-    let bmiSum = 0, bmiCount = 0;
-    ids.forEach((id) => {
-      const p = plans[id];
-      const bmi = p?.metrics?.bmi;
-      if (typeof bmi === "number") { bmiSum += bmi; bmiCount++; }
-    });
-    const avgBMI = bmiCount ? Math.round((bmiSum / bmiCount) * 10) / 10 : null;
-    const lastCreatedISO = latestPlan?.createdAt || null;
-    return { total, avgBMI, lastCreatedISO };
-  }, [index, plans, latestPlan?.createdAt]);
-
-  return { index, plans, latestId, latestPlan, stats };
+function pickLatest(items: PlanIndexItem[]): PlanIndexItem | undefined {
+  if (!items.length) return;
+  // prefer createdAt, else fall back to last item
+  const withDates = items
+    .map((p) => ({ ...p, t: p.createdAt ? Date.parse(p.createdAt) : 0 }))
+    .sort((a, b) => (b.t || 0) - (a.t || 0));
+  return withDates[0] || items[items.length - 1];
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { index, plans, latestId, latestPlan, stats } = usePlans();
+  const nav = useNavigate();
+  const [index, setIndex] = useState<PlanIndexItem[]>([]);
+  const [dailyLogsCount, setDailyLogsCount] = useState<number>(0);
 
-  // Quick intake summary (optional)
-  const intake = loadJSON<any>(INTAKE_V2_KEY, null);
-  const dietLine = intake?.profile ? `${intake.profile.dietType || "—"} · ${intake.profile.cuisine || "—"}` : "—";
-  const archetype = intake?.schedule?.archetypeId || "—";
-  const dosha = (() => {
-    const d = intake?.profile?.dosha || { kapha: 5, pitta: 5, vata: 5 };
-    const arr = [{k:"Kapha",v:d.kapha},{k:"Pitta",v:d.pitta},{k:"Vata",v:d.vata}].sort((a,b)=>b.v-a.v);
-    if (arr[0].v === arr[2].v) return "Tridoshic-balanced";
-    if (arr[0].v === arr[1].v) return `${arr[0].k}-${arr[1].k}`;
-    return arr[0].k;
-  })();
+  useEffect(() => {
+    setIndex(loadIndex());
 
-  function copy(text: string) {
-    try { navigator.clipboard.writeText(text); alert("Link copied!"); } catch { alert(text); }
-  }
+    // best-effort count for daily logs (different keys may be used across versions)
+    let count = 0;
+    try {
+      const k1 = localStorage.getItem("glowell:todayLogs");
+      if (k1) count += (JSON.parse(k1) as any[])?.length || 0;
+    } catch {}
+    try {
+      const k2 = localStorage.getItem("glowell:dailyLogs");
+      if (k2) count += (JSON.parse(k2) as any[])?.length || 0;
+    } catch {}
+    setDailyLogsCount(count);
+  }, []);
 
-  const demoURL = `${location.origin}/health-plan#demo`;
+  const latest = useMemo(() => pickLatest(index), [index]);
+  const totalPlans = index.length;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4">
+      {/* Render check */}
       <section className="gw-card">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-semibold">Dashboard</h1>
-            <p className="text-sm gw-muted">Your shortcuts, latest plan, and quick actions.</p>
+        <div className="text-sm gw-muted">Render check</div>
+        <div className="mt-1">Dashboard is loaded ✅</div>
+      </section>
+
+      {/* Stats */}
+      <section className="gw-card tinted">
+        <div className="grid" style={{ gap: 16, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+          <div className="gw-card" style={{ padding: 16 }}>
+            <div className="text-sm gw-muted">Total Plans</div>
+            <div className="text-2xl font-semibold mt-1">{totalPlans}</div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <button className="gw-btn" onClick={() => navigate("/health-form")}>Open Health Form</button>
-            <button className="gw-btn" onClick={() => navigate("/intake-review")}>Open Confirmation</button>
-            <button className="gw-btn" onClick={() => navigate("/health-plan")}>Open Health Plan</button>
-            <button className="gw-btn" onClick={() => navigate("/plans")}>Open Plans History</button>
+
+          <div className="gw-card" style={{ padding: 16 }}>
+            <div className="text-sm gw-muted">Latest BMI</div>
+            <div className="text-2xl font-semibold mt-1">
+              {latest?.bmi != null ? latest.bmi : "—"}
+            </div>
+          </div>
+
+          <div className="gw-card" style={{ padding: 16 }}>
+            <div className="text-sm gw-muted">Latest Energy (kcal)</div>
+            <div className="text-2xl font-semibold mt-1">
+              {latest?.energyEstimateKcal != null ? latest.energyEstimateKcal : 2000}
+            </div>
+          </div>
+
+          <div className="gw-card" style={{ padding: 16 }}>
+            <div className="text-sm gw-muted">Daily logs saved</div>
+            <div className="text-2xl font-semibold mt-1">{dailyLogsCount}</div>
           </div>
         </div>
       </section>
 
-      {/* Demo shortcuts */}
-      <section className="gw-card">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h2 className="font-medium">Public Demo</h2>
-            <p className="text-sm gw-muted">Read-only plan at <code>/health-plan#demo</code></p>
-          </div>
-          <div className="flex gap-2">
-            <button className="gw-btn" onClick={() => navigate("/health-plan#demo")}>Open Public Demo</button>
-            <button className="gw-btn" onClick={() => copy(demoURL)}>Copy Demo Link</button>
-          </div>
-        </div>
-      </section>
+      {/* Quick actions */}
+      <section className="gw-card tinted">
+        <h2 className="font-medium mb-3">Quick Actions</h2>
+        <div className="flex flex-wrap gap-2">
+          <button className="gw-btn" onClick={() => nav("/health-form")}>Open Intake</button>
+          <button className="gw-btn" onClick={() => nav("/health-plan")}>Open Health Plan</button>
+          <button className="gw-btn" onClick={() => nav("/plans")}>Open Plans History</button>
+          <button
+            className="gw-btn"
+            disabled={!latest?.id}
+            onClick={() => latest?.id && nav(`/plans/${encodeURIComponent(latest.id)}`)}
+          >
+            Open Latest Snapshot
+          </button>
 
-      {/* Tiles */}
-      <section className="gw-card">
-        <div className="grid gap-3 md:grid-cols-4">
-          <Tile label="Total plans saved" value={String(stats.total)} />
-          <Tile label="Average BMI (saved plans)" value={stats.avgBMI ?? "—"} />
-          <Tile label="Latest plan created" value={stats.lastCreatedISO ? new Date(stats.lastCreatedISO).toLocaleString() : "—"} />
-          <Tile label="Intake summary" value={`${dietLine} • ${archetype} • ${dosha}`} />
-        </div>
-      </section>
-
-      {/* Latest snapshot quick actions */}
-      <section className="gw-card">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h2 className="font-medium">Latest snapshot</h2>
-            <p className="text-sm gw-muted">
-              {latestId ? <>ID <code>{latestId}</code>{latestPlan?.version ? <> · v{latestPlan.version}</> : null}</> : "No snapshots yet."}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button className="gw-btn" disabled={!latestId} onClick={() => navigate(`/plans/${latestId}`)}>Open</button>
-            <button
-              className="gw-btn"
-              disabled={!latestId}
-              onClick={() => copy(`${location.origin}/plans/${latestId}`)}
-            >
-              Copy Link
-            </button>
-          </div>
+          {/* Public demo tools */}
+          <button className="gw-btn" onClick={() => (window.location.href = "/health-plan#demo")}>
+            Open Public Demo
+          </button>
+          <button
+            className="gw-btn"
+            onClick={async () => {
+              await navigator.clipboard.writeText(`${location.origin}/health-plan#demo`);
+              alert("Demo link copied!");
+            }}
+          >
+            Copy Demo Link
+          </button>
         </div>
 
-        {latestPlan && (
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
-            <Tile label="BMI" value={latestPlan.metrics?.bmi ?? "—"} />
-            <Tile label="Energy (kcal est.)" value={latestPlan.metrics?.energyEstimateKcal ?? "—"} />
-            <Tile label="Packs applied" value={(latestPlan.packsApplied || []).join(", ") || "—"} />
-          </div>
-        )}
-      </section>
-
-      {/* Stored plans (brief list) */}
-      <section className="gw-card">
-        <h2 className="font-medium mb-2">Recent plans</h2>
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th className="border-b py-2 pr-3">ID</th>
-                <th className="border-b py-2 pr-3">Created</th>
-                <th className="border-b py-2 pr-3">BMI</th>
-                <th className="border-b py-2 pr-3">kcal est.</th>
-                <th className="border-b py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(Array.isArray(index) ? index.slice(0, 8) : []).map((id) => {
-                const p = plans[id] as PlanSnapshot | undefined;
-                return (
-                  <tr key={id}>
-                    <td className="border-b py-2 pr-3"><code>{id}</code></td>
-                    <td className="border-b py-2 pr-3">{p?.createdAt ? new Date(p.createdAt).toLocaleString() : "—"}</td>
-                    <td className="border-b py-2 pr-3">{p?.metrics?.bmi ?? "—"}</td>
-                    <td className="border-b py-2 pr-3">{p?.metrics?.energyEstimateKcal ?? "—"}</td>
-                    <td className="border-b py-2">
-                      <button className="gw-btn" onClick={() => navigate(`/plans/${id}`)}>Open</button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {(!Array.isArray(index) || index.length === 0) && (
-                <tr><td className="border-b py-2 gw-muted" colSpan={5}>No plans saved yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+        <div className="mt-2 text-xs gw-muted">
+          Latest:{" "}
+          {latest?.id ? latest.id : "—"}
+          {latest?.createdAt ? ` • ${new Date(latest.createdAt).toLocaleString()}` : ""}
         </div>
       </section>
-    </div>
-  );
-}
-
-function Tile({ label, value }: { label: string; value: any }) {
-  return (
-    <div className="rounded border bg-white px-3 py-2">
-      <div className="text-xs gw-muted">{label}</div>
-      <div className="text-lg">{(value === 0 || value) ? String(value) : "—"}</div>
     </div>
   );
 }

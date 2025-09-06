@@ -1,0 +1,115 @@
+﻿===== src/main.tsx =====
+// src/main.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
+
+===== src/App.tsx =====
+// src/App.tsx
+import { Routes, Route, Navigate } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
+
+import Welcome from "./pages/Welcome";
+import Dashboard from "./pages/Dashboard";
+import HealthForm from "./pages/HealthForm";
+import HealthPlan from "./pages/HealthPlan";
+import PlansHistory from "./pages/PlansHistory";
+import PlanDetail from "./pages/PlanDetail"; // if this file doesn't exist, remove this line & its route
+import Settings from "./pages/Settings";
+import Subscription from "./pages/Subscription";
+import Ping from "./pages/Ping";
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Root app shell */}
+      <Route path="/" element={<MainLayout />}>
+        {/* Home */}
+        <Route index element={<Welcome />} />
+
+        {/* Core (NOTE: relative child paths, no leading slash) */}
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="health-form" element={<HealthForm />} />
+        <Route path="health-plan" element={<HealthPlan />} />
+        <Route path="plans" element={<PlansHistory />} />
+        <Route path="plans/:id" element={<PlanDetail />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="subscription" element={<Subscription />} />
+        <Route path="_ping" element={<Ping />} />
+
+        {/* Fallback inside the app shell */}
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
+      </Route>
+    </Routes>
+  );
+}
+
+
+===== src/layouts/MainLayout.tsx =====
+// src/layouts/MainLayout.tsx
+import { NavLink, Outlet, useLocation, Link } from "react-router-dom";
+
+export default function MainLayout() {
+  const { pathname } = useLocation();
+
+  const link = (to: string, label: string) => (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        [
+          "px-2 py-1 rounded transition-colors",
+          isActive ? "bg-white gw-link-active" : "hover:bg-white/60",
+        ].join(" ")
+      }
+    >
+      {label}
+    </NavLink>
+  );
+
+  return (
+    <div className="min-h-screen">
+      <header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full border" aria-hidden />
+            <span className="font-semibold">GloWell</span>
+          </Link>
+
+          <nav className="flex items-center gap-4 text-sm">
+            {link("/", "Home")}
+            {link("/dashboard", "Dashboard")}
+            {link("/health-form", "Health Form")}
+            {link("/health-plan", "Health Plan")}
+            {link("/plans", "Plans")}
+            {link("/settings", "Settings")}
+            {link("/subscription", "Subscription")}
+            {link("/_ping", "_ping")}
+          </nav>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        <Outlet />
+      </main>
+
+      <footer className="border-t bg-white/70">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-xs gw-muted flex justify-between">
+          <span>Â© {new Date().getFullYear()} GloWell â€” Live Naturally</span>
+          <span>Path: {pathname}</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+

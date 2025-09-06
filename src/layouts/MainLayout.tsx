@@ -1,61 +1,72 @@
-import { ReactNode } from "react";
-import { NavLink, Link } from "react-router-dom";
-import ThemeSwitch from "@/components/ThemeSwitch";
+// src/layouts/MainLayout.tsx
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import ThemeSwitch from "../components/ThemeSwitch";
 
-type Props = { children: ReactNode };
-
-const Chip = ({ to, label }: { to: string; label: string }) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) =>
-      [
-        "px-3 py-1 rounded-full text-sm border",
-        "transition-opacity",
-        isActive ? "opacity-100" : "opacity-75 hover:opacity-100",
-      ].join(" ")
-    }
-  >
-    {label}
-  </NavLink>
-);
-
-export default function MainLayout({ children }: Props) {
+function ChipLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      {/* Sticky header with chip nav + theme/lock */}
-      <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
-        <div className="mx-auto max-w-7xl px-3 md:px-6 py-3 flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2 mr-1">
-            <div className="h-7 w-7 rounded-xl bg-[var(--chip)]" />
-            <div className="font-semibold">GloWell</div>
-          </Link>
+    <NavLink
+      to={to}
+      className={({ isActive }) => "nav-chip" + (isActive ? " is-active" : "")}
+      end
+    >
+      {children}
+    </NavLink>
+  );
+}
 
-          <nav className="flex flex-wrap gap-2 ml-1">
-            <Chip to="/" label="Home" />
-            <Chip to="/dashboard" label="Dashboard" />
-            <Chip to="/health-form" label="Health Form" />
-            <Chip to="/health-plan" label="Plan" />
-            <Chip to="/plans" label="History" />
-            <Chip to="/subscription" label="Subscription" />
-            <Chip to="/settings" label="Settings" />
+export default function MainLayout() {
+  const nav = useNavigate();
+  const loc = useLocation();
+
+  function openDemo() {
+    nav("/health-plan#demo");
+  }
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <header className="topbar">
+        <div className="container topbar-inner">
+          {/* Brand (left) */}
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true" />
+            <span className="brand-text">GloWell</span>
+          </div>
+
+          {/* Nav chips (center, scrolls if overflow) */}
+          <nav className="nav" aria-label="Primary">
+            <ChipLink to="/">Home</ChipLink>
+            <ChipLink to="/dashboard">Dashboard</ChipLink>
+            <ChipLink to="/health-form">Health Form</ChipLink>
+            <ChipLink to="/health-plan">Health Plan</ChipLink>
+            <ChipLink to="/plans">Plans</ChipLink>
+            <ChipLink to="/settings">Settings</ChipLink>
+            <ChipLink to="/subscription">Subscription</ChipLink>
+            <ChipLink to="/_ping">_ping</ChipLink>
           </nav>
 
-          <div className="ml-auto">
+          {/* Actions (right) */}
+          <div className="actions">
+            <button className="gw-btn" onClick={openDemo}>Open Demo</button>
             <ThemeSwitch />
           </div>
         </div>
       </header>
 
-      <main className="pb-16">{children}</main>
+      {/* Page content */}
+      <main className="container py-4">
+        <Outlet />
+      </main>
 
-      <footer className="border-t">
-        <div className="mx-auto max-w-7xl px-3 md:px-6 py-6 text-sm opacity-80 flex items-center justify-between">
-          <div>© {new Date().getFullYear()} GloWell — Live Naturally</div>
-          <a className="underline opacity-80 hover:opacity-100" href="/health-plan#demo">
-            Open Demo Plan
-          </a>
-        </div>
+      {/* Footer + lock banner */}
+      <footer className="container footer">
+        <div>© 2025 GloWell — Live Naturally</div>
+        <div className="gw-muted text-right">Path: {loc.pathname}</div>
       </footer>
+
+      <div className="gw-lock-banner">
+        <span style={{ marginRight: 6 }}>🔒</span> Read-only mode active
+      </div>
     </div>
   );
 }

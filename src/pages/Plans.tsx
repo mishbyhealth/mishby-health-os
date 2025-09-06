@@ -1,126 +1,104 @@
+// src/pages/Plans.tsx
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-
-/**
- * This page is intentionally lightweight and crash-proof.
- * It reads whatever it can from localStorage and shows a simple list.
- * It will work even if only some keys are present.
- */
+import { useNavigate } from "react-router-dom";
 
 type PlanIndexItem = {
   id: string;
-  date?: string;
+  createdAt?: string;
   version?: string | number;
-  bmi?: number;
-  kcal?: number;
+  bmi?: number | null;
+  energyEstimateKcal?: number | null;
+  packs?: string[];
 };
 
-const PLANS_KEY = "glowell:plans";         // optional legacy list of ids
-const INDEX_KEY = "glowell:plans:index";   // optional rich index
+const INDEX_KEY = "glowell:plans:index";
 
-function readJSON<T = unknown>(key: string): T | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-}
-
-function scanAllPlanKeys(): string[] {
-  const ids: string[] = [];
+/** Fallback: discover any saved plan ids from localStorage when index is missing */
+function discoverPlanIdsFromLocalStorage(): string[] {
+  const ids = new Set<string>();
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i) || "";
-    if (k.startsWith("glowell:plan:")) {
-      ids.push(k.replace("glowell:plan:", ""));
-    }
+    if (k.startsWith("PLN-")) ids.add(k.replace(/^PLN-/, ""));
+    if (/^plan_/.test(k)) ids.add(k); // very old style
   }
-  return ids;
+  return Array.from(ids);
+}
+
+/** Load index or synthesize a lightweight one */
+function loadIndex(): PlanIndexItem[] {
+  try {
+    const raw = localStorage.getItem(INDEX_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(arr)) return arr;
+  } catch {}
+  return discoverPlanIdsFromLocalStorage().map((id) => ({ id }));
+}
+
+function fmtDate(s?: string) {
+  if (!s) return "—";
+  const t = Date.parse(s);
+  if (isNaN(t)) return s;
+  return new Date(t).toLocaleString();
 }
 
 export default function Plans() {
-  const [items, setItems] = useState<PlanIndexItem[]>([]);
+  const nav = useNavigate();
+  const [rows, setRows] = useState<PlanIndexItem[]>([]);
 
   useEffect(() => {
-    // Prefer the rich index if available
-    const index = readJSON<PlanIndexItem[]>(INDEX_KEY);
-    if (Array.isArray(index) && index.length) {
-      setItems(index);
-      return;
-    }
-
-    // Fallback: try list of ids
-    const idsFromList = readJSON<string[]>(PLANS_KEY) || [];
-    let ids = Array.isArray(idsFromList) ? idsFromList : [];
-
-    // Final fallback: scan all keys
-    if (!ids.length) {
-      ids = scanAllPlanKeys();
-    }
-
-    // Build minimal items from ids
-    const minimal = ids.map((id) => ({ id })) as PlanIndexItem[];
-    setItems(minimal);
+    setRows(loadIndex());
   }, []);
 
-  const count = items.length;
+  const count = rows.length;
+  const hasAny = count > 0;
 
-  const pretty = useMemo(
-    () =>
-      items.map((it) => ({
-        id: it.id,
-        date: it.date || "—",
-        version: it.version ?? "—",
-        bmi: typeof it.bmi === "number" ? it.bmi.toFixed(1) : "—",
-        kcal: typeof it.kcal === "number" ? Math.round(it.kcal) : "—",
-      })),
-    [items]
-  );
+  const tableRows = useMemo(() => rows, [rows]);
 
   return (
-    <div className="mx-auto max-w-5xl p-4 md:p-8">
-      <div className="gw-card tinted p-6 md:p-8 rounded-2xl">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Plans History</h1>
-        <p className="opacity-80 text-sm md:text-base">
-          Saved plans detected: <b>{count}</b>. This lightweight view works with any existing storage layout.
+    <div className="space-y-4">
+      {/* Header / summary */}
+      <section className="gw-card tinted">
+        <h1 className="text-xl font-semibold">Plans History</h1>
+        <p className="gw-muted text-sm">
+          Saved plans detected: <strong>{count}</strong>. This lightweight view works with any
+          existing storage layout. Open a plan to view/print/export.
         </p>
+      </section>
 
-        {count === 0 ? (
-          <div className="mt-6 gw-card p-4 rounded-xl">
-            <p className="text-sm opacity-80">
-              No saved plans found yet. Create one from{" "}
-              <Link to="/health-form" className="underline">Health Form</Link>{" "}
-              or open the{" "}
-              <a className="underline" href="/health-plan#demo">Demo Plan</a>.
-            </p>
-          </div>
+      {/* List */}
+      <section className="gw-card">
+        {!hasAny ? (
+          <div className="gw-empty">No saved plans yet.</div>
         ) : (
-          <div className="mt-6 overflow-x-auto">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left opacity-70">
-                  <th className="py-2 pr-3">ID</th>
-                  <th className="py-2 pr-3">Date</th>
-                  <th className="py-2 pr-3">Version</th>
-                  <th className="py-2 pr-3">BMI</th>
-                  <th className="py-2 pr-3">kCal</th>
-                  <th className="py-2 pr-3">Actions</th>
+                <tr className="gw-tr">
+                  <th className="gw-th">ID</th>
+                  <th className="gw-th">Date</th>
+                  <th className="gw-th">Version</th>
+                  <th className="gw-th">BMI</th>
+                  <th className="gw-th">kCal</th>
+                  <th className="gw-th">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pretty.map((row) => (
-                  <tr key={row.id} className="border-t">
-                    <td className="py-2 pr-3 font-mono break-all">{row.id}</td>
-                    <td className="py-2 pr-3">{row.date}</td>
-                    <td className="py-2 pr-3">{String(row.version)}</td>
-                    <td className="py-2 pr-3">{row.bmi}</td>
-                    <td className="py-2 pr-3">{row.kcal}</td>
-                    <td className="py-2 pr-3">
-                      {/* Generic open — your HealthPlan page may read from current/local storage */}
-                      <Link to="/health-plan" className="px-3 py-1 rounded-full border">
+                {tableRows.map((p, i) => (
+                  <tr key={p.id || i} className="gw-tr">
+                    <td className="gw-td" style={{ whiteSpace: "nowrap" }}>
+                      {p.id || "—"}
+                    </td>
+                    <td className="gw-td">{fmtDate(p.createdAt)}</td>
+                    <td className="gw-td">{p.version ?? "—"}</td>
+                    <td className="gw-td">{p.bmi ?? "—"}</td>
+                    <td className="gw-td">{p.energyEstimateKcal ?? "—"}</td>
+                    <td className="gw-td">
+                      <button
+                        className="gw-btn"
+                        onClick={() => nav(`/plans/${encodeURIComponent(p.id)}`)}
+                      >
                         Open Plan
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -128,11 +106,7 @@ export default function Plans() {
             </table>
           </div>
         )}
-
-        <div className="mt-6 text-xs opacity-70">
-          Tip: This page won’t crash even if the index is missing. Later we can wire a “View by ID” deep-link once the HealthPlan reader API is finalized.
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

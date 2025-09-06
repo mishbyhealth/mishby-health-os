@@ -1,30 +1,31 @@
 // src/utils/theme.ts
-export type Theme =
-  | "classic" | "mint" | "sky" | "lavender" | "sunset" | "forest" | "slate";
+export const THEMES = ["classic","mint","sky","lavender","sunset","forest","slate"] as const;
+export type ThemeName = typeof THEMES[number];
 
-export const THEMES: Theme[] = ["classic","mint","sky","lavender","sunset","forest","slate"];
 const THEME_KEY = "glowell:theme";
 const LOCK_KEY  = "glowell:lock";
 
-export function loadTheme(): Theme {
-  try { const t = localStorage.getItem(THEME_KEY) as Theme | null; if (t && THEMES.includes(t)) return t; } catch {}
-  return "classic";
+export function loadTheme(): ThemeName {
+  const v = localStorage.getItem(THEME_KEY);
+  return (THEMES.includes(v as ThemeName) ? (v as ThemeName) : "classic");
 }
-export function saveTheme(t: Theme){ try { localStorage.setItem(THEME_KEY, t); } catch {} }
-
-export function applyTheme(t: Theme){
+export function saveTheme(t: ThemeName) {
+  localStorage.setItem(THEME_KEY, t);
+}
+export function applyTheme(t: ThemeName) {
   document.documentElement.setAttribute("data-theme", t);
 }
 
 export function loadLock(): boolean {
-  try {
-    const env = (import.meta as any).env?.VITE_GLOWWELL_LOCK;
-    if (env === "1") return true;
-    const s = localStorage.getItem(LOCK_KEY);
-    return s === "1";
-  } catch { return false; }
+  try { return localStorage.getItem(LOCK_KEY) === "1"; } catch { return false; }
 }
-export function saveLock(locked: boolean){
-  try { localStorage.setItem(LOCK_KEY, locked ? "1" : "0"); } catch {}
-  document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
+export function saveLock(on: boolean) {
+  localStorage.setItem(LOCK_KEY, on ? "1" : "0");
+  document.documentElement.setAttribute("data-locked", on ? "1" : "0");
+  window.dispatchEvent(new CustomEvent("glowell:lock-change", { detail: on }));
+}
+export function toggleLock(): boolean {
+  const next = !loadLock();
+  saveLock(next);
+  return next;
 }

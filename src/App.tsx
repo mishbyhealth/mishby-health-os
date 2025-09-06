@@ -1,97 +1,34 @@
-import { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import MainLayout from "@/layouts/MainLayout";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import Welcome from "@/pages/Welcome";
+import { Routes, Route } from "react-router-dom";
+import Shell from "./layouts/Shell";
 
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const HealthForm = lazy(() => import("@/pages/HealthForm"));
-const IntakeReview = lazy(() => import("@/pages/IntakeReview"));
-const HealthPlan = lazy(() => import("@/pages/HealthPlan"));
-const Plans = lazy(() => import("@/pages/Plans"));           // you created this
-const Subscription = lazy(() => import("@/pages/Subscription"));
-const Ping = lazy(() => import("@/pages/Ping"));
-const Settings = lazy(() => import("@/pages/Settings"));
+import Welcome from "./pages/Welcome";
+import Dashboard from "./pages/Dashboard";
+import HealthForm from "./pages/HealthForm";
+import HealthPlan from "./pages/HealthPlan";
+import Plans from "./pages/Plans";
+import Subscription from "./pages/Subscription";
+import Settings from "./pages/Settings";
+import DonatePage from "./pages/Donate";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Ping from "./pages/Ping";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <MainLayout>
-        <Suspense fallback={<div className="p-6">Loading…</div>}>
-          <ErrorBoundary name="Routes">
-            <Routes>
-              <Route path="/" element={<Welcome />} />
-
-              <Route
-                path="/dashboard"
-                element={
-                  <ErrorBoundary name="Dashboard">
-                    <Dashboard />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/health-form"
-                element={
-                  <ErrorBoundary name="HealthForm">
-                    <HealthForm />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/intake-review"
-                element={
-                  <ErrorBoundary name="IntakeReview">
-                    <IntakeReview />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/health-plan"
-                element={
-                  <ErrorBoundary name="HealthPlan">
-                    <HealthPlan />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/plans"
-                element={
-                  <ErrorBoundary name="Plans">
-                    <Plans />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/subscription"
-                element={
-                  <ErrorBoundary name="Subscription">
-                    <Subscription />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/_ping"
-                element={
-                  <ErrorBoundary name="Ping">
-                    <Ping />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ErrorBoundary name="Settings">
-                    <Settings />
-                  </ErrorBoundary>
-                }
-              />
-
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </ErrorBoundary>
-        </Suspense>
-      </MainLayout>
-    </BrowserRouter>
+    <Routes>
+      <Route element={<Shell />}>
+        <Route index element={<Welcome />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/health-form" element={<HealthForm />} />
+        <Route path="/health-plan" element={<HealthPlan />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/subscription" element={<Subscription />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/donate" element={<DonatePage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/_ping" element={<Ping />} />
+      </Route>
+    </Routes>
   );
 }

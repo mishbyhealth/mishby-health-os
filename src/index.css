@@ -1,210 +1,278 @@
+/* src/index.css */
+
+/* Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ==== GloWell — Theming System (7 themes) + Pretty UI ==== */
-/* (…the rest of index.css stays) */
+/* ─────────────────────────────────────────────────────────────
+   GloWell Theme Tokens (beige + dark green)
+   ───────────────────────────────────────────────────────────── */
 :root{
-  --radius-lg: 20px;
-  --shadow-1: 0 6px 24px rgba(0,0,0,.06);
-  --shadow-2: 0 12px 40px rgba(0,0,0,.08);
-
-  /* Theme variables (overridden per theme) */
-  --bg: #F4EFE6;
-  --header: #F7F2EA;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --primary: #10b981;           /* accent */
-  --primary-strong: #059669;
-  --card-1: #ffffff;            /* card background */
-  --card-2: #ffffff;            /* subtle tint layer */
+  --gw-bg: #f7f2e9;      /* app background (beige) */
+  --gw-fg: #102a24;      /* primary text (deep green) */
+  --gw-accent: #0b7d69;  /* accent (dark teal/green) */
+  --gw-muted: #6b7280;   /* muted text (gray-500) */
+  --gw-card: #ffffff;    /* card surface */
+  --gw-border: #e5e7eb;  /* border (gray-200) */
 }
 
-/* ===== THEMES ===== */
-/* 1) Classic (beige) */
-:root[data-theme="classic"]{
-  --bg:#F4EFE6; --header:#F7F2EA; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
-  --primary:#10b981; --primary-strong:#059669;
+/* Base (applies site-wide) */
+@layer base {
+  html, body, #root {
+    min-height: 100%;
+    min-height: 100vh;
+    background: var(--gw-bg);
+    color: var(--gw-fg);
+  }
+
+  /* Typography tweaks */
+  h1,h2,h3,h4 { letter-spacing: -0.01em; }
+  a { text-underline-offset: 2px; }
+
+  /* Tables look tidy by default */
+  table { border-collapse: collapse; }
+  th, td { border-color: var(--gw-border); }
+}
+
+/* Components (small helpers) */
+@layer components {
+  .gw-card {
+    @apply rounded-lg border p-4;
+    background: var(--gw-card);
+    border-color: var(--gw-border);
+  }
+
+  .gw-btn {
+    @apply rounded border px-3 py-1 text-sm hover:bg-gray-50;
+    border-color: var(--gw-border);
+  }
+
+  .gw-link-active {
+    color: var(--gw-accent);
+    @apply font-medium;
+  }
+}
+
+/* Utilities (optional minor polish) */
+@layer utilities {
+  .gw-muted { color: var(--gw-muted); }
+}
+
+/* Print: clean A4 style */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff !important; color: #111 !important; }
+  header, footer, nav { display: none !important; }
+  .no-print { display: none !important; }
+}
+
+/* ===== Header + Lock Banner (one-row, scrollable nav) ===== */
+.container{max-width:1120px;margin:0 auto;padding:0 16px;}
+
+.topbar{position:sticky;top:0;z-index:40;background:var(--header);border-bottom:1px solid var(--border);}
+.topbar-inner{display:flex;align-items:center;gap:12px;min-height:56px;justify-content:space-between;flex-wrap:nowrap;}
+
+.brand{flex:0 0 auto;display:flex;align-items:center;gap:10px;color:var(--text);}
+.brand-text{font-weight:700;font-size:18px;line-height:1;}
+.brand-mark{width:18px;height:18px;border-radius:6px;background:var(--primary);box-shadow:0 0 0 2px #fff3 inset, var(--shadow-1);}
+
+/* Nav = single row, scrolls horizontally if overflow */
+.nav{flex:1 1 auto;min-width:0;display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+/* Optional: hide the thin bar entirely */
+.nav::-webkit-scrollbar{display:none}
+.nav-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:9999px;background:var(--card-1);border:1px solid var(--border);color:var(--text);}
+.nav-chip.is-active{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in hsl, var(--primary) 22%, transparent);}
+
+/* Right-side */
+.actions{flex:0 0 auto;display:flex;align-items:center;gap:8px;}
+
+.footer{margin-top:24px;padding:16px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px;}
+
+/* Lock banner */
+.gw-lock-banner{position:fixed;left:16px;bottom:16px;padding:10px 12px;border:1px dashed var(--border);border-radius:10px;background:var(--card-1);color:var(--text);box-shadow:var(--shadow-1);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s ease;}
+html[data-locked="1"] .gw-lock-banner{opacity:1;transform:translateY(0);pointer-events:auto;}
+
+/* --- Unified header heights + bigger brand (paste near end) --- */
+:root{ --bar-h: 60px; } /* tweak 56/60/64 to taste */
+
+.topbar-inner{ min-height: var(--bar-h); }
+.sidenav-brand{
+  min-height: var(--bar-h);
+  padding: 0 16px;
+  display:flex; align-items:center; gap:12px;
+}
+
+.brand-text{ font-weight:800; font-size:20px; line-height:1; }
+
+/* Prefer PNG logo if present */
+.brand-img{
+  width: 32px; height: 32px; object-fit: contain; border-radius: 8px;
+  box-shadow: 0 0 0 2px #fff3 inset, var(--shadow-1);
+}
+.brand-mark{
+  width: 28px; height: 28px; border-radius: 8px; background: var(--primary);
+  box-shadow: 0 0 0 2px #fff3 inset, var(--shadow-1);
+}
+
+/* Wider sidenav for larger brand */
+.sidenav{ width: 260px; flex: 0 0 260px; }
+
+/* ==== THEMES (place LAST in file) ==== */
+:root{
+  --radius-lg:20px;
+  --shadow-1:0 6px 24px rgba(0,0,0,.06);
+  --shadow-2:0 12px 40px rgba(0,0,0,.08);
+  /* defaults in case no theme attribute */
+  --bg:#f6f2e9; --header:#f7f2ea; --text:#111827; --muted:#6b7280;
+  --border:#e5e7eb; --primary:#10b981; --primary-strong:#059669;
   --card-1:#ffffff; --card-2:#fbfbfb;
 }
 
+/* 1) Classic (beige) */
+html[data-theme="classic"]{
+  --bg:#F4EFE6; --header:#F7F2EA; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
+  --primary:#10b981; --primary-strong:#059669; --card-1:#ffffff; --card-2:#fbfbfb;
+}
 /* 2) Mint */
-:root[data-theme="mint"]{
-  --bg:#ECF8F4; --header:#F3FBF8; --text:#0b3f2e; --muted:#5b7c70; --border:#d6efe7;
-  --primary:#12b886; --primary-strong:#099268;
-  --card-1:#ffffff; --card-2:#f2fbf7;
+html[data-theme="mint"]{
+  --bg:#eefaf4; --header:#eaf7f1; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --primary:#10b981; --primary-strong:#059669; --card-1:#ffffff; --card-2:#f6fffb;
 }
-
 /* 3) Sky */
-:root[data-theme="sky"]{
-  --bg:#EEF7FD; --header:#F6FAFE; --text:#0b2a46; --muted:#5b6e84; --border:#d7e9f6;
-  --primary:#0ea5e9; --primary-strong:#0284c7;
-  --card-1:#ffffff; --card-2:#f3faff;
+html[data-theme="sky"]{
+  --bg:#eef6ff; --header:#e9f2ff; --text:#0f172a; --muted:#64748b; --border:#e0ecff;
+  --primary:#3b82f6; --primary-strong:#2563eb; --card-1:#ffffff; --card-2:#f7fbff;
 }
-
 /* 4) Lavender */
-:root[data-theme="lavender"]{
-  --bg:#F4F1FA; --header:#F8F6FD; --text:#2b204a; --muted:#746a86; --border:#e6e0f3;
-  --primary:#8b5cf6; --primary-strong:#7c3aed;
-  --card-1:#ffffff; --card-2:#f7f4ff;
+html[data-theme="lavender"]{
+  --bg:#f5f2ff; --header:#f2efff; --text:#111827; --muted:#6b7280; --border:#e9e7ff;
+  --primary:#8b5cf6; --primary-strong:#7c3aed; --card-1:#ffffff; --card-2:#faf8ff;
 }
-
 /* 5) Sunset */
-:root[data-theme="sunset"]{
-  --bg:#FFF2ED; --header:#FFF7F4; --text:#4a241c; --muted:#8b6b63; --border:#f6ddd5;
-  --primary:#f97316; --primary-strong:#ea580c;
-  --card-1:#ffffff; --card-2:#fff7f2;
+html[data-theme="sunset"]{
+  --bg:#fff4ed; --header:#ffefe6; --text:#111827; --muted:#6b7280; --border:#ffe3d5;
+  --primary:#f97316; --primary-strong:#ea580c; --card-1:#ffffff; --card-2:#fff9f5;
 }
-
 /* 6) Forest */
-:root[data-theme="forest"]{
-  --bg:#F1F6F1; --header:#F6FAF6; --text:#0f2a14; --muted:#617465; --border:#dbe8dc;
-  --primary:#16a34a; --primary-strong:#15803d;
-  --card-1:#ffffff; --card-2:#f3faf3;
+html[data-theme="forest"]{
+  --bg:#eef7f1; --header:#eaf4ed; --text:#0b1324; --muted:#475569; --border:#d7e8de;
+  --primary:#16a34a; --primary-strong:#15803d; --card-1:#ffffff; --card-2:#f6fbf8;
 }
-
 /* 7) Slate */
-:root[data-theme="slate"]{
-  --bg:#F3F5F7; --header:#F8FAFB; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
-  --primary:#0ea5e9; --primary-strong:#0369a1;
-  --card-1:#ffffff; --card-2:#f7f9fb;
+html[data-theme="slate"]{
+  --bg:#f4f6f8; --header:#eff2f5; --text:#0f172a; --muted:#475569; --border:#e2e8f0;
+  --primary:#0ea5e9; --primary-strong:#0284c7; --card-1:#ffffff; --card-2:#f8fafc;
 }
 
-/* ===== Base layout ===== */
-*{ box-sizing:border-box; }
-html,body,#root{ height:100%; }
-body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
-               "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-  line-height:1.45; font-size:16px;
-}
+/* base usage */
+html,body,#root{height:100%}
+body{background:var(--bg);color:var(--text);}
 
-.container{ max-width:1120px; margin:0 auto; padding:16px; }
-@media (min-width:1024px){ .container{ padding:20px; } }
+/* ===== App Shell ===== */
+.app-shell{display:flex;min-height:100vh;background:var(--bg);color:var(--text);}
+.app-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 
-/* Header (light tint) */
-.topbar{
-  position:sticky; top:0; z-index:40;
+/* ===== SideNav ===== */
+.sidenav{
+  width: 240px; flex:0 0 240px;
+  border-right:1px solid var(--border);
   background:var(--header);
-  border-bottom:1px solid var(--border);
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  position:sticky; top:0; height:100vh;
 }
-.topbar-inner{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.brand{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; }
-.brand-mark{ width:24px; height:24px; border-radius:8px;
-  background: conic-gradient(from 180deg, #0ea5e9, #86efac, #facc15);
+.sidenav-inner{display:flex;flex-direction:column;height:100%;}
+.sidenav-brand{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border);}
+.sidenav-nav{display:flex;flex-direction:column;gap:8px;padding:12px;}
+.side-chip{
+  display:flex;align-items:center;
+  padding:10px 12px;border-radius:10px;background:var(--card-1);
+  border:1px solid var(--border); color:var(--text);
+}
+.side-chip.is-active{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in hsl, var(--primary) 22%, transparent);}
+.sidenav-controls{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+
+/* Brand mark (shared) */
+.brand-mark{width:18px;height:18px;border-radius:6px;background:var(--primary);box-shadow:0 0 0 2px #fff3 inset, var(--shadow-1);}
+.brand-text{font-weight:700}
+
+/* ===== Cards, chips, surfaces ===== */
+.gw-card, .card, .box{
+  background:var(--card-1); color:var(--text); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px; box-shadow:var(--shadow-1);
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--card-1); color:var(--text); border:1px solid var(--border);
+  border-radius:9999px; padding:4px 10px; font-size:12px;
 }
 
-/* Chip nav */
-.nav{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.nav .nav-chip{
-  display:inline-block; padding:8px 12px; border-radius:12px;
-  border:1px solid var(--border); background:transparent; color:inherit;
-  text-decoration:none; font-size:14px; transition:.15s;
-}
-.nav .nav-chip:hover{ border-color:var(--primary); color:var(--primary-strong); }
-.nav .nav-chip.is-active{
-  background:#fff; border-color:var(--primary); color:var(--primary-strong);
-  box-shadow:0 1px 4px color-mix(in srgb, var(--primary) 20%, transparent);
+/* Inputs adopt theme text/border */
+input, select, textarea{
+  color:var(--text); border:1px solid var(--border);
 }
 
-/* Footer */
-.footer{ color:var(--muted); font-size:12px; border-top:1px solid var(--border); padding:10px 16px 24px; }
+/* Tinted sections depend on theme */
+.tinted{background:color-mix(in hsl, var(--bg) 88%, var(--primary) 12%);}
 
-/* ===== Pretty cards (no more flat white) ===== */
-.gw-card{
-  background:
-    linear-gradient(180deg, var(--card-2) 0%, var(--card-1) 60%),
-    var(--card-1);
+/* Topbar (within app-main) */
+.topbar{position:sticky;top:0;z-index:30;background:var(--header);border-bottom:1px solid var(--border);}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;min-height:56px;}
+
+/* ─────────────────────────────────────────────────────────────
+   GloWell page helpers used by Health Form (added)
+   ───────────────────────────────────────────────────────────── */
+.gw-page{
+  padding: 16px;
+}
+.gw-tint{
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 12px;
+}
+
+/* Layout + spacing for rows/chips/labels/inputs */
+.gw-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.5rem;
+}
+
+.gw-badge{
+  display:inline-flex;
+  align-items:center;
+  border-radius:9999px;
+  padding:0.25rem 0.6rem;
+  font-size:0.875rem;
+  line-height:1;
+  background:var(--card-2);
+  color:var(--text);
   border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-1);
-  padding:18px;
+  /* ensure spacing even if container forgets gap */
+  margin-right:0.5rem;
+  margin-bottom:0.5rem;
 }
-@media (min-width:768px){ .gw-card{ padding:22px; } }
-
-/* Pastel-tinted variant (use className="gw-card tinted") */
-.gw-card.tinted{
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--primary) 10%, var(--card-2)) 0%,
-      var(--card-1) 70%
-    ),
-    var(--card-1);
-  box-shadow: var(--shadow-2);
+.gw-badge.is-active{
+  background:var(--header);
+  font-weight:600;
 }
 
-/* Headings inside cards */
-.gw-card h1,.gw-card h2{
-  margin:0 0 10px 0; display:flex; align-items:center; gap:10px; font-weight:800;
-}
-.gw-card h1{ font-size:26px; }
-.gw-card h2{ font-size:18px; }
-.gw-card h1::before,.gw-card h2::before{
-  content:""; width:8px; height:20px; border-radius:8px;
-  background:linear-gradient(180deg, var(--primary), var(--primary-strong));
+.gw-label > span{
+  display:block;
+  margin-bottom:0.25rem;
+  color:var(--muted);
 }
 
-/* Muted helper text */
-.gw-muted{ color:var(--muted); }
-
-/* Buttons */
-.gw-btn{
-  appearance:none; cursor:pointer;
-  border:1px solid var(--border); background:#fff; color:#111;
-  padding:8px 12px; border-radius:12px; font-size:14px; transition:.15s;
-}
-.gw-btn:hover{ background:#fafafa; border-color:color-mix(in srgb, var(--primary) 35%, var(--border)); }
-.gw-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent); }
-
-/* Inputs */
-input,select,textarea{
-  font:inherit; color:inherit; background:#fff; width:100%;
-  border:1px solid var(--border); border-radius:12px; padding:9px 12px;
-  transition:border-color .15s, box-shadow .15s;
-}
-input:focus,select:focus,textarea:focus{
-  outline:none; border-color:var(--primary-strong);
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent);
+.gw-input{
+  width:100%;
+  background:var(--card-1);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:10px;
+  padding:8px 10px;
 }
 
-/* Tables */
-table{ border-collapse:collapse; width:100%; }
-th,td{ border-bottom:1px solid var(--border); }
-th{ font-weight:600; color:#374151; }
-
-/* Small chips */
-.gw-chip{
-  display:inline-block; padding:6px 10px; border-radius:999px;
-  border:1px solid var(--border); background:#fff; font-size:12px;
+.gw-input::placeholder{
+  opacity:0.6;
 }
-
-/* Subtle global glow */
-body::after{
-  content:""; position:fixed; inset:0; pointer-events:none;
-  background:radial-gradient(1200px 800px at 80% -10%, rgba(255,255,255,.5), transparent);
-  mix-blend-mode:soft-light;
-}
-
-/* ===== Owner Lock (read-only) ===== */
-:root[data-locked="1"] *:where(input, select, textarea, button){
-  pointer-events:none !important; opacity:.75;
-}
-:root[data-locked="1"] .gw-lock-banner{ display:flex; }
-.gw-lock-banner{
-  position:fixed; right:20px; bottom:20px; z-index:60; display:none;
-  align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
-  background:#111; color:#fff; box-shadow:var(--shadow-2);
-}
-
-/* ===== Utilities (optional) ===== */
-.text-sm{ font-size:14px; }
-.text-xs{ font-size:12px; }
-.font-semibold{ font-weight:600; }
-.font-medium{ font-weight:500; }
-.mt-1{ margin-top:4px; } .mt-2{ margin-top:8px; } .mt-3{ margin-top:12px; }
-.mb-1{ margin-bottom:4px; } .mb-2{ margin-bottom:8px; } .mb-3{ margin-bottom:12px; }
-.block{ display:block; }

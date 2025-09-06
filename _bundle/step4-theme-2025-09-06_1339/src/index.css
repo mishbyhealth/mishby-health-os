@@ -1,0 +1,68 @@
+/* src/index.css */
+
+/* Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   GloWell Theme Tokens (beige + dark green)
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --gw-bg: #f7f2e9;      /* app background (beige) */
+  --gw-fg: #102a24;      /* primary text (deep green) */
+  --gw-accent: #0b7d69;  /* accent (dark teal/green) */
+  --gw-muted: #6b7280;   /* muted text (gray-500) */
+  --gw-card: #ffffff;    /* card surface */
+  --gw-border: #e5e7eb;  /* border (gray-200) */
+}
+
+/* Base (applies site-wide) */
+@layer base {
+  html, body, #root {
+    min-height: 100%;
+    min-height: 100vh;
+    background: var(--gw-bg);
+    color: var(--gw-fg);
+  }
+
+  /* Typography tweaks */
+  h1,h2,h3,h4 { letter-spacing: -0.01em; }
+  a { text-underline-offset: 2px; }
+
+  /* Tables look tidy by default */
+  table { border-collapse: collapse; }
+  th, td { border-color: var(--gw-border); }
+}
+
+/* Components (small helpers) */
+@layer components {
+  .gw-card {
+    @apply rounded-lg border p-4;
+    background: var(--gw-card);
+    border-color: var(--gw-border);
+  }
+
+  .gw-btn {
+    @apply rounded border px-3 py-1 text-sm hover:bg-gray-50;
+    border-color: var(--gw-border);
+  }
+
+  .gw-link-active {
+    color: var(--gw-accent);
+    @apply font-medium;
+  }
+}
+
+/* Utilities (optional minor polish) */
+@layer utilities {
+  .gw-muted { color: var(--gw-muted); }
+}
+
+/* Print: clean A4 style */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff !important; color: #111 !important; }
+  header, footer, nav { display: none !important; }
+  .no-print { display: none !important; }
+}

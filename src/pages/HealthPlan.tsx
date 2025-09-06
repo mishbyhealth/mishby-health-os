@@ -1,279 +1,317 @@
 // src/pages/HealthPlan.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ensurePacksLoaded, type PacksResult } from "../utils/packs";
 
-// Storage keys
 const PLANS_KEY = "glowell:plans";
 const INDEX_KEY = "glowell:plans:index";
-const INTAKE_V2_KEY = "glowell:intake.v2";
+const INTAKE_KEY = "glowell:intake";
+const SUB_KEY = "glowell:subscription";
 
-// Engine + libraries
-import { assemblePlanFromTemplates, type Plan, type IntakeSummary } from "../utils/engine_templates";
-import type { DietType, Cuisine } from "../utils/dietLibrary";
-import { ensurePacksLoaded } from "../utils/packs"; // runtime loader (safe if packs missing)
+type Gender = "male" | "female" | "other" | "";
+type DietType = "vegetarian" | "vegan" | "eggetarian" | "non_vegetarian" | "all_eater";
+type Spice = "low" | "medium" | "high";
 
-// --- utils ---
-function load<T>(key: string, fb: T): T {
-  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) as T : fb; } catch { return fb; }
+type IntakeData = {
+  age?: number | null;
+  gender?: Gender;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  dietType?: DietType;
+  spiceTolerance?: Spice;
+  state?: string;
+  city?: string;
+  region?: string;
+  timezone?: string;
+  // legacy
+  vegOnly?: boolean;
+};
+
+type Subscription = {
+  name?: string;
+  email?: string;
+  mobile?: string;
+  tier?: "free" | "silver" | "gold" | "platinum";
+};
+
+type MetricBlock = { bmi?: number | null; energyEstimateKcal?: number | null };
+type Tip = { text: string; source?: string };
+type HydrationItem = { time?: string; amountMl?: number };
+type MovementItem = { time?: string; activity?: string; minutes?: number };
+type MealItem = { time?: string; title?: string; items?: string[] };
+type ScheduleItem = { time?: string; what?: string; details?: string };
+type Plan = {
+  id: string; createdAt: string; version?: string;
+  metrics?: MetricBlock; hydration?: HydrationItem[]; movement?: MovementItem[];
+  meals?: MealItem[]; tips?: Tip[]; schedule?: ScheduleItem[]; packsApplied?: string[];
+};
+
+function safeParse<T>(raw: string | null, fallback: T): T { if (!raw) return fallback; try { return JSON.parse(raw) as T; } catch { return fallback; } }
+function readIntake(): IntakeData { return safeParse(localStorage.getItem(INTAKE_KEY), {} as IntakeData); }
+function readSubscription(): Subscription { return safeParse(localStorage.getItem(SUB_KEY), {} as Subscription); }
+
+function parseBool(v: string | null){ if(!v) return false; return v==="1" || v.toLowerCase()==="true" || v.toLowerCase()==="yes"; }
+function useDemoMode(): boolean { const loc = useLocation(); const hash = (loc.hash||"").toLowerCase(); const qs = new URLSearchParams(loc.search); return hash.includes("demo") || parseBool(qs.get("demo")); }
+
+function loadLatestPlan(): Plan | null {
+  try {
+    const idxRaw = localStorage.getItem(INDEX_KEY);
+    const plansRaw = localStorage.getItem(PLANS_KEY);
+    if (!plansRaw) return null;
+    const plans: Record<string, Plan> = JSON.parse(plansRaw);
+    if (idxRaw) {
+      const index: string[] = JSON.parse(idxRaw);
+      for (const id of index) if (plans[id]) return plans[id];
+    }
+    const arr = Object.values(plans);
+    if (!arr.length) return null;
+    return arr.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))[0];
+  } catch { return null; }
 }
-function save<T>(key: string, val: T){ try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
-function uid(){ return "PLN-" + new Date().toISOString().slice(0,10).replaceAll("-","") + "-" + Math.random().toString(36).slice(2,8); }
-function download(filename:string, text:string, type="text/plain"){
-  const blob = new Blob([text], { type }); const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-}
-function toCSV(rows: Array<Record<string, any>>){
-  if (!rows.length) return "";
-  const cols = Object.keys(rows[0]);
-  const esc = (v:any)=> `"${String(v ?? "").replaceAll('"','""')}"`;
-  return [cols.join(","), ...rows.map(r=> cols.map(c=>esc(r[c])).join(","))].join("\n");
-}
-function yes(msg:string){ try { return confirm(msg); } catch { return true; } }
 
-// Derive dosha label from scores
-function labelDosha(d?: {kapha:number; pitta:number; vata:number}){
-  const d0 = d || { kapha:5, pitta:5, vata:5 };
-  const arr = [{k:"Kapha",v:d0.kapha},{k:"Pitta",v:d0.pitta},{k:"Vata",v:d0.vata}].sort((a,b)=>b.v-a.v);
-  if (arr[0].v === arr[2].v) return "Tridoshic-balanced";
-  if (arr[0].v === arr[1].v) return `${arr[0].k}-${arr[1].k}`;
-  return arr[0].k;
+function computeBMI(heightCm?: number | null, weightKg?: number | null): number | null {
+  const h = Number(heightCm || 0); const w = Number(weightKg || 0); if (!h || !w) return null;
+  const m = h/100; const bmi = w/(m*m); return Number.isFinite(bmi) ? Math.round(bmi*10)/10 : null;
+}
+function estimateKcal(weightKg?: number | null): number { const w = Number(weightKg || 0); return w>0 ? Math.round(w*30) : 2000; }
+
+function backfillMetricsFromIntake(p: Plan, intake: IntakeData): Plan {
+  const metrics: MetricBlock = { ...(p.metrics || {}) };
+  if (metrics.bmi == null || Number.isNaN(metrics.bmi as number)) metrics.bmi = computeBMI(intake.heightCm, intake.weightKg);
+  if (metrics.energyEstimateKcal == null || Number.isNaN(metrics.energyEstimateKcal as number)) metrics.energyEstimateKcal = estimateKcal(intake.weightKg);
+  return { ...p, metrics };
 }
 
-export default function HealthPlan(){
-  const nav = useNavigate();
-  const [search] = useSearchParams();
-  const isDemo = location.hash.includes("#demo") || search.get("demo")==="1";
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [planId, setPlanId] = useState<string>("empty");
-  const once = useRef(false);
+function mealsFromIntake(intake: IntakeData): MealItem[] {
+  const diet: DietType = intake.dietType || "vegetarian";
+  const spice = intake.spiceTolerance || "medium";
+  const note = spice === "low" ? "(mild)" : spice === "high" ? "(spicy)" : "(medium)";
 
-  // Build intake summary for the engine
-  const intake = load<any>(INTAKE_V2_KEY, null);
-  const summary: IntakeSummary = useMemo(() => {
-    const diet: DietType = (intake?.profile?.dietType || "vegetarian") as DietType;
-    const cuisine: Cuisine | "Generic" = (intake?.profile?.cuisine || "Generic") as Cuisine | "Generic";
-    const times = intake?.schedule?.times || { wake:"06:30", lunch:"13:00", dinner:"20:30", leave:intake?.schedule?.times?.leave, return:intake?.schedule?.times?.return };
-    const chronic = intake?.health?.chronic || [];
-    const concerns = (intake?.today?.chips || []).concat(intake?.health?.concerns || []);
-    const goals = intake?.health?.goals || [];
-    const gender = intake?.profile?.gender || "";
-    const womens = intake?.health?.womens || null;
-    const doshaLabel = labelDosha(intake?.profile?.dosha);
-    return {
-      dietType: diet,
-      cuisine,
-      archetypeTimes: { wake: times.wake || "06:30", leave: times.leave, return: times.return, lunch: times.lunch || "13:00", dinner: times.dinner || "20:30", commuteMins: times.commuteMins || 0, breaks: times.breaks || [] },
-      chronic, concerns, goals, gender, womens,
-      doshaLabel,
-    };
-  }, [JSON.stringify(intake)]);
+  switch (diet) {
+    case "vegan":
+      return [
+        { time: "07:30", title: `Breakfast ${note}`, items: ["Oats + seeds", "Banana", "Peanut butter (no dairy)"] },
+        { time: "13:00", title: `Lunch ${note}`, items: ["Rajma/Chana", "Brown rice", "Veg sabzi"] },
+        { time: "20:00", title: `Dinner ${note}`, items: ["Tofu stir-fry", "Salad", "Lemon water"] },
+      ];
+    case "eggetarian":
+      return [
+        { time: "07:30", title: `Breakfast ${note}`, items: ["Masala omelette (light oil)", "Toast", "Fruit"] },
+        { time: "13:00", title: `Lunch ${note}`, items: ["Dal", "Veg sabzi", "Curd", "1–2 Roti/Rice"] },
+        { time: "20:00", title: `Dinner ${note}`, items: ["Paneer/Tofu", "Veg soup", "Salad"] },
+      ];
+    case "non_vegetarian":
+    case "all_eater":
+      return [
+        { time: "07:30", title: `Breakfast ${note}`, items: ["Oats + seeds", "Boiled egg", "Fruit"] },
+        { time: "13:00", title: `Lunch ${note}`, items: ["Grilled chicken (handful)", "Dal", "Salad", "1–2 Roti/Rice"] },
+        { time: "20:00", title: `Dinner ${note}`, items: ["Fish curry (light)", "Veg sabzi", "Roti/Rice"] },
+      ];
+    case "vegetarian":
+    default:
+      return [
+        { time: "07:30", title: `Breakfast ${note}`, items: ["Poha/Upma", "Nuts", "Fruit"] },
+        { time: "13:00", title: `Lunch ${note}`, items: ["Dal", "2 Roti", "Veg sabzi", "Curd"] },
+        { time: "20:00", title: `Dinner ${note}`, items: ["Khichdi", "Mixed salad", "Buttermilk"] },
+      ];
+  }
+}
+function hydrateBackfill(p: Plan): Plan { if (p.hydration?.length) return p;
+  return { ...p, hydration: [{ time:"06:30", amountMl:250 },{ time:"09:00", amountMl:300 },{ time:"12:30", amountMl:300 },{ time:"16:00", amountMl:250 },{ time:"19:00", amountMl:250 }] }; }
+function movementBackfill(p: Plan): Plan { if (p.movement?.length) return p;
+  return { ...p, movement: [{ time:"07:00", activity:"Brisk walk", minutes:20 },{ time:"18:00", activity:"Light yoga", minutes:15 }] }; }
+function tipsBackfill(p: Plan, intake: IntakeData): Plan {
+  if (p.tips?.length) return p;
+  const msgs: Tip[] = [
+    { text: "Prioritize home-cooked meals; keep portions balanced." },
+    { text: "Drink water steadily through the day; avoid chugging late night." },
+    { text: "Short movement breaks if sitting >45 minutes." },
+  ];
+  if (intake.spiceTolerance) msgs.push({ text: `Spice tolerance noted: ${intake.spiceTolerance}.` });
+  return { ...p, tips: msgs };
+}
 
-  // Build plan from templates + optional pack tips at runtime
-  useEffect(() => {
-    if (once.current) return;
-    once.current = true;
+function buildDemoPlan(now = new Date()): Plan {
+  const iso = now.toISOString();
+  return {
+    id: "demo-" + iso.slice(0, 19).replace(/[:T]/g, "-"),
+    createdAt: iso,
+    version: "v8-demo",
+    metrics: { bmi: 23.2, energyEstimateKcal: 1950 },
+    packsApplied: ["hypertension", "diabetes"],
+    hydration: [{ time:"06:30", amountMl:250 },{ time:"09:00", amountMl:300 },{ time:"12:30", amountMl:300 },{ time:"16:00", amountMl:250 },{ time:"19:00", amountMl:250 }],
+    movement: [{ time:"07:00", activity:"Brisk walk", minutes:20 },{ time:"18:00", activity:"Light yoga", minutes:15 }],
+    meals: [{ time:"07:30", title:"Breakfast", items:["Oats + seeds","Fruit"] },{ time:"13:00", title:"Lunch", items:["Dal","2 Roti","Veg sabzi"] },{ time:"20:00", title:"Dinner", items:["Khichdi","Salad"] }],
+    tips: [{ text:"Limit added salt; prefer herbs and lemon for flavor.", source:"hypertension" },{ text:"Distribute carbs through the day; include fiber.", source:"diabetes" }],
+    schedule: [{ time:"06:00", what:"Wake", details:"2–3 deep breaths near window" },{ time:"07:00", what:"Walk", details:"Brisk walk 20 min" },{ time:"13:00", what:"Lunch", details:"Balanced plate" },{ time:"22:00", what:"Wind down", details:"Screen-off, dim lights" }],
+  };
+}
 
-    const base = assemblePlanFromTemplates(summary);
+function toCSV(rows: string[][]): string { return rows.map(r => r.map(c => `"${(c ?? "").toString().replace(/"/g,'""')}"`).join(",")).join("\n"); }
+function download(filename: string, data: BlobPart, type = "text/plain") { const blob = new Blob([data], { type }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000); }
 
-    // Append runtime condition pack tips if packs JSONs exist
-    ensurePacksLoaded().then(packs => {
-      try {
-        const extraTips: string[] = [];
-        (base.packsApplied || []).forEach(p => {
-          const t = packs?.[p]?.tips || [];
-          t.forEach((it:any)=> extraTips.push(it?.text || String(it)));
-        });
-        const merged: Plan = { ...base, tips: [...base.tips, ...extraTips] };
-        setPlan(merged);
-        maybeSaveSnapshot(merged);
-      } catch {
-        setPlan(base);
-        maybeSaveSnapshot(base);
-      }
-    }).catch(() => {
-      setPlan(base);
-      maybeSaveSnapshot(base);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+export default function HealthPlan() {
+  const navigate = useNavigate();
+  const demo = useDemoMode();
+  const [packs, setPacks] = useState<PacksResult | null>(null);
+  const mounted = useRef(false);
 
-  function maybeSaveSnapshot(p: Plan){
-    if (isDemo) return; // never save demo
-    const id = uid();
-    setPlanId(id);
-    const map = load<Record<string, any>>(PLANS_KEY, {});
-    const idx = load<string[]>(INDEX_KEY, []);
-    const snap = {
-      id,
+  const intake = useMemo(() => readIntake(), []);
+  const sub = useMemo(() => readSubscription(), []);
+
+  const basePlan = useMemo<Plan>(() => {
+    const existing = loadLatestPlan();
+    if (demo) return buildDemoPlan();
+    return existing ?? {
+      id: "empty",
       createdAt: new Date().toISOString(),
       version: "v8",
-      metrics: p.metrics || {},
-      packsApplied: p.packsApplied || [],
-      readme: p.readme || "",
+      metrics: { bmi: null, energyEstimateKcal: null },
+      hydration: [], movement: [], meals: [], tips: [], schedule: [],
     };
-    const nextMap = { ...map, [id]: snap };
-    const nextIdx = [id, ...idx.filter(x=>x!==id)].slice(0, 200);
-    save(PLANS_KEY, nextMap);
-    save(INDEX_KEY, nextIdx);
-  }
+  }, [demo]);
 
-  // Exports
-  function exportJSON(){
-    if (!plan) return;
-    download(`glowell_plan_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({ id:planId, plan }, null, 2), "application/json");
-  }
-  function exportHydrationCSV(){
-    if (!plan) return;
-    const rows = plan.hydration.map(h=>({ time:h.at, label:h.label }));
-    download("hydration.csv", toCSV(rows), "text/csv");
-  }
-  function exportMealsCSV(){
-    if (!plan) return;
-    const rows = plan.meals.flatMap(m => (m.items||[]).map(it => ({ slot:m.slot, at:m.at||"", item:it.name })));
-    download("meals.csv", toCSV(rows), "text/csv");
-  }
-  function exportScheduleCSV(){
-    if (!plan) return;
-    const rows = plan.schedule.map(b => ({ time:b.at, type:b.type, label:b.label }));
-    download("schedule.csv", toCSV(rows), "text/csv");
-  }
+  const plan = useMemo<Plan>(() => {
+    let p = { ...basePlan };
+    p = backfillMetricsFromIntake(p, intake);
+    if (!p.meals?.length) p = { ...p, meals: mealsFromIntake(intake) };
+    p = hydrateBackfill(p);
+    p = movementBackfill(p);
+    p = tipsBackfill(p, intake);
+    return p;
+  }, [basePlan, intake]);
 
-  // Header chips
-  const headerLine = useMemo(() => {
-    const diet = intake?.profile?.dietType || "—";
-    const cuisine = intake?.profile?.cuisine || "—";
-    const arche = intake?.schedule?.archetypeId || "—";
-    const dosha = labelDosha(intake?.profile?.dosha);
-    return `${arche} · ${diet} · ${cuisine} · ${dosha}`;
-  }, [intake]);
+  useEffect(() => {
+    if (mounted.current) return; mounted.current = true;
+    (async () => { const res = await ensurePacksLoaded(); setPacks(res); })();
+  }, []);
+
+  const personalizationBanner = useMemo(() => {
+    const bits: string[] = [];
+    if (sub?.name) bits.push(`for ${sub.name}`);
+    if (intake.dietType) bits.push(`Diet: ${String(intake.dietType).replace("_","-")}`);
+    if (intake.spiceTolerance) bits.push(`Spice: ${intake.spiceTolerance}`);
+    return bits.length ? bits.join(" • ") : null;
+  }, [sub?.name, intake.dietType, intake.spiceTolerance]);
+
+  const packsChip = useMemo(() => {
+    const applied = plan.packsApplied?.length ? plan.packsApplied : [];
+    if (!applied.length) return null;
+    return (
+      <div aria-label="Condition Packs applied" className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs bg-white">
+        <span>Condition Packs:</span><strong>{applied.join(", ")}</strong>
+      </div>
+    );
+  }, [plan.packsApplied]);
+
+  function onExportJSON(){ download(`plan_${plan.id}.json`, JSON.stringify(plan, null, 2), "application/json"); }
+  function onExportScheduleCSV(){ const rows=[["time","what","details"],...(plan.schedule||[]).map(it=>[it.time||"",it.what||"",it.details||""])]; download(`plan_${plan.id}_schedule.csv`, toCSV(rows), "text/csv"); }
+  function onExportHydrationCSV(){ const rows=[["time","amountMl"],...(plan.hydration||[]).map(it=>[it.time||"", String(it.amountMl??"")])]; download(`plan_${plan.id}_hydration.csv`, toCSV(rows), "text/csv"); }
+  function onExportMealsCSV(){ const rows=[["time","title","items"],...(plan.meals||[]).map(it=>[it.time||"", it.title||"", (it.items||[]).join(" • ")])]; download(`plan_${plan.id}_meals.csv`, toCSV(rows), "text/csv"); }
+  async function onExportAllZIP(){
+    const summary = ["# GloWell Export","",`ID: ${plan.id}`,`Created: ${plan.createdAt}`,`Version: ${plan.version || "v8"}`,`Packs: ${(plan.packsApplied||[]).join(", ") || "-"}`,"","Files included:","- plan.json","- schedule.csv","- hydration.csv","- meals.csv","","Note: This bundle is a simple text package for quick sharing."].join("\n");
+    const payload = [
+      "===== README.txt =====\n"+summary,
+      "\n\n===== plan.json =====\n"+JSON.stringify(plan, null, 2),
+      "\n\n===== schedule.csv =====\n"+toCSV([["time","what","details"], ...(plan.schedule||[]).map(s=>[s.time||"",s.what||"",s.details||""])]),
+      "\n\n===== hydration.csv =====\n"+toCSV([["time","amountMl"], ...(plan.hydration||[]).map(h=>[h.time||"", String(h.amountMl??"")])]),
+      "\n\n===== meals.csv =====\n"+toCSV([["time","title","items"], ...(plan.meals||[]).map(m=>[m.time||"", m.title||"", (m.items||[]).join(" • ")])]),
+    ].join("\n");
+    download(`plan_${plan.id}_bundle.txt`, payload, "text/plain");
+  }
 
   return (
     <div className="space-y-6">
-      <section className="gw-card">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-semibold">Health Plan</h1>
-            <p className="text-sm gw-muted">
-              {isDemo ? "Public Demo (read-only)" : "Your latest plan (personalized if intake is saved)."}
-            </p>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button className="gw-btn" onClick={()=>nav("/health-form")}>Edit Intake</button>
-            <button className="gw-btn" onClick={()=>nav("/intake-review")}>Open Confirmation</button>
-            <button className="gw-btn" onClick={exportJSON}>Export JSON</button>
-            <button className="gw-btn" onClick={exportScheduleCSV}>Schedule CSV</button>
-            <button className="gw-btn" onClick={exportHydrationCSV}>Hydration CSV</button>
-            <button className="gw-btn" onClick={exportMealsCSV}>Meals CSV</button>
-          </div>
-        </div>
-
-        {/* header chips */}
-        <div className="mt-3" style={{display:"flex", flexWrap:"wrap", gap:8}}>
-          <span className="gw-btn" style={{cursor:"default"}}>{headerLine}</span>
-          {(plan?.packsApplied || []).map(p =>
-            <span key={p} className="gw-btn" style={{cursor:"default"}}>{p}</span>
+      {/* Title Row */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Health Plan</h1>
+          <p className="mt-1 text-sm gw-muted">{demo ? "Public Demo (read-only)" : "Your latest plan (personalized if intake is saved)."}</p>
+          {personalizationBanner && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs">
+              <span>Personalized</span><span>•</span><strong>{personalizationBanner}</strong>
+            </div>
           )}
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          {packsChip}
+          <div className="text-xs gw-muted">ID: <code>{plan.id}</code></div>
+        </div>
+      </div>
+
+      {/* Metrics */}
+      <section aria-label="Metrics" className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="gw-card"><div className="text-xs gw-muted">BMI</div><div className="text-xl font-semibold">{plan.metrics?.bmi == null ? "—" : (plan.metrics.bmi as number).toFixed(1)}</div></div>
+        <div className="gw-card"><div className="text-xs gw-muted">Energy (kcal)</div><div className="text-xl font-semibold">{plan.metrics?.energyEstimateKcal == null ? "—" : Math.round(plan.metrics.energyEstimateKcal as number)}</div></div>
+        <div className="gw-card"><div className="text-xs gw-muted">Created</div><div className="text-sm">{new Date(plan.createdAt).toLocaleString()}</div></div>
+      </section>
+
+      {/* Hydration */}
+      <section aria-label="Hydration" className="gw-card tinted">
+        <h2 className="font-medium mb-3">Hydration</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          {(plan.hydration || []).map((h,i)=> <li key={i}><strong>{h.time||"—"}</strong> — {h.amountMl ?? "—"} ml</li>)}
+          {!plan.hydration?.length && <li className="gw-muted">No hydration items.</li>}
+        </ul>
+      </section>
+
+      {/* Movement */}
+      <section aria-label="Movement" className="gw-card tinted">
+        <h2 className="font-medium mb-3">Movement</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          {(plan.movement || []).map((m,i)=> <li key={i}><strong>{m.time||"—"}</strong> — {m.activity || "—"} ({m.minutes ?? "—"} min)</li>)}
+          {!plan.movement?.length && <li className="gw-muted">No movement items.</li>}
+        </ul>
+      </section>
+
+      {/* Meals */}
+      <section aria-label="Meals" className="gw-card tinted">
+        <h2 className="font-medium mb-3">Meals</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          {(plan.meals || []).map((m,i)=> <li key={i}><strong>{m.time||"—"}</strong> — {m.title || "—"} {(m.items||[]).length ? `• ${(m.items||[]).join(", ")}` : ""}</li>)}
+          {!plan.meals?.length && <li className="gw-muted">No meals listed.</li>}
+        </ul>
+      </section>
+
+      {/* Tips */}
+      <section aria-label="Tips" className="gw-card tinted">
+        <h2 className="font-medium mb-3">Tips</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          {(plan.tips || []).map((t,i)=> <li key={i}>{t.text} {t.source ? <span className="text-xs gw-muted">({t.source})</span> : null}</li>)}
+          {!plan.tips?.length && <li className="gw-muted">No tips.</li>}
+        </ul>
+      </section>
+
+      {/* Schedule */}
+      <section aria-label="Schedule" className="gw-card">
+        <h2 className="font-medium mb-3">Schedule</h2>
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left"><th className="border-b py-2 pr-3">Time</th><th className="border-b py-2 pr-3">What</th><th className="border-b py-2">Details</th></tr></thead>
+            <tbody>
+              {(plan.schedule || []).map((s,i)=> (
+                <tr key={i} className="align-top">
+                  <td className="border-b py-2 pr-3">{s.time || "—"}</td>
+                  <td className="border-b py-2 pr-3">{s.what || "—"}</td>
+                  <td className="border-b py-2">{s.details || "—"}</td>
+                </tr>
+              ))}
+              {!plan.schedule?.length && <tr><td colSpan={3} className="border-b py-2 gw-muted">No schedule items.</td></tr>}
+            </tbody>
+          </table>
         </div>
       </section>
 
-      {!plan && (
-        <section className="gw-card">
-          <div className="gw-muted">Building your plan…</div>
-        </section>
-      )}
-
-      {plan && (
-        <>
-          {/* Metrics */}
-          <section className="gw-card">
-            <div className="grid gap-3 md:grid-cols-3">
-              <Tile label="BMI" value={intake?.profile?.bmi ?? "—"} />
-              <Tile label="Energy (kcal)" value={plan.metrics?.energyEstimateKcal ?? "—"} />
-              <Tile label="Created" value={new Date().toLocaleString()} />
-            </div>
-          </section>
-
-          {/* Hydration */}
-          <Section title="Hydration">
-            <List bullets={plan.hydration.map(h => `${h.at} — ${h.label}`)} empty="No hydration items." />
-          </Section>
-
-          {/* Movement */}
-          <Section title="Movement">
-            <List bullets={plan.movement.map(mv => `${mv.at} — ${mv.label}`)} empty="No movement items." />
-          </Section>
-
-          {/* Meals */}
-          <Section title="Meals">
-            <div className="grid gap-3 md:grid-cols-2">
-              {plan.meals.map(m => (
-                <div key={m.slot} className="rounded border bg-white px-3 py-2">
-                  <div className="text-sm"><strong>{titleCase(m.slot)}</strong>{m.at ? ` • ${m.at}` : ""}</div>
-                  <ul>
-                    {(m.items || []).map(it => <li key={it.id}>• {it.name}</li>)}
-                  </ul>
-                  {!!(m.notes && m.notes.length) && (
-                    <div className="text-xs gw-muted mt-1">{m.notes.join(" ")}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {!plan.meals.length && <div className="gw-muted">No meals listed.</div>}
-          </Section>
-
-          {/* Tips */}
-          <Section title="Tips">
-            <List bullets={(plan.tips || []).map(t => `• ${t}`)} empty="No tips." />
-          </Section>
-
-          {/* Schedule (plain view) */}
-          <Section title="Schedule (overview)">
-            <List bullets={plan.schedule.map(s => `${s.at} — ${titleCase(s.type)}: ${s.label}`)} empty="No schedule items." />
-          </Section>
-
-          {/* Danger zone */}
-          {!isDemo && (
-            <section className="gw-card">
-              <div className="flex items-center justify-between">
-                <div className="text-sm gw-muted">
-                  Snapshot saved to Plans History as soon as the plan loaded.
-                </div>
-                <button
-                  className="gw-btn"
-                  onClick={()=>{
-                    if (!yes("Clear all saved plans from this device?")) return;
-                    save(PLANS_KEY, {}); save(INDEX_KEY, []); alert("Cleared.");
-                  }}
-                >
-                  Clear Saved Plans
-                </button>
-              </div>
-            </section>
-          )}
-        </>
-      )}
+      {/* Actions */}
+      <section aria-label="Actions" className="flex flex-wrap gap-2">
+        <button className="gw-btn" onClick={()=>navigate("/health-form")}>Open Intake</button>
+        <button className="gw-btn" onClick={()=>navigate("/plans")}>Open Plans History</button>
+        <button className="gw-btn" onClick={onExportJSON}>Export JSON</button>
+        <button className="gw-btn" onClick={onExportScheduleCSV}>Export Schedule CSV</button>
+        <button className="gw-btn" onClick={onExportHydrationCSV}>Export Hydration CSV</button>
+        <button className="gw-btn" onClick={onExportMealsCSV}>Export Meals CSV</button>
+        <button className="gw-btn" onClick={onExportAllZIP}>Export All (Bundle)</button>
+      </section>
     </div>
   );
 }
-
-function Section({ title, children }:{title:string; children:React.ReactNode}){
-  return (
-    <section className="gw-card">
-      <h2 className="font-medium text-lg mb-2">{title}</h2>
-      {children}
-    </section>
-  );
-}
-function Tile({label, value}:{label:string; value:any}){
-  return (
-    <div className="rounded border bg-white px-3 py-2">
-      <div className="text-xs gw-muted">{label}</div>
-      <div className="text-lg">{(value===0 || value) ? String(value) : "—"}</div>
-    </div>
-  );
-}
-function List({ bullets, empty }:{ bullets: string[]; empty: string }){
-  if (!bullets.length) return <div className="gw-muted">{empty}</div>;
-  return <ul>{bullets.map((b,i)=><li key={i} style={{margin:"6px 0"}}>{b}</li>)}</ul>;
-}
-function titleCase(s:string){ return s.charAt(0).toUpperCase() + s.slice(1); }
