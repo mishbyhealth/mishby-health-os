@@ -1,85 +1,38 @@
 // src/utils/formPersistence.ts
-// Lightweight, dependency-free localStorage helpers for saving/restoring form drafts.
-// Safe to use in SSR/Node because it guards for "window" existence.
+// Draft helpers + debounced autosave (React hook). Additive; safe.
 
-export const HEALTH_FORM_DRAFT_KEY = "mho:form:healthForm:v1";
-
-type Json =
-  | Record<string, unknown>
-  | unknown[]
-  | string
-  | number
-  | boolean
-  | null;
-
-/** Returns true if we're in a browser environment. */
-function hasWindow() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.localStorage !== "undefined"
-  );
-}
-
-/** Save any serializable object as a draft. Overwrites previous value. */
-export function saveDraft<T extends Json>(
-  data: T,
-  key: string = HEALTH_FORM_DRAFT_KEY
-): void {
-  if (!hasWindow()) return;
+export function loadDraft<T = any>(key: string, fallback: T): T {
   try {
-    const payload = JSON.stringify({
-      v: 1,
-      t: Date.now(),
-      data,
-    });
-    window.localStorage.setItem(key, payload);
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
-    // ignore quota/serialization errors silently for UX
+    return fallback;
   }
 }
 
-/** Load a previously saved draft. Returns undefined if none or parse error. */
-export function loadDraft<T = any>(
-  key: string = HEALTH_FORM_DRAFT_KEY
-): T | undefined {
-  if (!hasWindow()) return undefined;
+export function saveDraft<T = any>(key: string, value: T) {
   try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return undefined;
-    const parsed = JSON.parse(raw);
-    // Basic shape check
-    if (parsed && typeof parsed === "object" && "data" in parsed) {
-      return (parsed as { data: T }).data;
-    }
-  } catch {
-    // fall through
-  }
-  return undefined;
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
 }
 
-/** Remove the saved draft. No error if it doesn't exist. */
-export function clearDraft(key: string = HEALTH_FORM_DRAFT_KEY): void {
-  if (!hasWindow()) return;
+export function clearDraft(key: string) {
   try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
+    localStorage.removeItem(key);
+  } catch {}
 }
 
-/** Optional helper: debounce a function without extra libs. */
-export function debounce<F extends (...args: any[]) => void>(fn: F, ms = 400) {
-  let timer: number | undefined;
-  return (...args: Parameters<F>) => {
-    if (typeof window === "undefined") return fn(...args);
-    if (timer) window.clearTimeout(timer);
-    timer = window.setTimeout(() => fn(...args), ms);
-  };
-}
+import { useEffect, useRef } from "react";
 
-/* ------------------------------------------------------------------ */
-/* Compatibility aliases (expected by HealthForm.tsx)                  */
-/* ------------------------------------------------------------------ */
-export const saveFormState = saveDraft;
-export const loadFormState = loadDraft;
-export const clearFormState = clearDraft;
+export function useAutosave<T>(key: string, value: T, delayMs = 600) {
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    // @ts-ignore
+    timerRef.current = window.setTimeout(() => saveDraft(key, value), delayMs);
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [key, value, delayMs]);
+}

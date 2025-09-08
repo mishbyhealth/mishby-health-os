@@ -251,8 +251,8 @@ export default function HealthForm() {
   const symptoms = today.symptoms ?? [];
 
   return (
-    <div className="gw-page">
-      <div className="gw-tint">
+    <div className="py-2">
+      <div className="gw-tint mx-auto" style={{ maxWidth: 980 }}>
         <div className="gw-row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
           <h2 className="text-xl">Health Intake</h2>
           <div className="text-xs gw-badge">Account: {accountId}</div>

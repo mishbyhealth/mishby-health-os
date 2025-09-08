@@ -1,315 +1,195 @@
 /* src/index.css */
 
-/* Tailwind layers */
+/* ── Tailwind layers (keep first) ─────────────────────────── */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────────────────────
-   GloWell Theme Tokens (beige + dark green)
-   ───────────────────────────────────────────────────────────── */
+/* ── Design tokens (safe defaults if no theme is set) ─────── */
 :root{
-  --gw-bg: #f7f2e9;      /* app background (beige) */
-  --gw-fg: #102a24;      /* primary text (deep green) */
-  --gw-accent: #0b7d69;  /* accent (dark teal/green) */
-  --gw-muted: #6b7280;   /* muted text (gray-500) */
-  --gw-card: #ffffff;    /* card surface */
-  --gw-border: #e5e7eb;  /* border (gray-200) */
-}
+  /* Surfaces & text */
+  --bg:#F6F2E9;
+  --header:#F7F2EA;
+  --text:#111827;
+  --muted:#6B7280;
+  --border:#E5E7EB;
+  --card-1:#FFFFFF;
+  --card-2:#FBFBFB;
 
-/* Base (applies site-wide) */
-@layer base {
-  html, body, #root {
-    min-height: 100%;
-    min-height: 100vh;
-    background: var(--gw-bg);
-    color: var(--gw-fg);
-  }
+  /* Primary accent (mapped to gw-* for helpers) */
+  --primary:#5A4B6E;          /* calm mauve */
+  --primary-600:#4E415F;
+  --primary-700:#443A54;
 
-  /* Typography tweaks */
-  h1,h2,h3,h4 { letter-spacing: -0.01em; }
-  a { text-underline-offset: 2px; }
+  --gw-primary:var(--primary);
+  --gw-primary-600:var(--primary-600);
+  --gw-primary-700:var(--primary-700);
 
-  /* Tables look tidy by default */
-  table { border-collapse: collapse; }
-  th, td { border-color: var(--gw-border); }
-}
-
-/* Components (small helpers) */
-@layer components {
-  .gw-card {
-    @apply rounded-lg border p-4;
-    background: var(--gw-card);
-    border-color: var(--gw-border);
-  }
-
-  .gw-btn {
-    @apply rounded border px-3 py-1 text-sm hover:bg-gray-50;
-    border-color: var(--gw-border);
-  }
-
-  .gw-link-active {
-    color: var(--gw-accent);
-    @apply font-medium;
-  }
-}
-
-/* Utilities (optional minor polish) */
-@layer utilities {
-  .gw-muted { color: var(--gw-muted); }
-}
-
-/* Print: clean A4 style */
-@media print {
-  @page { size: A4; margin: 12mm; }
-  body { background: #fff !important; color: #111 !important; }
-  header, footer, nav { display: none !important; }
-  .no-print { display: none !important; }
-}
-
-/* ===== Header + Lock Banner (one-row, scrollable nav) ===== */
-.container{max-width:1120px;margin:0 auto;padding:0 16px;}
-
-.topbar{position:sticky;top:0;z-index:40;background:var(--header);border-bottom:1px solid var(--border);}
-.topbar-inner{display:flex;align-items:center;gap:12px;min-height:56px;justify-content:space-between;flex-wrap:nowrap;}
-
-.brand{flex:0 0 auto;display:flex;align-items:center;gap:10px;color:var(--text);}
-.brand-text{font-weight:700;font-size:18px;line-height:1;}
-.brand-mark{width:18px;height:18px;border-radius:6px;background:var(--primary);box-shadow:0 0 0 2px #fff3 inset, var(--shadow-1);}
-
-/* Nav = single row, scrolls horizontally if overflow */
-.nav{flex:1 1 auto;min-width:0;display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-/* Optional: hide the thin bar entirely */
-.nav::-webkit-scrollbar{display:none}
-.nav-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:9999px;background:var(--card-1);border:1px solid var(--border);color:var(--text);}
-.nav-chip.is-active{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in hsl, var(--primary) 22%, transparent);}
-
-/* Right-side */
-.actions{flex:0 0 auto;display:flex;align-items:center;gap:8px;}
-
-.footer{margin-top:24px;padding:16px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px;}
-
-/* Lock banner */
-.gw-lock-banner{position:fixed;left:16px;bottom:16px;padding:10px 12px;border:1px dashed var(--border);border-radius:10px;background:var(--card-1);color:var(--text);box-shadow:var(--shadow-1);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s ease;}
-html[data-locked="1"] .gw-lock-banner{opacity:1;transform:translateY(0);pointer-events:auto;}
-
-/* --- Unified header heights + bigger brand (paste near end) --- */
-:root{ --bar-h: 60px; } /* tweak 56/60/64 to taste */
-
-.topbar-inner{ min-height: var(--bar-h); }
-.sidenav-brand{
-  min-height: var(--bar-h);
-  padding: 0 16px;
-  display:flex; align-items:center; gap:12px;
-}
-
-.brand-text{ font-weight:800; font-size:20px; line-height:1; }
-
-/* Prefer PNG logo if present */
-.brand-img{
-  width: 32px; height: 32px; object-fit: contain; border-radius: 8px;
-  box-shadow: 0 0 0 2px #fff3 inset, var(--shadow-1);
-}
-.brand-mark{
-  width: 28px; height: 28px; border-radius: 8px; background: var(--primary);
-  box-shadow: 0 0 0 2px #fff3 inset, var(--shadow-1);
-}
-
-/* Wider sidenav for larger brand */
-.sidenav{ width: 260px; flex: 0 0 260px; }
-
-/* ==== THEMES (place LAST in file) ==== */
-:root{
+  /* Shape & depth */
   --radius-lg:20px;
   --shadow-1:0 6px 24px rgba(0,0,0,.06);
   --shadow-2:0 12px 40px rgba(0,0,0,.08);
-  /* defaults in case no theme attribute */
-  --bg:#f6f2e9; --header:#f7f2ea; --text:#111827; --muted:#6b7280;
-  --border:#e5e7eb; --primary:#10b981; --primary-strong:#059669;
-  --card-1:#ffffff; --card-2:#fbfbfb;
+
+  /* Layout clamp */
+  --gw-content-max:1040px;
 }
 
-/* 1) Classic (beige) */
-html[data-theme="classic"]{
-  --bg:#F4EFE6; --header:#F7F2EA; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
-  --primary:#10b981; --primary-strong:#059669; --card-1:#ffffff; --card-2:#fbfbfb;
-}
-/* 2) Mint */
-html[data-theme="mint"]{
-  --bg:#eefaf4; --header:#eaf7f1; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
-  --primary:#10b981; --primary-strong:#059669; --card-1:#ffffff; --card-2:#f6fffb;
-}
-/* 3) Sky */
-html[data-theme="sky"]{
-  --bg:#eef6ff; --header:#e9f2ff; --text:#0f172a; --muted:#64748b; --border:#e0ecff;
-  --primary:#3b82f6; --primary-strong:#2563eb; --card-1:#ffffff; --card-2:#f7fbff;
-}
-/* 4) Lavender */
-html[data-theme="lavender"]{
-  --bg:#f5f2ff; --header:#f2efff; --text:#111827; --muted:#6b7280; --border:#e9e7ff;
-  --primary:#8b5cf6; --primary-strong:#7c3aed; --card-1:#ffffff; --card-2:#faf8ff;
-}
-/* 5) Sunset */
-html[data-theme="sunset"]{
-  --bg:#fff4ed; --header:#ffefe6; --text:#111827; --muted:#6b7280; --border:#ffe3d5;
-  --primary:#f97316; --primary-strong:#ea580c; --card-1:#ffffff; --card-2:#fff9f5;
-}
-/* 6) Forest */
-html[data-theme="forest"]{
-  --bg:#eef7f1; --header:#eaf4ed; --text:#0b1324; --muted:#475569; --border:#d7e8de;
-  --primary:#16a34a; --primary-strong:#15803d; --card-1:#ffffff; --card-2:#f6fbf8;
-}
-/* 7) Slate */
-html[data-theme="slate"]{
-  --bg:#f4f6f8; --header:#eff2f5; --text:#0f172a; --muted:#475569; --border:#e2e8f0;
-  --primary:#0ea5e9; --primary-strong:#0284c7; --card-1:#ffffff; --card-2:#f8fafc;
+/* ── Base (global) ────────────────────────────────────────── */
+@layer base {
+  html, body, #root { min-height:100%; min-height:100vh; background:var(--bg); color:var(--text); }
+  h1,h2,h3,h4 { letter-spacing:-0.01em; }
+  a { text-underline-offset:2px; }
+  table { border-collapse:collapse; }
+  th, td { border-color:var(--border); }
 }
 
-/* base usage */
-html,body,#root{height:100%}
-body{background:var(--bg);color:var(--text);}
+/* ── Components (helpers) ─────────────────────────────────── */
+@layer components {
+  .gw-card { @apply rounded-lg border p-4; background:var(--card-1); border-color:var(--border); box-shadow:var(--shadow-1); }
+  .gw-btn  { @apply rounded border px-3 py-1 text-sm hover:bg-gray-50; border-color:var(--border); }
 
-/* ===== App Shell ===== */
-.app-shell{display:flex;min-height:100vh;background:var(--bg);color:var(--text);}
-.app-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+  .gw-btn-primary { background:var(--gw-primary); color:#fff !important; border:1px solid transparent; }
+  .gw-btn-primary:hover { background:var(--gw-primary-600); }
+  .gw-btn-primary:active { background:var(--gw-primary-700); }
 
-/* ===== SideNav ===== */
+  .gw-link-active { color:var(--gw-primary); @apply font-medium; }
+
+  /* SideNav item helpers */
+  .side-item{ background:#fff; }
+  .side-item:hover{ background:rgba(0,0,0,0.04); }
+  .side-item-active{ background:var(--gw-primary); color:#fff !important; }
+
+  /* Page helpers used across forms */
+  .gw-page{ width:min(100%, var(--gw-content-max)); margin-inline:auto; padding:12px; box-sizing:border-box; }
+  .gw-tint{ background:var(--card-2); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-1); padding:12px; }
+  .gw-row{ display:flex; flex-wrap:wrap; gap:.5rem; }
+  .gw-badge{ display:inline-flex; align-items:center; border-radius:9999px; padding:.25rem .6rem; font-size:.875rem; line-height:1;
+             background:var(--card-2); color:var(--text); border:1px solid var(--border); margin-right:.5rem; margin-bottom:.5rem; }
+  .gw-badge.is-active{ background:var(--header); font-weight:600; }
+  .gw-label > span{ display:block; margin-bottom:.25rem; color:var(--muted); }
+  .gw-input{ width:100%; background:var(--card-1); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:8px 10px; }
+  .gw-input::placeholder{ opacity:.6; }
+}
+
+/* ── Utilities ────────────────────────────────────────────── */
+@layer utilities { .gw-muted{ color:var(--muted); } }
+
+/* ── Print tidy A4 ───────────────────────────────────────── */
+@media print{
+  @page { size:A4; margin:12mm; }
+  body { background:#fff !important; color:#111 !important; }
+  header, footer, nav { display:none !important; }
+  .no-print { display:none !important; }
+}
+
+/* ── App shell & layout ──────────────────────────────────── */
+.app-shell{ display:flex; min-height:100vh; background:var(--bg); color:var(--text); }
+.app-main{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+
 .sidenav{
-  width: 240px; flex:0 0 240px;
-  border-right:1px solid var(--border);
-  background:var(--header);
-  position:sticky; top:0; height:100vh;
+  width:240px; flex:0 0 240px; position:sticky; top:0; height:100vh;
+  border-right:1px solid var(--border); background:var(--header);
 }
-.sidenav-inner{display:flex;flex-direction:column;height:100%;}
-.sidenav-brand{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border);}
-.sidenav-nav{display:flex;flex-direction:column;gap:8px;padding:12px;}
-.side-chip{
-  display:flex;align-items:center;
-  padding:10px 12px;border-radius:10px;background:var(--card-1);
-  border:1px solid var(--border); color:var(--text);
-}
-.side-chip.is-active{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in hsl, var(--primary) 22%, transparent);}
-.sidenav-controls{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+.sidenav-inner{ display:flex; flex-direction:column; height:100%; }
+.sidenav-brand{ display:flex; align-items:center; gap:10px; padding:16px; border-bottom:1px solid var(--border); }
+.sidenav-nav{ display:flex; flex-direction:column; gap:8px; padding:12px; }
+.side-chip{ display:flex; align-items:center; padding:10px 12px; border-radius:10px;
+            background:var(--card-1); border:1px solid var(--border); color:var(--text); }
+.side-chip.is-active{ border-color:var(--gw-primary); box-shadow:0 0 0 2px color-mix(in hsl, var(--gw-primary) 22%, transparent); }
+.sidenav-controls{ margin-top:auto; padding:12px; border-top:1px solid var(--border); }
 
-/* Brand mark (shared) */
-.brand-mark{width:18px;height:18px;border-radius:6px;background:var(--primary);box-shadow:0 0 0 2px #fff3 inset, var(--shadow-1);}
-.brand-text{font-weight:700}
+/* Brand mark */
+.brand-mark{ width:18px; height:18px; border-radius:6px; background:var(--gw-primary); box-shadow:0 0 0 2px #fff3 inset, var(--shadow-1); }
+.brand-text{ font-weight:700; }
 
-/* ===== Cards, chips, surfaces ===== */
-.gw-card, .card, .box{
-  background:var(--card-1); color:var(--text); border:1px solid var(--border);
-  border-radius:var(--radius-lg); padding:16px; box-shadow:var(--shadow-1);
-}
-.chip{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--card-1); color:var(--text); border:1px solid var(--border);
-  border-radius:9999px; padding:4px 10px; font-size:12px;
-}
+/* Top bar & footer */
+.topbar{ position:sticky; top:0; z-index:40; background:var(--header); border-bottom:1px solid var(--border); }
+.topbar-inner{ display:flex; align-items:center; justify-content:space-between; min-height:60px; gap:12px; }
+.footer{ margin-top:24px; padding:16px 0; border-top:1px solid var(--border); color:var(--muted); font-size:12px; }
 
-/* Inputs adopt theme text/border */
-input, select, textarea{
-  color:var(--text); border:1px solid var(--border);
-}
+/* Lock banner */
+.gw-lock-banner{ position:fixed; left:16px; bottom:16px; padding:10px 12px; border:1px dashed var(--border); border-radius:10px;
+                 background:var(--card-1); color:var(--text); box-shadow:var(--shadow-1); opacity:0; transform:translateY(8px);
+                 pointer-events:none; transition:.2s ease; }
+html[data-locked="1"] .gw-lock-banner{ opacity:1; transform:translateY(0); pointer-events:auto; }
 
-/* Tinted sections depend on theme */
-.tinted{background:color-mix(in hsl, var(--bg) 88%, var(--primary) 12%);}
+/* Clamp & overflow guard */
+html, body, #root{ width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box; }
+main, [role="main"]{ width:min(100%, var(--gw-content-max)); margin-inline:auto; padding-inline:12px; box-sizing:border-box; }
 
-/* Topbar (within app-main) */
-.topbar{position:sticky;top:0;z-index:30;background:var(--header);border-bottom:1px solid var(--border);}
-.topbar-inner{display:flex;align-items:center;justify-content:space-between;min-height:56px;}
-
-/* ─────────────────────────────────────────────────────────────
-   GloWell page helpers used by Health Form (added)
-   ───────────────────────────────────────────────────────────── */
-.gw-page{
-  padding: 16px;
-}
-.gw-tint{
-  background: var(--card-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
-  padding: 12px;
+/* Mobile tweaks */
+@media (max-width:768px){
+  .app-shell{ display:block; }
+  .sidenav{ position:static; width:100%; height:auto; border-right:0; border-bottom:1px solid var(--border); }
+  .sidenav-inner{ height:auto; }
+  .sidenav-brand{ padding:12px 16px; }
+  .sidenav-nav{ display:flex; gap:8px; padding:8px 12px 12px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+  .side-chip{ flex:0 0 auto; }
+  .gw-page{ padding:12px; }
+  .gw-card{ padding:12px; }
+  .topbar-inner{ min-height:52px; }
+  .gw-row > div{ width:100% !important; min-width:0 !important; }
+  .gw-badge{ margin-right:.4rem; margin-bottom:.4rem; }
 }
 
-/* Layout + spacing for rows/chips/labels/inputs */
-.gw-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.5rem;
+/* ───────────────────────────────────────────────────────────
+   THEME PALETTES (7 improved sets)
+   Keys unchanged: classic, mint, sky, lavender, sunset, forest, slate
+   Each provides calm backgrounds + accessible accents.
+   ────────────────────────────────────────────────────────── */
+
+/* 1) classic — Sandstone & Teal (calm, premium) */
+html[data-theme="classic"]{
+  --bg:#F7F2E9; --header:#F4EFE6; --text:#14212B; --muted:#667085; --border:#E7E2D9;
+  --card-1:#FFFFFF; --card-2:#FBF9F4;
+  --primary:#0B7A5A; --primary-600:#096B50; --primary-700:#075B45;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
 
-.gw-badge{
-  display:inline-flex;
-  align-items:center;
-  border-radius:9999px;
-  padding:0.25rem 0.6rem;
-  font-size:0.875rem;
-  line-height:1;
-  background:var(--card-2);
-  color:var(--text);
-  border:1px solid var(--border);
-  /* ensure spacing even if container forgets gap */
-  margin-right:0.5rem;
-  margin-bottom:0.5rem;
-}
-.gw-badge.is-active{
-  background:var(--header);
-  font-weight:600;
+/* 2) mint — Sage Meadow (soft green, not neon) */
+html[data-theme="mint"]{
+  --bg:#F2F7F3; --header:#ECF3EE; --text:#10241B; --muted:#5F6E63; --border:#DDE7E0;
+  --card-1:#FFFFFF; --card-2:#F7FBF8;
+  --primary:#4C956C; --primary-600:#3F825E; --primary-700:#356E50;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
 
-.gw-label > span{
-  display:block;
-  margin-bottom:0.25rem;
-  color:var(--muted);
+/* 3) sky — Breeze (cool, trustworthy blue) */
+html[data-theme="sky"]{
+  --bg:#EFF6FF; --header:#EAF2FF; --text:#0E1B2A; --muted:#5A6B7B; --border:#DBE7FF;
+  --card-1:#FFFFFF; --card-2:#F8FBFF;
+  --primary:#3F8CFF; --primary-600:#2F79E6; --primary-700:#2566C8;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
 
-.gw-input{
-  width:100%;
-  background:var(--card-1);
-  border:1px solid var(--border);
-  color:var(--text);
-  border-radius:10px;
-  padding:8px 10px;
+/* 4) lavender — Mist (calm mauve you asked for) */
+html[data-theme="lavender"]{
+  --bg:#F5F2FA; --header:#F1ECF7; --text:#1A1721; --muted:#6A6474; --border:#E4DFF0;
+  --card-1:#FFFFFF; --card-2:#F9F7FC;
+  --primary:#5A4B6E; --primary-600:#4E415F; --primary-700:#443A54;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
 
-.gw-input::placeholder{
-  opacity:0.6;
+/* 5) sunset — Coral Peach (warm, friendly; not too loud) */
+html[data-theme="sunset"]{
+  --bg:#FFF5EF; --header:#FFEFE6; --text:#2A1712; --muted:#756463; --border:#FFE2D5;
+  --card-1:#FFFFFF; --card-2:#FFF9F6;
+  --primary:#E96D5B; --primary-600:#D85C4A; --primary-700:#C14D3E;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
-/* ── Mobile layout fixes (<= 768px) ─────────────────────────── */
-@media (max-width: 768px) {
-  /* Stack the shell instead of side-by-side */
-  .app-shell { display: block; }
 
-  /* Make SideNav a top bar */
-  .sidenav {
-    position: static;
-    width: 100%;
-    height: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidenav-inner { height: auto; }
-  .sidenav-brand { padding: 12px 16px; }
-  .sidenav-nav {
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px 12px;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-  .side-chip { flex: 0 0 auto; }
+/* 6) forest — Evergreen (deep natural, balanced) */
+html[data-theme="forest"]{
+  --bg:#EEF6F0; --header:#E9F1EB; --text:#0C1A13; --muted:#4F6357; --border:#D7E6DC;
+  --card-1:#FFFFFF; --card-2:#F6FBF8;
+  --primary:#2F6E4E; --primary-600:#285D43; --primary-700:#204E39;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
+}
 
-  /* Content spacing */
-  .gw-page { padding: 12px; }
-  .gw-card { padding: 12px; }
-  .topbar-inner { min-height: 52px; }
-
-  /* Force form columns to stack full width */
-  .gw-row > div { width: 100% !important; min-width: 0 !important; }
-
-  /* Chips breathe on small screens */
-  .gw-badge { margin-right: 0.4rem; margin-bottom: 0.4rem; }
+/* 7) slate — Soft Slate (neutral with ocean accent) */
+html[data-theme="slate"]{
+  --bg:#F4F6F8; --header:#EFF2F5; --text:#0F172A; --muted:#4B5B6A; --border:#E1E7EF;
+  --card-1:#FFFFFF; --card-2:#F8FAFC;
+  --primary:#4F6D7A; --primary-600:#435E69; --primary-700:#394F58;
+  --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }

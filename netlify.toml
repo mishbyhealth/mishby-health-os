@@ -5,6 +5,15 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  directory = "netlify/functions"
+
+# API first (must come BEFORE SPA fallback)
+[[redirects]]
+  from = "/api/plan"
+  to = "/.netlify/functions/plan"
+  status = 200
+
 # SPA fallback for client-side routes
 [[redirects]]
   from = "/*"

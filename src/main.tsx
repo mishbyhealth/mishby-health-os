@@ -1,48 +1,55 @@
 // src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import App from "@/App";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+import Shell from "@/layouts/Shell";
+
+import Home from "@/pages/HomePage";
+import Dashboard from "@/pages/Dashboard";
+import HealthForm from "@/pages/HealthForm";
+import HealthFormV2 from "@/pages/HealthFormV2";
+import HealthPlan from "@/pages/HealthPlan";
+import Plans from "@/pages/Plans";
+import Settings from "@/pages/Settings";
+import Subscription from "@/pages/Subscription";
+import Donate from "@/pages/Donate";
+import About from "@/pages/About";
+import Terms from "@/pages/Terms";
+import Ping from "@/pages/Ping";
+import AccountsPage from "@/pages/Accounts";
+import TodayTracker from "@/pages/TodayTracker";
+
+import { AccountProvider } from "@/context/AccountProvider";
 import "@/index.css";
 
-import { bootMode } from "@/utils/mode";
-import { bootAccountsMigration } from "@/utils/accounts";
-import FloatingModeToggle from "@/components/FloatingModeToggle";
-import FloatingAccountsShortcut from "@/components/FloatingAccountsShortcut";
-import AccountsPage from "@/pages/Accounts";
-import { AccountProvider } from "@/context/AccountProvider";
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Shell />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "health-form", element: <HealthForm /> },
+      { path: "health-form-v2", element: <HealthFormV2 /> },
+      { path: "tracker", element: <TodayTracker /> },        // NEW
+      { path: "health-plan", element: <HealthPlan /> },
+      { path: "plans", element: <Plans /> },
+      { path: "settings", element: <Settings /> },
+      { path: "subscription", element: <Subscription /> },
+      { path: "donate", element: <Donate /> },
+      { path: "about", element: <About /> },
+      { path: "terms", element: <Terms /> },
+      { path: "_ping", element: <Ping /> },
+      { path: "accounts", element: <AccountsPage /> },       // owner-only page
+    ],
+  },
+]);
 
-// ---- Boot (theme, lock, full-form, mode, accounts migration) ----
-(function boot() {
-  const tKey = "glowell:theme";
-  const theme = localStorage.getItem(tKey) || "lavender";
-  if (!localStorage.getItem(tKey)) localStorage.setItem(tKey, theme);
-  document.documentElement.setAttribute("data-theme", theme);
-
-  const locked = localStorage.getItem("glowell:locked") === "1";
-  document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
-
-  const full = localStorage.getItem("glowell:fullForm") === "1";
-  document.documentElement.setAttribute("data-fullform", full ? "1" : "0");
-
-  bootMode();               // data-mode
-  bootAccountsMigration();  // seeds "Self", copies legacy keys, sets current id
-})();
-
-// ---- Mount App with /accounts route + providers ----
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AccountProvider>
-        <Routes>
-          <Route path="/accounts" element={<AccountsPage />} />
-          <Route path="/*" element={<App />} />
-        </Routes>
-
-        {/* Owner floating shortcuts */}
-        <FloatingModeToggle />
-        <FloatingAccountsShortcut />
-      </AccountProvider>
-    </BrowserRouter>
+    <AccountProvider>
+      <RouterProvider router={router} />
+    </AccountProvider>
   </React.StrictMode>
 );

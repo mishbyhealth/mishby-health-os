@@ -1,147 +1,116 @@
-// src/pages/Settings.tsx
-import React, { useEffect, useMemo, useState } from "react";
+// src/pages/Settings.tsx (compat with any owner.ts)
+import { useEffect, useState } from "react";
+import { getAiPlanEnabled, setAiPlanEnabled } from "@/services/planService";
+import * as Owner from "@/utils/owner";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
-type SettingsShape = {
-  language?: string;        // "en" | "hi"
-  region?: string;          // free text
-  timezone?: string;        // IANA
-  vegOnly?: boolean;
-  spiceTolerance?: "low" | "medium" | "high";
-  featureFlags?: Record<string, boolean>;
-};
+const MODE_KEY = "glowell:mode";
 
-const KEY = "glowell:settings";
-
-function loadSettings(): SettingsShape {
+function getModeSafe(): "owner" | "user" {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
+    if (typeof Owner.getMode === "function") return Owner.getMode();
+    if (typeof Owner.isOwner === "function") return Owner.isOwner() ? "owner" : "user";
+    return localStorage.getItem(MODE_KEY) === "owner" ? "owner" : "user";
   } catch {
-    return {};
+    return "user";
   }
 }
-function saveSettings(s: SettingsShape) {
-  localStorage.setItem(KEY, JSON.stringify(s));
+
+function setOwnerModeSafe(on: boolean) {
+  try {
+    if (typeof Owner.setOwnerMode === "function") {
+      Owner.setOwnerMode(on);
+    } else {
+      localStorage.setItem(MODE_KEY, on ? "owner" : "user");
+      document.documentElement.setAttribute("data-mode", on ? "owner" : "user");
+    }
+  } catch {}
 }
 
 export default function Settings() {
-  const detectedTz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata", []);
-  const [settings, setSettings] = useState<SettingsShape>({});
+  const [mode, setMode] = useState<"owner" | "user">("user");
+  const [aiOn, setAiOn] = useState(false);
 
   useEffect(() => {
-    const s = loadSettings();
-    if (!s.timezone) s.timezone = detectedTz;
-    setSettings(s);
-  }, [detectedTz]);
+    setMode(getModeSafe());
+    setAiOn(getAiPlanEnabled());
+  }, []);
 
-  function update<K extends keyof SettingsShape>(key: K, val: SettingsShape[K]) {
-    const next = { ...settings, [key]: val };
-    setSettings(next);
-    saveSettings(next);
-  }
+  const toggleMode = (next: "owner" | "user") => {
+    setMode(next);
+    setOwnerModeSafe(next === "owner");
+  };
+
+  const onToggleAi = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.checked;
+    setAiOn(next);
+    setAiPlanEnabled(next);
+  };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <p className="text-sm text-gray-600">
-        Preferences are stored locally in your browser and applied across the app.
-      </p>
+    <div className="mx-auto max-w-5xl px-4 py-6">
+      <Header />
+      <h1 className="text-2xl font-semibold mb-4">Settings</h1>
 
-      <section className="rounded-lg border p-4 space-y-4" aria-label="General">
-        <h2 className="font-medium">General</h2>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <label className="block">
-            <div className="text-xs text-gray-500 mb-1">Language</div>
-            <select
-              className="w-full rounded border px-3 py-2 text-sm"
-              value={settings.language ?? "en"}
-              onChange={(e) => update("language", e.target.value)}
-            >
-              <option value="en">English</option>
-              <option value="hi">हिंदी (Hindi)</option>
-            </select>
-          </label>
-
-          <label className="block">
-            <div className="text-xs text-gray-500 mb-1">Region</div>
+      {/* Owner/User Mode */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-xl font-medium mb-3">Mode</h2>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2">
             <input
-              className="w-full rounded border px-3 py-2 text-sm"
-              placeholder="e.g., India / Gujarat"
-              value={settings.region ?? ""}
-              onChange={(e) => update("region", e.target.value)}
+              type="radio"
+              name="mode"
+              checked={mode === "user"}
+              onChange={() => toggleMode("user")}
             />
+            <span>User Mode</span>
           </label>
-
-          <label className="block">
-            <div className="text-xs text-gray-500 mb-1">Timezone (auto)</div>
+          <label className="flex items-center gap-2">
             <input
-              className="w-full rounded border px-3 py-2 text-sm"
-              value={settings.timezone ?? detectedTz}
-              onChange={(e) => update("timezone", e.target.value)}
+              type="radio"
+              name="mode"
+              checked={mode === "owner"}
+              onChange={() => toggleMode("owner")}
             />
-          </label>
-
-          <label className="flex items-center gap-2 mt-6">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={!!settings.vegOnly}
-              onChange={(e) => update("vegOnly", e.target.checked)}
-            />
-            <span className="text-sm">Vegetarian-only guidance</span>
+            <span>Owner Mode</span>
           </label>
         </div>
+        <p className="mt-2 text-xs opacity-70">
+          Persists in browser (localStorage). Key: <code>glowell:mode</code>
+        </p>
       </section>
 
-      <section className="rounded-lg border p-4 space-y-4" aria-label="Food preferences">
-        <h2 className="font-medium">Food & Taste Preferences</h2>
-
-        <label className="block max-w-xs">
-          <div className="text-xs text-gray-500 mb-1">Spice tolerance</div>
-          <select
-            className="w-full rounded border px-3 py-2 text-sm"
-            value={settings.spiceTolerance ?? "medium"}
-            onChange={(e) => update("spiceTolerance", e.target.value as SettingsShape["spiceTolerance"])}
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
+      {/* AI Plan (Owner-only) */}
+      <section className="mb-8 rounded-xl border p-4">
+        <h2 className="text-xl font-medium mb-2">AI Plan (Owner-only)</h2>
+        {mode !== "owner" ? (
+          <p className="text-sm opacity-70">
+            Switch to <b>Owner Mode</b> above to manage AI Plan settings.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm opacity-80 mb-3">
+              Enable a serverless-generated, non-clinical plan. If disabled or API fails,
+              the app will use the template/fallback plan.
+            </p>
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={aiOn}
+                onChange={onToggleAi}
+                className="h-5 w-5"
+              />
+              <span className="font-medium">Enable AI Plan</span>
+            </label>
+            <p className="mt-2 text-xs opacity-70">
+              Persists in browser. Key: <code>glowell:aiPlan:on</code>
+            </p>
+          </>
+        )}
       </section>
 
-      <section className="rounded-lg border p-4 space-y-2" aria-label="Advanced">
-        <h2 className="font-medium">Advanced</h2>
-        <div className="text-xs text-gray-600">
-          Feature flags (toggle experimental modules):
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {["demoEnabled", "printHeader", "csvExport"].map((flag) => {
-            const enabled = !!settings.featureFlags?.[flag];
-            return (
-              <label key={flag} className="inline-flex items-center gap-2 rounded border px-3 py-1 text-sm">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4"
-                  checked={enabled}
-                  onChange={(e) => {
-                    const ff = { ...(settings.featureFlags ?? {}) };
-                    ff[flag] = e.target.checked;
-                    update("featureFlags", ff);
-                  }}
-                />
-                <span>{flag}</span>
-              </label>
-            );
-          })}
-        </div>
-      </section>
-
-      <div className="text-xs text-gray-500">
-        Storage key: <code>{KEY}</code>
-      </div>
+      <Footer />
     </div>
   );
 }

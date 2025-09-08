@@ -1,54 +1,45 @@
-import { NavLink, Link } from "react-router-dom";
-import ThemeSwitch from "./ThemeSwitch";
+// File: src/components/SideNav.tsx
+import React from "react";
+import { NavLink } from "react-router-dom";
 
-export default function SideNav() {
-  return (
-    <aside className="sidenav">
-      <div className="sidenav-inner">
-        {/* Brand (logo PNG if available; fallback to colored chip) */}
-        <Link to="/" className="sidenav-brand" aria-label="GloWell Home">
-          {/* Try /logo.png; if it fails, hide img and show brand-mark */}
-          <img
-            src="/logo.png"
-            alt=""
-            className="brand-img"
-            onError={(e) => { (e.currentTarget.style.display = "none"); }}
-          />
-          <span className="brand-mark" aria-hidden="true" /> {/* fallback chip */}
-          <span className="brand-text">GloWell</span>
-        </Link>
-
-        {/* Nav */}
-        <nav className="sidenav-nav">
-          <NavChip to="/">Home</NavChip>
-          <NavChip to="/dashboard">Dashboard</NavChip>
-          <NavChip to="/health-form">Health Form</NavChip>
-          <NavChip to="/health-plan">Health Plan</NavChip>
-          <NavChip to="/plans">Plans</NavChip>
-          <NavChip to="/settings">Settings</NavChip>
-          <NavChip to="/subscription">Subscription</NavChip>
-          <NavChip to="/donate">Donate</NavChip>
-          <NavChip to="/about">About</NavChip>            {/* NEW */}
-          <NavChip to="/terms">Terms & Conditions</NavChip> {/* NEW */}
-          <NavChip to="/_ping">_ping</NavChip>
-        </nav>
-
-        <div className="sidenav-controls">
-          <ThemeSwitch />
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function NavChip({ to, children }: { to: string; children: React.ReactNode }) {
+function Item({ to, children }:{ to:string; children:React.ReactNode }) {
   return (
     <NavLink
       to={to}
-      className={({ isActive }) => "side-chip" + (isActive ? " is-active" : "")}
-      end
+      className={({ isActive }) =>
+        `block px-3 py-2 rounded-md mb-2 side-item ${isActive ? "side-item-active" : ""}`
+      }
     >
       {children}
     </NavLink>
+  );
+}
+
+export default function SideNav() {
+  return (
+    <aside className="p-3" style={{ width: 220 }}>
+      <div className="flex items-center gap-2 mb-4">
+        <img src="/favicon.svg" alt="GloWell" className="h-6 w-6" />
+        <span className="font-semibold">GloWell</span>
+      </div>
+
+      <Item to="/">Home</Item>
+      <Item to="/dashboard">Dashboard</Item>
+      <Item to="/health-form">Health Form</Item>
+      <Item to="/health-form-v2">Form V2</Item>
+      <Item to="/tracker">Today Tracker</Item>
+      <Item to="/health-plan">Health Plan</Item>
+      <Item to="/plans">Plans</Item>
+      <Item to="/settings">Settings</Item>
+      <Item to="/subscription">Subscription</Item>
+      <Item to="/donate">Donate</Item>
+      <Item to="/about">About</Item>
+      <Item to="/terms">Terms & Conditions</Item>
+      <Item to="/_ping">_ping</Item>
+
+      <div className="text-xs mt-4">
+        Theme: <span className="gw-muted">{document.documentElement.dataset.theme || "—"}</span>
+      </div>
+    </aside>
   );
 }

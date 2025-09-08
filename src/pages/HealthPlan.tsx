@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ensurePacksLoaded, type PacksResult } from "../utils/packs";
+import { getAiPlanEnabled, requestAiPlan, type PlanJson } from "@/services/planService";
 
 const PLANS_KEY = "glowell:plans";
 const INDEX_KEY = "glowell:plans:index";
@@ -116,10 +117,26 @@ function mealsFromIntake(intake: IntakeData): MealItem[] {
       ];
   }
 }
-function hydrateBackfill(p: Plan): Plan { if (p.hydration?.length) return p;
-  return { ...p, hydration: [{ time:"06:30", amountMl:250 },{ time:"09:00", amountMl:300 },{ time:"12:30", amountMl:300 },{ time:"16:00", amountMl:250 },{ time:"19:00", amountMl:250 }] }; }
-function movementBackfill(p: Plan): Plan { if (p.movement?.length) return p;
-  return { ...p, movement: [{ time:"07:00", activity:"Brisk walk", minutes:20 },{ time:"18:00", activity:"Light yoga", minutes:15 }] }; }
+
+function hydrateBackfill(p: Plan): Plan {
+  if (p.hydration?.length) return p;
+  return { ...p, hydration: [
+    { time:"06:30", amountMl:250 },
+    { time:"09:00", amountMl:300 },
+    { time:"12:30", amountMl:300 },
+    { time:"16:00", amountMl:250 },
+    { time:"19:00", amountMl:250 }
+  ] };
+}
+
+function movementBackfill(p: Plan): Plan {
+  if (p.movement?.length) return p;
+  return { ...p, movement: [
+    { time:"07:00", activity:"Brisk walk", minutes:20 },
+    { time:"18:00", activity:"Light yoga", minutes:15 }
+  ] };
+}
+
 function tipsBackfill(p: Plan, intake: IntakeData): Plan {
   if (p.tips?.length) return p;
   const msgs: Tip[] = [
@@ -150,14 +167,52 @@ function buildDemoPlan(now = new Date()): Plan {
 function toCSV(rows: string[][]): string { return rows.map(r => r.map(c => `"${(c ?? "").toString().replace(/"/g,'""')}"`).join(",")).join("\n"); }
 function download(filename: string, data: BlobPart, type = "text/plain") { const blob = new Blob([data], { type }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000); }
 
+// --- NEW: Adapt AI stub → current Plan shape (non-destructive)
+function adaptAiToPlan(ai: PlanJson, base: Plan): Plan {
+  const meals: MealItem[] = [];
+  const pushMeal = (time: string, title: string, items: string[] | undefined) => meals.push({ time, title, items: items || [] });
+
+  // Map meals (use fixed anchor times for readability)
+  pushMeal("07:30", "Breakfast", ai.meals?.breakfast || []);
+  pushMeal("13:00", "Lunch", ai.meals?.lunch || []);
+  pushMeal("16:30", "Snacks", ai.meals?.snacks || []);
+  pushMeal("20:00", "Dinner", ai.meals?.dinner || []);
+
+  // Hydration
+  const hydration: HydrationItem[] = (ai.hydration || []).map(h => ({
+    time: h.time, amountMl: h.ml
+  }));
+
+  // Movement (map simple strings to two anchor times)
+  const movement: MovementItem[] = (ai.movement || []).map((m, i) => ({
+    time: i === 0 ? "07:00" : i === 1 ? "18:00" : "",
+    activity: m, minutes: i === 0 ? 15 : i === 1 ? 15 : undefined
+  }));
+
+  // Tips
+  const tips: Tip[] = (ai.tips || []).map(t => ({ text: t }));
+
+  // Keep schedule from base (non-destructive), add packs
+  return {
+    ...base,
+    packsApplied: ai.packs_applied?.length ? ai.packs_applied : base.packsApplied,
+    hydration: hydration.length ? hydration : base.hydration,
+    meals: meals.some(m => (m.items || []).length) ? meals : base.meals,
+    movement: movement.length ? movement : base.movement,
+    tips: tips.length ? tips : base.tips,
+  };
+}
+
 export default function HealthPlan() {
   const navigate = useNavigate();
   const demo = useDemoMode();
   const [packs, setPacks] = useState<PacksResult | null>(null);
+  const [aiData, setAiData] = useState<PlanJson | null>(null);
   const mounted = useRef(false);
 
   const intake = useMemo(() => readIntake(), []);
   const sub = useMemo(() => readSubscription(), []);
+  const aiOn = useMemo(() => getAiPlanEnabled(), []);
 
   const basePlan = useMemo<Plan>(() => {
     const existing = loadLatestPlan();
@@ -171,7 +226,8 @@ export default function HealthPlan() {
     };
   }, [demo]);
 
-  const plan = useMemo<Plan>(() => {
+  // Compute template/fallback plan first (keeps old behavior)
+  const templatePlan = useMemo<Plan>(() => {
     let p = { ...basePlan };
     p = backfillMetricsFromIntake(p, intake);
     if (!p.meals?.length) p = { ...p, meals: mealsFromIntake(intake) };
@@ -181,18 +237,46 @@ export default function HealthPlan() {
     return p;
   }, [basePlan, intake]);
 
+  // Load packs (for intakeSummary packs_applied hint)
   useEffect(() => {
     if (mounted.current) return; mounted.current = true;
     (async () => { const res = await ensurePacksLoaded(); setPacks(res); })();
   }, []);
+
+  // If toggle is ON and not demo, request AI stub once
+  useEffect(() => {
+    if (demo) return;
+    if (!aiOn) return;
+    (async () => {
+      try {
+        const packsApplied = packs?.ok ? packs.loaded : (templatePlan.packsApplied || []);
+        const ai = await requestAiPlan(
+          { packs_applied: packsApplied || [] },
+          {} // aggregates can be added later from TodayTracker
+        );
+        setAiData(ai);
+      } catch (e) {
+        console.warn("AI Plan fetch failed; using template plan.", e);
+        setAiData(null);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiOn, demo, packs?.ok, (packs?.loaded || []).join("|")]);
+
+  // Merge AI data (non-destructive) if present
+  const plan = useMemo<Plan>(() => {
+    if (aiOn && aiData) return adaptAiToPlan(aiData, templatePlan);
+    return templatePlan;
+  }, [aiOn, aiData, templatePlan]);
 
   const personalizationBanner = useMemo(() => {
     const bits: string[] = [];
     if (sub?.name) bits.push(`for ${sub.name}`);
     if (intake.dietType) bits.push(`Diet: ${String(intake.dietType).replace("_","-")}`);
     if (intake.spiceTolerance) bits.push(`Spice: ${intake.spiceTolerance}`);
+    if (aiOn && aiData) bits.push("AI Plan");
     return bits.length ? bits.join(" • ") : null;
-  }, [sub?.name, intake.dietType, intake.spiceTolerance]);
+  }, [sub?.name, intake.dietType, intake.spiceTolerance, aiOn, aiData]);
 
   const packsChip = useMemo(() => {
     const applied = plan.packsApplied?.length ? plan.packsApplied : [];
@@ -226,7 +310,9 @@ export default function HealthPlan() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Health Plan</h1>
-          <p className="mt-1 text-sm gw-muted">{demo ? "Public Demo (read-only)" : "Your latest plan (personalized if intake is saved)."}</p>
+          <p className="mt-1 text-sm gw-muted">
+            {demo ? "Public Demo (read-only)" : "Your latest plan (personalized if intake is saved)."}
+          </p>
           {personalizationBanner && (
             <div className="mt-2 inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs">
               <span>Personalized</span><span>•</span><strong>{personalizationBanner}</strong>
