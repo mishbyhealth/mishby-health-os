@@ -4,24 +4,30 @@
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-    "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "skipLibCheck": true,
     "noEmit": true,
-    "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
-
-    // ✅ Alias setup
+    "jsx": "react-jsx",
     "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"]
-    }
+    "paths": { "@/*": ["*"] }
   },
-  "include": ["src"],
-  "references": [
-    { "path": "./tsconfig.node.json" }
+  "include": ["src/**/*", "vite-env.d.ts", "vite-env.d.ts", "vite.env.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    ".vercel",
+    ".netlify",
+    "coverage",
+    ".turbo",
+    ".cache",
+    "**/_archive/**",
+    "**/_bundle/**",
+    "src/**/features.backup*/**",
+    "**/*.backup*/**"
   ]
 }

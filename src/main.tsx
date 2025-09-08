@@ -1,51 +1,48 @@
 // src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import "./index.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import App from "@/App";
+import "@/index.css";
 
-// Owner/full-form boot helpers
-import { bootOwnerFromURL, bootFullFormFromStorage } from "./utils/owner";
+import { bootMode } from "@/utils/mode";
+import { bootAccountsMigration } from "@/utils/accounts";
+import FloatingModeToggle from "@/components/FloatingModeToggle";
+import FloatingAccountsShortcut from "@/components/FloatingAccountsShortcut";
+import AccountsPage from "@/pages/Accounts";
+import { AccountProvider } from "@/context/AccountProvider";
 
+// ---- Boot (theme, lock, full-form, mode, accounts migration) ----
 (function boot() {
-  // ── THEME ─────────────────────────────────────────────────────
-  // Make Lavender the default. If a saved theme exists and is valid, use it.
-  // Otherwise, set + use 'lavender' on first paint.
-  const allowed = ["classic", "mint", "sky", "lavender", "sunset", "forest", "slate"] as const;
+  const tKey = "glowell:theme";
+  const theme = localStorage.getItem(tKey) || "lavender";
+  if (!localStorage.getItem(tKey)) localStorage.setItem(tKey, theme);
+  document.documentElement.setAttribute("data-theme", theme);
 
-  try {
-    const saved = localStorage.getItem("glowell:theme");
-    const isAllowed = !!saved && (allowed as readonly string[]).includes(saved);
-    const theme = isAllowed ? (saved as string) : "lavender";
+  const locked = localStorage.getItem("glowell:locked") === "1";
+  document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
 
-    // if nothing was saved, remember the default so subsequent loads are stable
-    if (!saved) localStorage.setItem("glowell:theme", theme);
+  const full = localStorage.getItem("glowell:fullForm") === "1";
+  document.documentElement.setAttribute("data-fullform", full ? "1" : "0");
 
-    document.documentElement.setAttribute("data-theme", theme);
-  } catch {
-    // if localStorage is blocked, still paint in lavender
-    document.documentElement.setAttribute("data-theme", "lavender");
-  }
-
-  // ── LOCK STATE ────────────────────────────────────────────────
-  try {
-    const locked = localStorage.getItem("glowell:locked") === "1";
-    document.documentElement.setAttribute("data-locked", locked ? "1" : "0");
-  } catch {
-    document.documentElement.setAttribute("data-locked", "0");
-  }
-
-  // ── OWNER + FULL FORM BOOT ───────────────────────────────────
-  // ?owner=1 persists owner mode; full-form flag sets <html data-fullform="0|1">
-  bootOwnerFromURL();
-  bootFullFormFromStorage();
+  bootMode();               // data-mode
+  bootAccountsMigration();  // seeds "Self", copies legacy keys, sets current id
 })();
 
+// ---- Mount App with /accounts route + providers ----
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <AccountProvider>
+        <Routes>
+          <Route path="/accounts" element={<AccountsPage />} />
+          <Route path="/*" element={<App />} />
+        </Routes>
+
+        {/* Owner floating shortcuts */}
+        <FloatingModeToggle />
+        <FloatingAccountsShortcut />
+      </AccountProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

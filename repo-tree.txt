@@ -1,444 +1,485 @@
-Repo: MishbyHealthOS
-├── _archive/
-│   ├── cleanup-2025-09-05_1942/
-│   │   ├── features/
-│   │   │   ├── health-plan/
-│   │   │   │   ├── MultiStepHealthForm.new.tsx
-│   │   │   │   └── MultiStepHealthForm.tsx.bak
-│   │   │   ├── health-plan-advanced/
-│   │   │   │   └── PrettyHealthFormV2.new.tsx
-│   │   │   ├── tracker/
-│   │   │   │   ├── TrackerDashboard.new.tsx
-│   │   │   │   └── TrackerDashboard.tsx.bak
-│   │   │   ├── uploads/
-│   │   │   │   ├── UploadsConsent.new.tsx
-│   │   │   │   ├── UploadsManager.new.tsx
-│   │   │   │   └── UploadsManager.tsx.bak
-│   │   │   └── uploads-v2/
-│   │   │       └── UploadsBeautifulV2.new.tsx
-│   │   ├── functions/
-│   │   │   └── src/
-│   │   │       ├── cleanupUploads.new.ts
-│   │   │       ├── cleanupUploads.ts.bak
-│   │   │       ├── cleanupUploadsV2.new.ts
-│   │   │       ├── uploadsIngest.new.ts
-│   │   │       ├── uploadsIngest.ts.bak
-│   │   │       └── uploadsIngestV2.new.ts
-│   │   ├── mho/
-│   │   │   ├── compliance/
-│   │   │   │   ├── ComplianceGuard.new.ts
-│   │   │   │   ├── ComplianceGuard2.new.ts
-│   │   │   │   ├── ComplianceGuard2.ts.bak
-│   │   │   │   ├── nonClinical.rules.new.json
-│   │   │   │   ├── nonClinical.v2.rules.json.bak
-│   │   │   │   ├── nonClinical.v2.rules.new.json
-│   │   │   │   ├── redFlags.new.json
-│   │   │   │   ├── strings.new.ts
-│   │   │   │   ├── strings2.new.ts
-│   │   │   │   └── strings2.ts.bak
-│   │   │   ├── engine/
-│   │   │   │   ├── extractors/
-│   │   │   │   │   ├── classify.new.ts
-│   │   │   │   │   ├── dischargeParser.new.ts
-│   │   │   │   │   ├── labParser.new.ts
-│   │   │   │   │   ├── ocr.new.ts
-│   │   │   │   │   └── rxParser.new.ts
-│   │   │   │   ├── normalize.new.ts
-│   │   │   │   ├── processForm.new.ts
-│   │   │   │   └── safeGenerate.new.ts
-│   │   │   ├── engine-v2/
-│   │   │   │   ├── buildPlan.new.ts
-│   │   │   │   ├── buildPlan.ts.bak
-│   │   │   │   ├── calcs.new.ts
-│   │   │   │   ├── calcs.ts.bak
-│   │   │   │   ├── modes.new.ts
-│   │   │   │   ├── modes.ts.bak
-│   │   │   │   ├── normalize.new.ts
-│   │   │   │   ├── normalize.ts.bak
-│   │   │   │   ├── safeGenerate.new.ts
-│   │   │   │   ├── safeGenerate.ts.bak
-│   │   │   │   ├── types.new.ts
-│   │   │   │   ├── types.ts.bak
-│   │   │   │   ├── validate.new.ts
-│   │   │   │   └── validate.ts.bak
-│   │   │   ├── form/
-│   │   │   │   └── healthForm.schema.new.json
-│   │   │   ├── plan/
-│   │   │   │   └── schema.new.ts
-│   │   │   ├── plan-v2/
-│   │   │   │   ├── schema.new.ts
-│   │   │   │   └── schema.ts.bak
-│   │   │   ├── plugins/
-│   │   │   │   └── exporters/
-│   │   │   │       ├── csv.v2.new.ts
-│   │   │   │       ├── excel.new.ts
-│   │   │   │       ├── pdf.new.ts
-│   │   │   │       ├── pdf.v2.new.ts
-│   │   │   │       ├── whatsapp.new.ts
-│   │   │   │       └── whatsapp.v2.new.ts
-│   │   │   └── uploads-v2/
-│   │   │       ├── classify.new.ts
-│   │   │       ├── dischargeParser.new.ts
-│   │   │       ├── labParser.new.ts
-│   │   │       ├── ocr.new.ts
-│   │   │       └── rxParser.new.ts
-│   │   ├── scripts/
-│   │   │   ├── nonclinical-lint.cjs.bak
-│   │   │   ├── nonclinical-lint.new.cjs
-│   │   │   └── nonclinical-lint.v2.new.cjs
-│   │   ├── services/
-│   │   │   └── storage/
-│   │   │       ├── uploadService.new.ts
-│   │   │       └── uploadService.ts.bak
-│   │   └── src/
-│   │       ├── _archive/
-│   │       │   └── services-v2/
-│   │       │       └── storage/
-│   │       │           └── uploadService.v2.new.ts
-│   │       ├── features/
-│   │       │   └── health-plan-advanced/
-│   │       │       └── PrettyHealthFormV2.tsx.bak
-│   │       ├── pages/
-│   │       │   ├── PlanDetail.tsx
-│   │       │   ├── PlanOnlyV2.tsx
-│   │       │   ├── PlansHistory.tsx
-│   │       │   ├── PlansHistoryV2.tsx
-│   │       │   ├── PlanView.new.tsx
-│   │       │   ├── PlanView.tsx.bak
-│   │       │   ├── PlanViewV2.new.tsx
-│   │       │   └── PlanViewV2.tsx.bak
-│   │       └── routes/
-│   │           └── AppRoutes.tsx
-│   ├── legacy-2025-09-05_2249/
-│   │   └── src/
-│   │       └── App.css
-│   ├── phase2-2025-09-05_2046/
-│   │   ├── functions/
-│   │   │   └── src/
-│   │   │       ├── cleanupUploads.ts
-│   │   │       └── uploadsIngest.ts
-│   │   └── scripts/
-│   │       └── nonclinical-lint.cjs
-│   └── placeholder-backup-2025-09-06_0041/
-├── _archive_2025-08-24/
-│   ├── backups/
-│   └── file_tree.txt
-├── _import/
-│   └── parts/
-├── core/
-│   └── config.ts
-├── docs/
-│   ├── _archive/
-│   │   ├── ADV_ENGINE_V2_MIGRATION.md
-│   │   ├── ADV_ENGINE_V2_PROMPTS.md
-│   │   ├── ADV_ENGINE_V2_README.md
-│   │   ├── GLOWELL_BLUEPRINT_README.md
-│   │   ├── MIGRATION_STEPS.md
-│   │   └── PROMPT_PACK.md
-│   ├── advanced-engine-v2/
-│   │   ├── INDEX.md
-│   │   ├── MIGRATION.md
-│   │   ├── PROMPTS.md
-│   │   └── README.md
-│   ├── GLOWELL_BLUEPRINT_README.new.md
-│   ├── MIGRATION_STEPS.new.md
-│   ├── PASTE_MAP.md
-│   ├── PLANS_QA_CHECKLIST.md
-│   ├── PROMPT_PACK.new.md
-│   ├── README_DEPLOY.md
-│   ├── README.md
-│   ├── REPO_STRUCTURE_V1.md
-│   └── USAGE_v7.md
-├── features/
-│   ├── auth/
-│   │   ├── authService.ts
-│   │   └── useAuth.ts
-│   ├── component-library/
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   ├── index.ts
-│   │   └── LoadingSpinner.tsx
-│   ├── deployment/
-│   │   ├── deploy-helper.ts
-│   │   └── netlify-config.ts
-│   ├── health-plan/
-│   │   ├── BasicInfoStep.tsx
-│   │   ├── generateHealthPlan.ts
-│   │   ├── MultiStepHealthForm.tsx
-│   │   └── planGenerator.ts
-│   ├── health-plan-advanced/
-│   │   └── PrettyHealthFormV2.tsx
-│   ├── maintenance/
-│   ├── services/
-│   │   ├── pdfService.ts
-│   │   └── userService.ts
-│   ├── testing/
-│   │   ├── mocks/
-│   │   │   └── mockData.ts
-│   │   ├── setup/
-│   │   │   └── test-utils.ts
-│   │   └── health-plan.test.ts
-│   ├── tracker/
-│   │   └── TrackerDashboard.tsx
-│   ├── uploads/
-│   │   ├── UploadsConsent.tsx
-│   │   └── UploadsManager.tsx
-│   └── uploads-v2/
-│       └── UploadsBeautifulV2.tsx
-├── functions/
-│   ├── src/
-│   │   ├── cleanupUploadsV2.ts
-│   │   ├── index.ts
-│   │   └── uploadsIngestV2.ts
-│   ├── .eslintrc.js
-│   ├── .gitignore
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── tsconfig.dev.json
-│   └── tsconfig.json
-├── mho/
-│   ├── compliance/
-│   │   ├── ComplianceGuard.ts
-│   │   ├── ComplianceGuard2.ts
-│   │   ├── nonClinical.rules.json
-│   │   ├── nonClinical.v2.rules.json
-│   │   ├── redFlags.json
-│   │   ├── strings.ts
-│   │   └── strings2.ts
-│   ├── engine/
-│   │   ├── extractors/
-│   │   │   ├── classify.ts
-│   │   │   ├── dischargeParser.ts
-│   │   │   ├── labParser.ts
-│   │   │   ├── ocr.ts
-│   │   │   └── rxParser.ts
-│   │   ├── normalize.ts
-│   │   ├── processForm.ts
-│   │   └── safeGenerate.ts
-│   ├── engine-v2/
-│   │   ├── buildPlan.ts
-│   │   ├── calcs.ts
-│   │   ├── modes.ts
-│   │   ├── normalize.ts
-│   │   ├── safeGenerate.ts
-│   │   ├── types.ts
-│   │   └── validate.ts
-│   ├── form/
-│   │   └── healthForm.schema.json
-│   ├── plan/
-│   │   └── schema.ts
-│   ├── plan-v2/
-│   │   └── schema.ts
-│   ├── plugins/
-│   │   └── exporters/
-│   │       ├── csv.v2.ts
-│   │       ├── excel.ts
-│   │       ├── pdf.ts
-│   │       ├── pdf.v2.ts
-│   │       ├── whatsapp.ts
-│   │       └── whatsapp.v2.ts
-│   └── uploads-v2/
-│       ├── classify.ts
-│       ├── dischargeParser.ts
-│       ├── labParser.ts
-│       ├── ocr.ts
-│       └── rxParser.ts
-├── mho2/
-│   ├── compliance/
-│   │   ├── ComplianceGuard.ts
-│   │   └── ComplianceGuard2.ts
-│   ├── engine/
-│   ├── engine-v2/
-│   │   ├── packs.ts
-│   │   ├── registry.ts
-│   │   └── safeGenerate.ts
-│   ├── nagano/
-│   └── plugins/
-│       └── exporters/
-│           ├── pdf.ts
-│           └── whatsapp.ts
-├── monitoring/
-│   └── alert-rules.json
-├── public/
-│   ├── brand/
-│   │   └── logo-hero.png
-│   ├── data/
-│   │   ├── locations/
-│   │   │   ├── Gujarat.json
-│   │   │   └── Maharashtra.json
-│   │   ├── packs/
-│   │   │   ├── diabetes.json
-│   │   │   └── hypertension.json
-│   │   └── india_locations.manifest.json
-│   ├── _redirects
-│   ├── _redirects.locked
-│   ├── _redirects.open
-│   ├── apple-touch-icon.png
-│   ├── favicon.ico
-│   ├── favicon.svg
-│   ├── logo192.png
-│   ├── logo512.png
-│   ├── maintenance.html
-│   ├── manifest.json
-│   ├── og-hero-v1.jpg
-│   ├── og-v3.png
-│   ├── og.png
-│   ├── robots.txt
-│   ├── share-v1.html
-│   ├── share.html
-│   ├── site.webmanifest
-│   └── sitemap.xml
-├── scripts/
-│   ├── analyze-bundle.cjs
-│   ├── backup.js
-│   ├── ci-check.js
-│   ├── ensure-scripts.mjs
-│   ├── Lock.ps1
-│   ├── make-file-tree.mjs
-│   ├── nonclinical-fix.cjs
-│   ├── nonclinical-glossary.json
-│   ├── nonclinical-lint.v2.cjs
-│   ├── repo-scan.mjs
-│   ├── Unlock.ps1
-│   └── validate-health-form.mjs
-├── services/
-│   └── storage/
-│       └── uploadService.ts
-├── src/
-│   ├── _archive/
-│   │   ├── features-v2/
-│   │   │   └── health-plan-advanced/
-│   │   │       └── PrettyHealthFormV2.tsx
-│   │   ├── services-v2/
-│   │   │   └── storage/
-│   │   │       └── uploadService.v2.ts
-│   │   └── README.md
-│   ├── app/
-│   │   └── meta.ts
-│   ├── assets/
-│   │   └── Logo.png
-│   ├── components/
-│   │   ├── forms/
-│   │   │   └── HealthFormStepper.tsx
-│   │   ├── plan/
-│   │   │   └── PlanCard.tsx
-│   │   ├── Drawer.tsx
-│   │   ├── ErrorBoundary.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── PrintHeader.tsx
-│   │   ├── ProgressBar.tsx
-│   │   ├── SideNav.tsx
-│   │   ├── SupportGloWellCard.tsx
-│   │   └── ThemeSwitch.tsx
-│   ├── constants/
-│   │   └── appMeta.ts
-│   ├── control/
-│   │   └── FeatureFlags.ts
-│   ├── features/
-│   │   ├── community/
-│   │   │   └── CommunityFeed.tsx
-│   │   ├── exporters/
-│   │   │   ├── PDFExportButton.tsx
-│   │   │   └── PDFExporter.tsx
-│   │   ├── health-plan/
-│   │   │   └── MultiStepHealthForm.tsx
-│   │   ├── health-plan-advanced/
-│   │   │   └── PrettyHealthFormV2.tsx
-│   │   ├── notifications/
-│   │   │   └── Reminders.tsx
-│   │   └── uploads-v2/
-│   │       └── UploadsBeautifulV2.tsx
-│   ├── features.backup-20250825-162419/
-│   │   └── health-plan/
-│   │       └── MultiStepHealthForm.tsx
-│   ├── layouts/
-│   │   ├── index.ts
-│   │   └── MainLayout.tsx
-│   ├── lib/
-│   │   └── razorpay.ts
-│   ├── pages/
-│   │   ├── __backup_BuildPlanForm.tsx.bak
-│   │   ├── About.tsx
-│   │   ├── Checkout.tsx
-│   │   ├── Dashboard.tsx
-│   │   ├── DebugEngine.tsx
-│   │   ├── Donate.tsx
-│   │   ├── HealthForm.tsx
-│   │   ├── HealthFormV2.tsx
-│   │   ├── HealthPlan.tsx
-│   │   ├── HealthPlanFlow.tsx
-│   │   ├── HomePage.tsx
-│   │   ├── IntakeReview.tsx
-│   │   ├── Learn.tsx
-│   │   ├── Ping.tsx
-│   │   ├── PlannerTest.tsx
-│   │   ├── Plans.tsx
-│   │   ├── PlanView.tsx
-│   │   ├── PlanViewV2.tsx
-│   │   ├── Profile.tsx
-│   │   ├── Settings.tsx
-│   │   ├── Subscription.tsx
-│   │   └── Welcome.tsx
-│   ├── routes/
-│   ├── services/
-│   │   ├── authService.js
-│   │   └── webhookService.js
-│   ├── utils/
-│   │   ├── archetypes.ts
-│   │   ├── dietLibrary.ts
-│   │   ├── dosha.ts
-│   │   ├── downloadTxt.ts
-│   │   ├── engine_templates.ts
-│   │   ├── formPersistence.ts
-│   │   ├── locations.ts
-│   │   ├── packRules.ts
-│   │   ├── packs.ts
-│   │   ├── pdfExporter.ts
-│   │   ├── rateLimiter.js
-│   │   ├── routineTemplates.ts
-│   │   ├── theme.ts
-│   │   ├── toast.ts
-│   │   ├── validators.ts
-│   │   └── zip.ts
-│   ├── App.tsx
-│   ├── global.d.ts
-│   ├── index.css
-│   ├── main.tsx
-│   └── vite-env.d.ts
-├── tools/
-│   ├── generate_manifest.mjs
-│   └── repo-audit.ps1
-├── .env
-├── .env.example
-├── .env.local
-├── .firebaserc
-├── .gitattributes
-├── .gitignore
-├── CONTRIBUTING.md
-├── eslint.config.js
-├── file_tree.mjs
-├── firebase.json
-├── firebase.ts
-├── firestore.indexes.json
-├── firestore.rules
-├── glowell_blueprint.mjs
-├── index.html
-├── make-icons.mjs
-├── migrate_v2_to_main.mjs
-├── netlify.toml
-├── package-lock.json
-├── package.json
-├── postcss.config.cjs
-├── README.md
-├── RELEASE_NOTES.md
-├── tailwind.config.cjs
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-├── tsconfig.tsbuildinfo
-├── vite-env.d.ts
-├── vite.config.ts
-├── vitest.config.js
-└── vitest.config.ts
-Generated: 6/9/2025, 1:05:03 pm (IST)
+﻿.git
+.vscode
+core
+dist
+docs
+features
+functions
+mho
+mho2
+monitoring
+node_modules
+public
+scripts
+services
+src
+tools
+_archive
+_archive_2025-08-24
+_bundle
+_import
+.env
+.env.example
+.env.local
+.firebaserc
+.gitattributes
+.gitignore
+CONTRIBUTING.md
+eslint.config.js
+file_tree.mjs
+firebase.json
+firebase.ts
+firestore.indexes.json
+firestore.rules
+glowell_blueprint.mjs
+index.html
+make-icons.mjs
+migrate_v2_to_main.mjs
+netlify.toml
+package-lock.json
+package.json
+postcss.config.cjs
+README.md
+RELEASE_NOTES.md
+repo-tree.txt
+tailwind.config.cjs
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+tsconfig.tsbuildinfo
+vite-env.d.ts
+vite.config.ts
+vitest.config.js
+vitest.config.ts
+.vscode\settings.json
+core\config.ts
+docs\advanced-engine-v2
+docs\_archive
+docs\GLOWELL_BLUEPRINT_README.new.md
+docs\MIGRATION_STEPS.new.md
+docs\PASTE_MAP.md
+docs\PLANS_QA_CHECKLIST.md
+docs\PROMPT_PACK.new.md
+docs\README.md
+docs\README_DEPLOY.md
+docs\REPO_STRUCTURE_V1.md
+docs\USAGE_v7.md
+docs\advanced-engine-v2\INDEX.md
+docs\advanced-engine-v2\MIGRATION.md
+docs\advanced-engine-v2\PROMPTS.md
+docs\advanced-engine-v2\README.md
+docs\_archive\ADV_ENGINE_V2_MIGRATION.md
+docs\_archive\ADV_ENGINE_V2_PROMPTS.md
+docs\_archive\ADV_ENGINE_V2_README.md
+docs\_archive\GLOWELL_BLUEPRINT_README.md
+docs\_archive\MIGRATION_STEPS.md
+docs\_archive\PROMPT_PACK.md
+features\auth
+features\component-library
+features\deployment
+features\health-plan
+features\health-plan-advanced
+features\maintenance
+features\services
+features\testing
+features\tracker
+features\uploads
+features\uploads-v2
+features\auth\authService.ts
+features\auth\useAuth.ts
+features\component-library\Button.tsx
+features\component-library\Card.tsx
+features\component-library\index.ts
+features\component-library\LoadingSpinner.tsx
+features\deployment\deploy-helper.ts
+features\deployment\netlify-config.ts
+features\health-plan\BasicInfoStep.tsx
+features\health-plan\generateHealthPlan.ts
+features\health-plan\MultiStepHealthForm.tsx
+features\health-plan\planGenerator.ts
+features\health-plan-advanced\PrettyHealthFormV2.tsx
+features\services\pdfService.ts
+features\services\userService.ts
+features\testing\mocks
+features\testing\setup
+features\testing\health-plan.test.ts
+features\testing\mocks\mockData.ts
+features\testing\setup\test-utils.ts
+features\tracker\TrackerDashboard.tsx
+features\uploads\UploadsConsent.tsx
+features\uploads\UploadsManager.tsx
+features\uploads-v2\UploadsBeautifulV2.tsx
+functions\node_modules
+functions\src
+functions\.eslintrc.js
+functions\.gitignore
+functions\package-lock.json
+functions\package.json
+functions\tsconfig.dev.json
+functions\tsconfig.json
+functions\src\cleanupUploadsV2.ts
+functions\src\index.ts
+functions\src\uploadsIngestV2.ts
+mho\compliance
+mho\engine
+mho\engine-v2
+mho\form
+mho\plan
+mho\plan-v2
+mho\plugins
+mho\uploads-v2
+mho\compliance\ComplianceGuard.ts
+mho\compliance\ComplianceGuard2.ts
+mho\compliance\nonClinical.rules.json
+mho\compliance\nonClinical.v2.rules.json
+mho\compliance\redFlags.json
+mho\compliance\strings.ts
+mho\compliance\strings2.ts
+mho\engine\extractors
+mho\engine\normalize.ts
+mho\engine\processForm.ts
+mho\engine\safeGenerate.ts
+mho\engine\extractors\classify.ts
+mho\engine\extractors\dischargeParser.ts
+mho\engine\extractors\labParser.ts
+mho\engine\extractors\ocr.ts
+mho\engine\extractors\rxParser.ts
+mho\engine-v2\buildPlan.ts
+mho\engine-v2\calcs.ts
+mho\engine-v2\modes.ts
+mho\engine-v2\normalize.ts
+mho\engine-v2\safeGenerate.ts
+mho\engine-v2\types.ts
+mho\engine-v2\validate.ts
+mho\form\healthForm.schema.json
+mho\plan\schema.ts
+mho\plan-v2\schema.ts
+mho\plugins\exporters
+mho\plugins\exporters\csv.v2.ts
+mho\plugins\exporters\excel.ts
+mho\plugins\exporters\pdf.ts
+mho\plugins\exporters\pdf.v2.ts
+mho\plugins\exporters\whatsapp.ts
+mho\plugins\exporters\whatsapp.v2.ts
+mho\uploads-v2\classify.ts
+mho\uploads-v2\dischargeParser.ts
+mho\uploads-v2\labParser.ts
+mho\uploads-v2\ocr.ts
+mho\uploads-v2\rxParser.ts
+mho2\compliance
+mho2\engine
+mho2\engine-v2
+mho2\nagano
+mho2\plugins
+mho2\compliance\ComplianceGuard.ts
+mho2\compliance\ComplianceGuard2.ts
+mho2\engine-v2\packs.ts
+mho2\engine-v2\registry.ts
+mho2\engine-v2\safeGenerate.ts
+mho2\plugins\exporters
+mho2\plugins\exporters\pdf.ts
+mho2\plugins\exporters\whatsapp.ts
+monitoring\alert-rules.json
+public\brand
+public\data
+public\apple-touch-icon.png
+public\favicon.ico
+public\favicon.svg
+public\logo192.png
+public\logo512.png
+public\maintenance.html
+public\manifest.json
+public\og-hero-v1.jpg
+public\og-v3.png
+public\og.png
+public\robots.txt
+public\share-v1.html
+public\share.html
+public\site.webmanifest
+public\sitemap.xml
+public\_redirects
+public\_redirects.locked
+public\_redirects.open
+public\brand\logo-hero.png
+public\data\locations
+public\data\packs
+public\data\india_locations.manifest.json
+public\data\locations\Gujarat.json
+public\data\locations\Maharashtra.json
+public\data\packs\diabetes.json
+public\data\packs\hypertension.json
+scripts\analyze-bundle.cjs
+scripts\backup.js
+scripts\ci-check.js
+scripts\ensure-scripts.mjs
+scripts\Lock.ps1
+scripts\make-file-tree.mjs
+scripts\nonclinical-fix.cjs
+scripts\nonclinical-glossary.json
+scripts\nonclinical-lint.v2.cjs
+scripts\repo-scan.mjs
+scripts\Unlock.ps1
+scripts\validate-health-form.mjs
+services\storage
+services\storage\uploadService.ts
+src\app
+src\assets
+src\components
+src\constants
+src\control
+src\features
+src\features.backup-20250825-162419
+src\layouts
+src\lib
+src\pages
+src\routes
+src\services
+src\utils
+src\_archive
+src\App.tsx
+src\global.d.ts
+src\index.css
+src\main.tsx
+src\vite-env.d.ts
+src\app\meta.ts
+src\assets\Logo.png
+src\components\forms
+src\components\plan
+src\components\Drawer.tsx
+src\components\ErrorBoundary.tsx
+src\components\FloatingModeToggle.tsx
+src\components\Footer.tsx
+src\components\Header.tsx
+src\components\OwnerBar.tsx
+src\components\PrintHeader.tsx
+src\components\ProgressBar.tsx
+src\components\SideNav.tsx
+src\components\SupportGloWellCard.tsx
+src\components\ThemeSwitch.tsx
+src\components\forms\HealthFormStepper.tsx
+src\components\plan\PlanCard.tsx
+src\constants\appMeta.ts
+src\control\FeatureFlags.ts
+src\features\community
+src\features\exporters
+src\features\health-plan
+src\features\health-plan-advanced
+src\features\notifications
+src\features\uploads-v2
+src\features\community\CommunityFeed.tsx
+src\features\exporters\PDFExportButton.tsx
+src\features\exporters\PDFExporter.tsx
+src\features\health-plan\MultiStepHealthForm.tsx
+src\features\health-plan-advanced\PrettyHealthFormV2.tsx
+src\features\notifications\Reminders.tsx
+src\features\uploads-v2\UploadsBeautifulV2.tsx
+src\features.backup-20250825-162419\health-plan
+src\features.backup-20250825-162419\health-plan\MultiStepHealthForm.tsx
+src\layouts\index.ts
+src\layouts\MainLayout.tsx
+src\layouts\Shell.tsx
+src\lib\razorpay.ts
+src\pages\About.tsx
+src\pages\Checkout.tsx
+src\pages\Dashboard.tsx
+src\pages\DebugEngine.tsx
+src\pages\Donate.tsx
+src\pages\HealthForm.tsx
+src\pages\HealthFormV2.tsx
+src\pages\HealthPlan.tsx
+src\pages\HealthPlanFlow.tsx
+src\pages\Home.tsx
+src\pages\HomePage.tsx
+src\pages\IntakeReview.tsx
+src\pages\Learn.tsx
+src\pages\Ping.tsx
+src\pages\PlannerTest.tsx
+src\pages\Plans.tsx
+src\pages\PlanView.tsx
+src\pages\PlanViewV2.tsx
+src\pages\Profile.tsx
+src\pages\Settings.tsx
+src\pages\Subscription.tsx
+src\pages\Terms.tsx
+src\pages\Welcome.tsx
+src\pages\__backup_BuildPlanForm.tsx.bak
+src\services\authService.js
+src\services\webhookService.js
+src\utils\archetypes.ts
+src\utils\dietLibrary.ts
+src\utils\dosha.ts
+src\utils\downloadTxt.ts
+src\utils\drafts.ts
+src\utils\engine_templates.ts
+src\utils\formPersistence.ts
+src\utils\locations.ts
+src\utils\mode.ts
+src\utils\owner.ts
+src\utils\packRules.ts
+src\utils\packs.ts
+src\utils\pdfExporter.ts
+src\utils\rateLimiter.js
+src\utils\routineTemplates.ts
+src\utils\theme.ts
+src\utils\toast.ts
+src\utils\validators.ts
+src\utils\zip.ts
+src\_archive\features-v2
+src\_archive\services-v2
+src\_archive\README.md
+src\_archive\features-v2\health-plan-advanced
+src\_archive\features-v2\health-plan-advanced\PrettyHealthFormV2.tsx
+src\_archive\services-v2\storage
+src\_archive\services-v2\storage\uploadService.v2.ts
+tools\generate_manifest.mjs
+tools\repo-audit.ps1
+_archive\cleanup-2025-09-05_1942
+_archive\legacy-2025-09-05_2249
+_archive\phase2-2025-09-05_2046
+_archive\placeholder-backup-2025-09-06_0041
+_archive\cleanup-2025-09-05_1942\features
+_archive\cleanup-2025-09-05_1942\functions
+_archive\cleanup-2025-09-05_1942\mho
+_archive\cleanup-2025-09-05_1942\scripts
+_archive\cleanup-2025-09-05_1942\services
+_archive\cleanup-2025-09-05_1942\src
+_archive\cleanup-2025-09-05_1942\features\health-plan
+_archive\cleanup-2025-09-05_1942\features\health-plan-advanced
+_archive\cleanup-2025-09-05_1942\features\tracker
+_archive\cleanup-2025-09-05_1942\features\uploads
+_archive\cleanup-2025-09-05_1942\features\uploads-v2
+_archive\cleanup-2025-09-05_1942\features\health-plan\MultiStepHealthForm.new.tsx
+_archive\cleanup-2025-09-05_1942\features\health-plan\MultiStepHealthForm.tsx.bak
+_archive\cleanup-2025-09-05_1942\features\health-plan-advanced\PrettyHealthFormV2.new.tsx
+_archive\cleanup-2025-09-05_1942\features\tracker\TrackerDashboard.new.tsx
+_archive\cleanup-2025-09-05_1942\features\tracker\TrackerDashboard.tsx.bak
+_archive\cleanup-2025-09-05_1942\features\uploads\UploadsConsent.new.tsx
+_archive\cleanup-2025-09-05_1942\features\uploads\UploadsManager.new.tsx
+_archive\cleanup-2025-09-05_1942\features\uploads\UploadsManager.tsx.bak
+_archive\cleanup-2025-09-05_1942\features\uploads-v2\UploadsBeautifulV2.new.tsx
+_archive\cleanup-2025-09-05_1942\functions\src
+_archive\cleanup-2025-09-05_1942\functions\src\cleanupUploads.new.ts
+_archive\cleanup-2025-09-05_1942\functions\src\cleanupUploads.ts.bak
+_archive\cleanup-2025-09-05_1942\functions\src\cleanupUploadsV2.new.ts
+_archive\cleanup-2025-09-05_1942\functions\src\uploadsIngest.new.ts
+_archive\cleanup-2025-09-05_1942\functions\src\uploadsIngest.ts.bak
+_archive\cleanup-2025-09-05_1942\functions\src\uploadsIngestV2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\compliance
+_archive\cleanup-2025-09-05_1942\mho\engine
+_archive\cleanup-2025-09-05_1942\mho\engine-v2
+_archive\cleanup-2025-09-05_1942\mho\form
+_archive\cleanup-2025-09-05_1942\mho\plan
+_archive\cleanup-2025-09-05_1942\mho\plan-v2
+_archive\cleanup-2025-09-05_1942\mho\plugins
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2
+_archive\cleanup-2025-09-05_1942\mho\compliance\ComplianceGuard.new.ts
+_archive\cleanup-2025-09-05_1942\mho\compliance\ComplianceGuard2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\compliance\ComplianceGuard2.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\compliance\nonClinical.rules.new.json
+_archive\cleanup-2025-09-05_1942\mho\compliance\nonClinical.v2.rules.json.bak
+_archive\cleanup-2025-09-05_1942\mho\compliance\nonClinical.v2.rules.new.json
+_archive\cleanup-2025-09-05_1942\mho\compliance\redFlags.new.json
+_archive\cleanup-2025-09-05_1942\mho\compliance\strings.new.ts
+_archive\cleanup-2025-09-05_1942\mho\compliance\strings2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\compliance\strings2.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors
+_archive\cleanup-2025-09-05_1942\mho\engine\normalize.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\processForm.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\safeGenerate.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors\classify.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors\dischargeParser.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors\labParser.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors\ocr.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine\extractors\rxParser.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\buildPlan.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\buildPlan.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\calcs.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\calcs.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\modes.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\modes.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\normalize.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\normalize.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\safeGenerate.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\safeGenerate.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\types.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\types.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\validate.new.ts
+_archive\cleanup-2025-09-05_1942\mho\engine-v2\validate.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\form\healthForm.schema.new.json
+_archive\cleanup-2025-09-05_1942\mho\plan\schema.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plan-v2\schema.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plan-v2\schema.ts.bak
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\csv.v2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\excel.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\pdf.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\pdf.v2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\whatsapp.new.ts
+_archive\cleanup-2025-09-05_1942\mho\plugins\exporters\whatsapp.v2.new.ts
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2\classify.new.ts
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2\dischargeParser.new.ts
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2\labParser.new.ts
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2\ocr.new.ts
+_archive\cleanup-2025-09-05_1942\mho\uploads-v2\rxParser.new.ts
+_archive\cleanup-2025-09-05_1942\scripts\nonclinical-lint.cjs.bak
+_archive\cleanup-2025-09-05_1942\scripts\nonclinical-lint.new.cjs
+_archive\cleanup-2025-09-05_1942\scripts\nonclinical-lint.v2.new.cjs
+_archive\cleanup-2025-09-05_1942\services\storage
+_archive\cleanup-2025-09-05_1942\services\storage\uploadService.new.ts
+_archive\cleanup-2025-09-05_1942\services\storage\uploadService.ts.bak
+_archive\cleanup-2025-09-05_1942\src\features
+_archive\cleanup-2025-09-05_1942\src\pages
+_archive\cleanup-2025-09-05_1942\src\routes
+_archive\cleanup-2025-09-05_1942\src\_archive
+_archive\cleanup-2025-09-05_1942\src\features\health-plan-advanced
+_archive\cleanup-2025-09-05_1942\src\features\health-plan-advanced\PrettyHealthFormV2.tsx.bak
+_archive\cleanup-2025-09-05_1942\src\pages\PlanDetail.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlanOnlyV2.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlansHistory.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlansHistoryV2.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlanView.new.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlanView.tsx.bak
+_archive\cleanup-2025-09-05_1942\src\pages\PlanViewV2.new.tsx
+_archive\cleanup-2025-09-05_1942\src\pages\PlanViewV2.tsx.bak
+_archive\cleanup-2025-09-05_1942\src\routes\AppRoutes.tsx
+_archive\cleanup-2025-09-05_1942\src\_archive\services-v2
+_archive\cleanup-2025-09-05_1942\src\_archive\services-v2\storage
+_archive\cleanup-2025-09-05_1942\src\_archive\services-v2\storage\uploadService.v2.new.ts
+_archive\legacy-2025-09-05_2249\src
+_archive\legacy-2025-09-05_2249\src\App.css
+_archive\phase2-2025-09-05_2046\functions
+_archive\phase2-2025-09-05_2046\scripts
+_archive\phase2-2025-09-05_2046\functions\src
+_archive\phase2-2025-09-05_2046\functions\src\cleanupUploads.ts
+_archive\phase2-2025-09-05_2046\functions\src\uploadsIngest.ts
+_archive\phase2-2025-09-05_2046\scripts\nonclinical-lint.cjs
+_archive_2025-08-24\backups
+_archive_2025-08-24\file_tree.txt
+_bundle\step2-2025-09-06_1317
+_bundle\step3-shell-2025-09-06_1331
+_bundle\step4-theme-2025-09-06_1339
+_bundle\step2-configs-2025-09-06_1317.zip
+_bundle\step2-configs-2025-09-06_1319.txt
+_bundle\step3-shell-2025-09-06_1331.txt
+_bundle\step3-shell-2025-09-06_1331.zip
+_bundle\step4-theme-2025-09-06_1339.txt
+_bundle\step4-theme-2025-09-06_1339.zip
+_bundle\step5-terminal-2025-09-06_1345.txt
+_bundle\step2-2025-09-06_1317\index.html
+_bundle\step2-2025-09-06_1317\package.json
+_bundle\step2-2025-09-06_1317\tsconfig.app.json
+_bundle\step2-2025-09-06_1317\tsconfig.json
+_bundle\step2-2025-09-06_1317\tsconfig.node.json
+_bundle\step2-2025-09-06_1317\vite.config.ts
+_bundle\step3-shell-2025-09-06_1331\src
+_bundle\step3-shell-2025-09-06_1331\App.tsx
+_bundle\step3-shell-2025-09-06_1331\main.tsx
+_bundle\step3-shell-2025-09-06_1331\src\layouts
+_bundle\step3-shell-2025-09-06_1331\src\layouts\MainLayout.tsx
+_bundle\step4-theme-2025-09-06_1339\src
+_bundle\step4-theme-2025-09-06_1339\src\components
+_bundle\step4-theme-2025-09-06_1339\src\utils
+_bundle\step4-theme-2025-09-06_1339\src\index.css
+_bundle\step4-theme-2025-09-06_1339\src\components\ThemeSwitch.tsx
+_bundle\step4-theme-2025-09-06_1339\src\utils\theme.ts
+_import\parts

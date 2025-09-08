@@ -276,3 +276,40 @@ input, select, textarea{
 .gw-input::placeholder{
   opacity:0.6;
 }
+/* ── Mobile layout fixes (<= 768px) ─────────────────────────── */
+@media (max-width: 768px) {
+  /* Stack the shell instead of side-by-side */
+  .app-shell { display: block; }
+
+  /* Make SideNav a top bar */
+  .sidenav {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidenav-inner { height: auto; }
+  .sidenav-brand { padding: 12px 16px; }
+  .sidenav-nav {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .side-chip { flex: 0 0 auto; }
+
+  /* Content spacing */
+  .gw-page { padding: 12px; }
+  .gw-card { padding: 12px; }
+  .topbar-inner { min-height: 52px; }
+
+  /* Force form columns to stack full width */
+  .gw-row > div { width: 100% !important; min-width: 0 !important; }
+
+  /* Chips breathe on small screens */
+  .gw-badge { margin-right: 0.4rem; margin-bottom: 0.4rem; }
+}
