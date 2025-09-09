@@ -193,3 +193,29 @@ html[data-theme="slate"]{
   --primary:#4F6D7A; --primary-600:#435E69; --primary-700:#394F58;
   --gw-primary:var(--primary); --gw-primary-600:var(--primary-600); --gw-primary-700:var(--primary-700);
 }
+
+/* Header links layout fix */
+.gw-top-links{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.gw-top-links a{display:inline-block;padding:.25rem .5rem;border-radius:.5rem}
+
+/* Header links fix (no code changes needed) */
+.topbar-inner nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.topbar-inner nav a{display:inline-block;padding:.25rem .5rem;border-radius:.5rem}
+
+/* --- Side layout hard fix --- */
+.app-shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidenav{border-right:1px solid var(--gw-border,#e5e7eb);background:var(--gw-side-bg,#f8fafc)}
+.sidenav-inner{position:sticky;top:0;max-height:100vh;overflow:auto;padding:12px}
+.app-main{min-width:0}
+
+/* SideNav visuals */
+.brand{font-weight:700;font-size:18px;margin:4px 0 12px}
+.brand-accent{color:var(--gw-accent,#0f766e)}
+.nav-col{display:flex;flex-direction:column;gap:8px}
+.gw-nav{display:block;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.gw-nav.is-active{background:var(--gw-active,#e6f4ea);border-color:#c7e7d1}
+.sidenav-foot{margin-top:16px;font-size:12px;opacity:.7}
+
+/* Topbar link spacing (if any) */
+.topbar-inner nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.topbar-inner nav a{display:inline-block;padding:.25rem .5rem;border-radius:.5rem}

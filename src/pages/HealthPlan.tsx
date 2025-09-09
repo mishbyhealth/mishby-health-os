@@ -3,6 +3,12 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ensurePacksLoaded, type PacksResult } from "../utils/packs";
 import { getAiPlanEnabled, requestAiPlan, type PlanJson } from "@/services/planService";
+import * as Owner from "@/utils/owner";
+
+function isOwnerSafe(){
+  try{ if(typeof Owner.isOwner==="function") return Owner.isOwner(); }catch{}
+  try{ return localStorage.getItem("glowell:mode")==="owner"; }catch{ return false; }
+}
 
 const PLANS_KEY = "glowell:plans";
 const INDEX_KEY = "glowell:plans:index";
@@ -24,17 +30,10 @@ type IntakeData = {
   city?: string;
   region?: string;
   timezone?: string;
-  // legacy
   vegOnly?: boolean;
 };
 
-type Subscription = {
-  name?: string;
-  email?: string;
-  mobile?: string;
-  tier?: "free" | "silver" | "gold" | "platinum";
-};
-
+type Subscription = { name?: string; email?: string; mobile?: string; tier?: "free" | "silver" | "gold" | "platinum" };
 type MetricBlock = { bmi?: number | null; energyEstimateKcal?: number | null };
 type Tip = { text: string; source?: string };
 type HydrationItem = { time?: string; amountMl?: number };
@@ -50,7 +49,6 @@ type Plan = {
 function safeParse<T>(raw: string | null, fallback: T): T { if (!raw) return fallback; try { return JSON.parse(raw) as T; } catch { return fallback; } }
 function readIntake(): IntakeData { return safeParse(localStorage.getItem(INTAKE_KEY), {} as IntakeData); }
 function readSubscription(): Subscription { return safeParse(localStorage.getItem(SUB_KEY), {} as Subscription); }
-
 function parseBool(v: string | null){ if(!v) return false; return v==="1" || v.toLowerCase()==="true" || v.toLowerCase()==="yes"; }
 function useDemoMode(): boolean { const loc = useLocation(); const hash = (loc.hash||"").toLowerCase(); const qs = new URLSearchParams(loc.search); return hash.includes("demo") || parseBool(qs.get("demo")); }
 
@@ -167,32 +165,16 @@ function buildDemoPlan(now = new Date()): Plan {
 function toCSV(rows: string[][]): string { return rows.map(r => r.map(c => `"${(c ?? "").toString().replace(/"/g,'""')}"`).join(",")).join("\n"); }
 function download(filename: string, data: BlobPart, type = "text/plain") { const blob = new Blob([data], { type }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000); }
 
-// --- NEW: Adapt AI stub → current Plan shape (non-destructive)
 function adaptAiToPlan(ai: PlanJson, base: Plan): Plan {
   const meals: MealItem[] = [];
   const pushMeal = (time: string, title: string, items: string[] | undefined) => meals.push({ time, title, items: items || [] });
-
-  // Map meals (use fixed anchor times for readability)
   pushMeal("07:30", "Breakfast", ai.meals?.breakfast || []);
   pushMeal("13:00", "Lunch", ai.meals?.lunch || []);
   pushMeal("16:30", "Snacks", ai.meals?.snacks || []);
   pushMeal("20:00", "Dinner", ai.meals?.dinner || []);
-
-  // Hydration
-  const hydration: HydrationItem[] = (ai.hydration || []).map(h => ({
-    time: h.time, amountMl: h.ml
-  }));
-
-  // Movement (map simple strings to two anchor times)
-  const movement: MovementItem[] = (ai.movement || []).map((m, i) => ({
-    time: i === 0 ? "07:00" : i === 1 ? "18:00" : "",
-    activity: m, minutes: i === 0 ? 15 : i === 1 ? 15 : undefined
-  }));
-
-  // Tips
+  const hydration: HydrationItem[] = (ai.hydration || []).map(h => ({ time: h.time, amountMl: h.ml }));
+  const movement: MovementItem[] = (ai.movement || []).map((m, i) => ({ time: i === 0 ? "07:00" : i === 1 ? "18:00" : "", activity: m, minutes: i <= 1 ? 15 : undefined }));
   const tips: Tip[] = (ai.tips || []).map(t => ({ text: t }));
-
-  // Keep schedule from base (non-destructive), add packs
   return {
     ...base,
     packsApplied: ai.packs_applied?.length ? ai.packs_applied : base.packsApplied,
@@ -213,6 +195,7 @@ export default function HealthPlan() {
   const intake = useMemo(() => readIntake(), []);
   const sub = useMemo(() => readSubscription(), []);
   const aiOn = useMemo(() => getAiPlanEnabled(), []);
+  const owner = isOwnerSafe();
 
   const basePlan = useMemo<Plan>(() => {
     const existing = loadLatestPlan();
@@ -226,7 +209,6 @@ export default function HealthPlan() {
     };
   }, [demo]);
 
-  // Compute template/fallback plan first (keeps old behavior)
   const templatePlan = useMemo<Plan>(() => {
     let p = { ...basePlan };
     p = backfillMetricsFromIntake(p, intake);
@@ -237,23 +219,13 @@ export default function HealthPlan() {
     return p;
   }, [basePlan, intake]);
 
-  // Load packs (for intakeSummary packs_applied hint)
-  useEffect(() => {
-    if (mounted.current) return; mounted.current = true;
-    (async () => { const res = await ensurePacksLoaded(); setPacks(res); })();
-  }, []);
-
-  // If toggle is ON and not demo, request AI stub once
   useEffect(() => {
     if (demo) return;
     if (!aiOn) return;
     (async () => {
       try {
         const packsApplied = packs?.ok ? packs.loaded : (templatePlan.packsApplied || []);
-        const ai = await requestAiPlan(
-          { packs_applied: packsApplied || [] },
-          {} // aggregates can be added later from TodayTracker
-        );
+        const ai = await requestAiPlan({ packs_applied: packsApplied || [] }, {});
         setAiData(ai);
       } catch (e) {
         console.warn("AI Plan fetch failed; using template plan.", e);
@@ -263,22 +235,24 @@ export default function HealthPlan() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiOn, demo, packs?.ok, (packs?.loaded || []).join("|")]);
 
-  // Merge AI data (non-destructive) if present
   const plan = useMemo<Plan>(() => {
     if (aiOn && aiData) return adaptAiToPlan(aiData, templatePlan);
     return templatePlan;
   }, [aiOn, aiData, templatePlan]);
 
+  // Owner-only metadata (hidden for users)
   const personalizationBanner = useMemo(() => {
+    if (!owner) return null;
     const bits: string[] = [];
     if (sub?.name) bits.push(`for ${sub.name}`);
     if (intake.dietType) bits.push(`Diet: ${String(intake.dietType).replace("_","-")}`);
     if (intake.spiceTolerance) bits.push(`Spice: ${intake.spiceTolerance}`);
     if (aiOn && aiData) bits.push("AI Plan");
     return bits.length ? bits.join(" • ") : null;
-  }, [sub?.name, intake.dietType, intake.spiceTolerance, aiOn, aiData]);
+  }, [owner, sub?.name, intake.dietType, intake.spiceTolerance, aiOn, aiData]);
 
   const packsChip = useMemo(() => {
+    if (!owner) return null;
     const applied = plan.packsApplied?.length ? plan.packsApplied : [];
     if (!applied.length) return null;
     return (
@@ -286,7 +260,7 @@ export default function HealthPlan() {
         <span>Condition Packs:</span><strong>{applied.join(", ")}</strong>
       </div>
     );
-  }, [plan.packsApplied]);
+  }, [owner, plan.packsApplied]);
 
   function onExportJSON(){ download(`plan_${plan.id}.json`, JSON.stringify(plan, null, 2), "application/json"); }
   function onExportScheduleCSV(){ const rows=[["time","what","details"],...(plan.schedule||[]).map(it=>[it.time||"",it.what||"",it.details||""])]; download(`plan_${plan.id}_schedule.csv`, toCSV(rows), "text/csv"); }
@@ -311,7 +285,7 @@ export default function HealthPlan() {
         <div>
           <h1 className="text-2xl font-semibold">Health Plan</h1>
           <p className="mt-1 text-sm gw-muted">
-            {demo ? "Public Demo (read-only)" : "Your latest plan (personalized if intake is saved)."}
+            {demo ? "Public Demo (read-only)" : "Your latest plan."}
           </p>
           {personalizationBanner && (
             <div className="mt-2 inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs">
@@ -321,7 +295,7 @@ export default function HealthPlan() {
         </div>
         <div className="flex flex-col items-end gap-2">
           {packsChip}
-          <div className="text-xs gw-muted">ID: <code>{plan.id}</code></div>
+          {owner && <div className="text-xs gw-muted">ID: <code>{plan.id}</code></div>}
         </div>
       </div>
 

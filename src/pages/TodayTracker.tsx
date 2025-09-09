@@ -1,263 +1,211 @@
-import React from "react";
-import { useAccountId } from "@/context/AccountProvider";
-import { useAutosave } from "@/utils/formPersistence";
+// src/pages/TodayTracker.tsx
+import { useEffect, useMemo, useState } from "react";
+import {
+  TrackerDay, ymd, loadDay, saveDay, listRecentDays,
+  computeGoals, sumHydrationMl
+} from "@/services/trackerService";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
-/**
- * Today Tracker (additive)
- * Stores per-account, per-day logs in localStorage.
- * Keys:
- *  - glowell:tracker:<accountId>:<yyyy-mm-dd>
- *  - glowell:tracker:index:<accountId>   // list of days with any data
- */
-
-type TimeHHMM = string;
-
-type Dosha = { vata?: number; pitta?: number; kapha?: number; label?: string };
-type Vitals = {
-  bpSys?: number; bpDia?: number; pulse?: number;
-  fpg?: number; ppg?: number;
-  weightKg?: number;
-};
-type TrackerDay = {
-  dateISO: string;               // yyyy-mm-dd
-  sleep?: { sleepTime?: TimeHHMM; wakeTime?: TimeHHMM; hours?: number };
-  hydration?: { ml?: number };
-  dosha?: Dosha;
-  vitals?: Vitals;
-  symptoms?: string[];
-  notes?: string;
-};
-
-const SYMPTOMS = [
-  "headache","acidity","gas","bloating","constipation","diarrhea",
-  "cough","cold","sore_throat","fatigue","stress","poor_sleep","body_ache"
-] as const;
-
-function todayISO() {
+const nowHm = () => {
   const d = new Date();
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
-function shiftISO(base: string, deltaDays: number) {
-  const [y,m,d] = base.split("-").map(n=>Number(n));
-  const dt = new Date(y, m-1, d);
-  dt.setDate(dt.getDate()+deltaDays);
-  const mm = String(dt.getMonth()+1).padStart(2,"0");
-  const dd = String(dt.getDate()).padStart(2,"0");
-  return `${dt.getFullYear()}-${mm}-${dd}`;
-}
-function parseHHMM(t?: string) {
-  if (!t) return null;
-  const m = /^(\d{1,2}):(\d{2})$/.exec(t);
-  if (!m) return null;
-  const h = Math.min(23, Math.max(0, parseInt(m[1], 10)));
-  const mm = Math.min(59, Math.max(0, parseInt(m[2], 10)));
-  return { h, mm };
-}
-function hoursBetween(sleep?: string, wake?: string): number | undefined {
-  const s = parseHHMM(sleep), w = parseHHMM(wake);
-  if (!s || !w) return undefined;
-  const start = s.h * 60 + s.mm;
-  const end = w.h * 60 + w.mm;
-  const mins = end >= start ? (end - start) : (24 * 60 - start + end);
-  return Math.round((mins / 60) * 10) / 10;
-}
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
 
 export default function TodayTracker() {
-  const accountId = useAccountId();
+  const [date, setDate] = useState<string>(ymd());
+  const [day, setDay] = useState<TrackerDay>(() => loadDay(ymd()));
+  const goals = useMemo(() => computeGoals(), []);
+  const recent = useMemo(() => listRecentDays(14), [date]); // refresh when date changes
 
-  const [dateISO, setDateISO] = React.useState<string>(todayISO());
-  const STORAGE_KEY = `glowell:tracker:${accountId}:${dateISO}`;
-  const INDEX_KEY = `glowell:tracker:index:${accountId}`;
-
-  const loadDay = React.useCallback((): TrackerDay => {
+  // derive hours if start/end provided
+  const hours = useMemo(() => {
+    const s = day.sleep?.start, e = day.sleep?.end;
+    if (!s || !e) return day.sleep?.hours || 0;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return { dateISO };
-  }, [STORAGE_KEY, dateISO]);
+      const [sh, sm] = s.split(":").map(Number);
+      const [eh, em] = e.split(":").map(Number);
+      let mins = (eh * 60 + em) - (sh * 60 + sm);
+      if (mins < 0) mins += 24 * 60; // overnight
+      return Math.round((mins / 60) * 10) / 10;
+    } catch { return day.sleep?.hours || 0; }
+  }, [day.sleep?.start, day.sleep?.end, day.sleep?.hours]);
 
-  const [day, setDay] = React.useState<TrackerDay>(() => loadDay());
-  React.useEffect(() => { setDay(loadDay()); }, [loadDay]);
+  // adherence
+  const hydTotal = useMemo(() => sumHydrationMl(day), [day]);
+  const sleepAdh = Math.min(100, Math.round((hours / goals.sleepHours) * 100));
+  const hydAdh = Math.min(100, Math.round((hydTotal / goals.hydrationMl) * 100));
 
-  // derive sleep hours
-  React.useEffect(() => {
-    const h = hoursBetween(day.sleep?.sleepTime, day.sleep?.wakeTime);
-    setDay(prev => ({ ...prev, sleep: { ...(prev.sleep||{}), hours: h } }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day.sleep?.sleepTime, day.sleep?.wakeTime]);
+  // load a specific date
+  function load(dateStr: string) {
+    setDate(dateStr);
+    setDay(loadDay(dateStr));
+  }
 
-  // autosave this day
-  useAutosave(STORAGE_KEY, day, 400);
+  // write-through save
+  function commit(next: Partial<TrackerDay>) {
+    const updated: TrackerDay = { ...day, ...next, date };
+    setDay(updated);
+    saveDay(updated);
+  }
 
-  // maintain index of days with logs
-  React.useEffect(() => {
-    try {
-      const idx = new Set<string>(JSON.parse(localStorage.getItem(INDEX_KEY) || "[]"));
-      idx.add(dateISO);
-      localStorage.setItem(INDEX_KEY, JSON.stringify([...idx].sort()));
-    } catch {}
-  }, [INDEX_KEY, dateISO, day]);
+  // pulse add
+  function addPulse(ml: number) {
+    const pulses = [...(day.hydration?.pulses || [])];
+    pulses.push({ time: nowHm(), ml });
+    commit({ hydration: { ml: day.hydration?.ml || 0, pulses } });
+  }
 
-  const changeDate = (dir: -1 | 1) => setDateISO(prev => shiftISO(prev, dir));
-
-  const setSleep = (patch: Partial<NonNullable<TrackerDay["sleep"]>>) =>
-    setDay(d => ({ ...d, sleep: { ...(d.sleep||{}), ...patch } }));
-
-  const addWater = (ml: number) =>
-    setDay(d => ({ ...d, hydration: { ml: Math.max(0, (d.hydration?.ml || 0) + ml) } }));
-
-  const setDosha = (patch: Partial<Dosha>) =>
-    setDay(d => ({ ...d, dosha: { ...(d.dosha||{}), ...patch } }));
-
-  const setVitals = (k: keyof Vitals, v?: number) =>
-    setDay(d => ({ ...d, vitals: { ...(d.vitals||{}), [k]: v } }));
-
-  const toggleSymptom = (s: string) =>
-    setDay(d => {
-      const list = d.symptoms || [];
-      const has = list.includes(s);
-      const next = has ? list.filter(x=>x!==s) : [...list, s];
-      return { ...d, symptoms: next };
-    });
+  // UI helpers
+  const chip = (label: string, ok: boolean) => (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs border ${ok ? "bg-green-50 border-green-300" : "bg-amber-50 border-amber-300"}`}>{label}</span>
+  );
 
   return (
-    <div className="py-2">
-      <div className="gw-tint mx-auto" style={{ maxWidth: 980, padding: "0.75rem 1rem" }}>
-        <div className="gw-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <h2 className="text-xl">Today Tracker</h2>
-          <div className="gw-row" style={{ gap: 8 }}>
-            <button className="gw-btn" onClick={() => changeDate(-1)}>← Prev</button>
-            <input
-              className="gw-input"
-              type="date"
-              value={dateISO}
-              onChange={e => setDateISO(e.target.value || todayISO())}
-            />
-            <button className="gw-btn" onClick={() => setDateISO(todayISO())}>Today</button>
-            <button className="gw-btn" onClick={() => changeDate(1)}>Next →</button>
+    <div className="mx-auto max-w-5xl px-4 py-6">
+      <Header />
+
+      <h1 className="text-2xl font-semibold mb-4">Today Tracker</h1>
+
+      {/* Date + Quick history */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => load(e.target.value)}
+          className="rounded border px-3 py-1"
+        />
+        <div className="text-sm opacity-70">Recent:</div>
+        <div className="flex flex-wrap gap-2">
+          {recent.length === 0 && <span className="text-sm opacity-60">—</span>}
+          {recent.map((d) => (
+            <button
+              key={d}
+              onClick={() => load(d)}
+              className={`rounded-full border px-3 py-1 text-xs ${d === date ? "bg-black text-white" : "bg-white"}`}
+              title="Open this day"
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Goals + adherence */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Targets & Adherence</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="rounded border p-3">
+            <div className="text-xs opacity-70">Sleep goal</div>
+            <div className="text-xl font-semibold">{goals.sleepHours} h</div>
+            <div className="mt-2 text-sm">Today: <b>{hours || 0} h</b></div>
+            <div className="mt-2 h-2 w-full rounded bg-gray-200">
+              <div className="h-2 rounded bg-black" style={{ width: `${sleepAdh}%` }} />
+            </div>
+            <div className="mt-1 text-xs opacity-70">Adherence: {sleepAdh}%</div>
+          </div>
+          <div className="rounded border p-3">
+            <div className="text-xs opacity-70">Hydration goal</div>
+            <div className="text-xl font-semibold">{goals.hydrationMl} ml</div>
+            <div className="mt-2 text-sm">Today: <b>{hydTotal} ml</b></div>
+            <div className="mt-2 h-2 w-full rounded bg-gray-200">
+              <div className="h-2 rounded bg-black" style={{ width: `${hydAdh}%` }} />
+            </div>
+            <div className="mt-1 text-xs opacity-70">Adherence: {hydAdh}%</div>
           </div>
         </div>
+        <div className="mt-3 flex gap-2">
+          {chip("Sleep ok if ≥ ~7–8h", hours >= 7)}
+          {chip("Hydration ok if near goal", hydTotal >= goals.hydrationMl * 0.8)}
+        </div>
+      </section>
 
-        {/* Sleep */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <div className="gw-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <h3>Sleep</h3>
-          </div>
-          <div className="gw-row" style={{ gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 120 }}>Sleep time</div>
-              <input className="gw-input" type="time" value={day.sleep?.sleepTime || ""} onChange={e=>setSleep({ sleepTime: e.target.value })}/>
-            </label>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 120 }}>Wake time</div>
-              <input className="gw-input" type="time" value={day.sleep?.wakeTime || ""} onChange={e=>setSleep({ wakeTime: e.target.value })}/>
-            </label>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 120 }}>Hours</div>
-              <input className="gw-input" readOnly value={day.sleep?.hours ?? ""}/>
-            </label>
-          </div>
-        </section>
+      {/* Sleep */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Sleep</h2>
+        <div className="flex flex-wrap gap-3 items-center">
+          <label className="flex items-center gap-2">
+            <span className="text-sm opacity-70">Start</span>
+            <input type="time" value={day.sleep?.start || ""} onChange={(e)=>commit({ sleep: { ...day.sleep, start: e.target.value } })} className="rounded border px-2 py-1"/>
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm opacity-70">End</span>
+            <input type="time" value={day.sleep?.end || ""} onChange={(e)=>commit({ sleep: { ...day.sleep, end: e.target.value } })} className="rounded border px-2 py-1"/>
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm opacity-70">Hours</span>
+            <input type="number" min={0} step={0.25} value={day.sleep?.hours ?? ""} onChange={(e)=>commit({ sleep: { ...day.sleep, hours: Number(e.target.value) || 0 } })} className="w-24 rounded border px-2 py-1"/>
+          </label>
+        </div>
+      </section>
 
-        {/* Hydration */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <div className="gw-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <h3>Hydration</h3>
-            <div className="gw-badge">{(day.hydration?.ml || 0)} ml</div>
-          </div>
-          <div className="gw-row" style={{ gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-            {[200,250,300,500].map(q => (
-              <button key={q} className="gw-btn" onClick={() => addWater(q)}>+{q} ml</button>
-            ))}
-            {(day.hydration?.ml || 0) > 0 && (
-              <button className="gw-btn" onClick={() => addWater(-250)}>–250 ml</button>
-            )}
-          </div>
-        </section>
+      {/* Hydration */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Hydration</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <button className="rounded border px-3 py-1" onClick={()=>addPulse(150)}>+150 ml</button>
+          <button className="rounded border px-3 py-1" onClick={()=>addPulse(250)}>+250 ml</button>
+          <button className="rounded border px-3 py-1" onClick={()=>addPulse(300)}>+300 ml</button>
+          <label className="ml-3 text-sm opacity-70">Manual total (ml)</label>
+          <input
+            type="number"
+            min={0}
+            step={50}
+            value={day.hydration?.ml ?? ""}
+            onChange={(e)=>commit({ hydration: { ml: Number(e.target.value) || 0, pulses: day.hydration?.pulses || [] } })}
+            className="w-28 rounded border px-2 py-1"
+          />
+        </div>
+        <div className="mt-2 text-sm opacity-70">
+          Pulses today: {(day.hydration?.pulses || []).length} • Total: <b>{hydTotal} ml</b>
+        </div>
+      </section>
 
-        {/* Dosha (daily) */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <h3>Dosha (today)</h3>
-          <div className="gw-row" style={{ gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 80 }}>Vata</div>
-              <input className="gw-input" type="range" min={0} max={10} step={1}
-                     value={day.dosha?.vata ?? 0}
-                     onChange={e=>setDosha({ vata: Number(e.target.value) })}/>
+      {/* Daily Dosha */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Daily Dosha (self-feel)</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {(["vata","pitta","kapha"] as const).map((k)=> (
+            <label key={k} className="flex flex-col gap-1">
+              <span className="text-sm capitalize">{k}</span>
+              <input type="range" min={0} max={10} value={(day.dosha?.[k] ?? 5)} onChange={(e)=>commit({ dosha: { ...day.dosha, [k]: Number(e.target.value) } as any })}/>
+              <span className="text-xs opacity-70">Value: {day.dosha?.[k] ?? 5}</span>
             </label>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 80 }}>Pitta</div>
-              <input className="gw-input" type="range" min={0} max={10} step={1}
-                     value={day.dosha?.pitta ?? 0}
-                     onChange={e=>setDosha({ pitta: Number(e.target.value) })}/>
-            </label>
-            <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-              <div className="gw-label" style={{ width: 80 }}>Kapha</div>
-              <input className="gw-input" type="range" min={0} max={10} step={1}
-                     value={day.dosha?.kapha ?? 0}
-                     onChange={e=>setDosha({ kapha: Number(e.target.value) })}/>
-            </label>
-          </div>
-        </section>
+          ))}
+        </div>
+      </section>
 
-        {/* Quick vitals */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <h3>Quick Vitals</h3>
-          <div className="gw-row" style={{ gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-            <LabeledNumber label="BP Sys" value={day.vitals?.bpSys} onChange={v=>setVitals("bpSys", v)} />
-            <LabeledNumber label="BP Dia" value={day.vitals?.bpDia} onChange={v=>setVitals("bpDia", v)} />
-            <LabeledNumber label="Pulse" value={day.vitals?.pulse} onChange={v=>setVitals("pulse", v)} />
-            <LabeledNumber label="FPG" value={day.vitals?.fpg} onChange={v=>setVitals("fpg", v)} />
-            <LabeledNumber label="PPG" value={day.vitals?.ppg} onChange={v=>setVitals("ppg", v)} />
-            <LabeledNumber label="Weight (kg)" value={day.vitals?.weightKg} onChange={v=>setVitals("weightKg", v)} />
-          </div>
-        </section>
+      {/* Quick vitals & symptoms */}
+      <section className="mb-6 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Quick Vitals & Symptoms</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <input placeholder="BP (e.g., 126/82)" value={day.vitals?.bp || ""} onChange={(e)=>commit({ vitals: { ...day.vitals, bp: e.target.value } })} className="rounded border px-3 py-1"/>
+          <input placeholder="Sugar (e.g., 108 mg/dL)" value={day.vitals?.sugar || ""} onChange={(e)=>commit({ vitals: { ...day.vitals, sugar: e.target.value } })} className="rounded border px-3 py-1"/>
+          <input placeholder="Weight (kg)" type="number" step={0.1} value={day.vitals?.weightKg ?? ""} onChange={(e)=>commit({ vitals: { ...day.vitals, weightKg: Number(e.target.value) || undefined } })} className="w-32 rounded border px-3 py-1"/>
+        </div>
+        <div className="mt-3">
+          <input
+            placeholder="Symptoms (comma separated)"
+            value={(day.symptoms || []).join(", ")}
+            onChange={(e)=>commit({ symptoms: e.target.value.split(",").map(s=>s.trim()).filter(Boolean) })}
+            className="w-full rounded border px-3 py-1"
+          />
+        </div>
+      </section>
 
-        {/* Symptoms */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <h3>Symptoms (tap to toggle)</h3>
-          <div className="gw-row" style={{ gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-            {SYMPTOMS.map(s => (
-              <button
-                key={s}
-                className={`gw-badge ${day.symptoms?.includes(s) ? "is-active" : ""}`}
-                onClick={() => toggleSymptom(s)}
-              >
-                {s.replaceAll("_"," ").replace(/\b\w/g, m=>m.toUpperCase())}
-              </button>
-            ))}
-          </div>
-        </section>
+      {/* Notes */}
+      <section className="mb-8 rounded-xl border p-4">
+        <h2 className="text-lg font-medium mb-3">Notes</h2>
+        <textarea
+          value={day.notes || ""}
+          onChange={(e)=>commit({ notes: e.target.value })}
+          rows={4}
+          className="w-full rounded border px-3 py-2"
+          placeholder="Free notes for today…"
+        />
+      </section>
 
-        {/* Notes */}
-        <section className="gw-card" style={{ marginTop: 12 }}>
-          <h3>Notes</h3>
-          <textarea className="gw-input" rows={4}
-            placeholder="Free notes for today..."
-            value={day.notes || ""}
-            onChange={e => setDay(d => ({ ...d, notes: e.target.value }))}/>
-        </section>
-      </div>
+      <Footer />
     </div>
-  );
-}
-
-function LabeledNumber({ label, value, onChange }:{
-  label: string; value?: number; onChange:(v?:number)=>void;
-}) {
-  return (
-    <label className="gw-row" style={{ gap: 8, alignItems: "center" }}>
-      <div className="gw-label" style={{ width: 110 }}>{label}</div>
-      <input
-        className="gw-input"
-        inputMode="numeric"
-        value={value ?? ""}
-        onChange={e => onChange(e.target.value===""?undefined:Number(e.target.value))}
-        placeholder="—"
-      />
-    </label>
   );
 }

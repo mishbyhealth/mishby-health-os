@@ -1,44 +1,38 @@
-// File: src/components/SideNav.tsx
-import React from "react";
+// src/components/SideNav.tsx
 import { NavLink } from "react-router-dom";
 
-function Item({ to, children }:{ to:string; children:React.ReactNode }) {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `block px-3 py-2 rounded-md mb-2 side-item ${isActive ? "side-item-active" : ""}`
-      }
-    >
-      {children}
-    </NavLink>
-  );
-}
+const Link = ({ to, children }: { to: string; children: React.ReactNode }) => (
+  <NavLink to={to} className={({ isActive }) => `gw-nav ${isActive ? "is-active" : ""}`}>
+    {children}
+  </NavLink>
+);
 
 export default function SideNav() {
   return (
-    <aside className="p-3" style={{ width: 220 }}>
-      <div className="flex items-center gap-2 mb-4">
-        <img src="/favicon.svg" alt="GloWell" className="h-6 w-6" />
-        <span className="font-semibold">GloWell</span>
-      </div>
+    <aside className="sidenav">
+      <div className="sidenav-inner">
+        <div className="brand">Glo<span className="brand-accent">Well</span></div>
 
-      <Item to="/">Home</Item>
-      <Item to="/dashboard">Dashboard</Item>
-      <Item to="/health-form">Health Form</Item>
-      <Item to="/health-form-v2">Form V2</Item>
-      <Item to="/tracker">Today Tracker</Item>
-      <Item to="/health-plan">Health Plan</Item>
-      <Item to="/plans">Plans</Item>
-      <Item to="/settings">Settings</Item>
-      <Item to="/subscription">Subscription</Item>
-      <Item to="/donate">Donate</Item>
-      <Item to="/about">About</Item>
-      <Item to="/terms">Terms & Conditions</Item>
-      <Item to="/_ping">_ping</Item>
+        <nav className="nav-col">
+          <Link to="/">Home</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/health-form">Health Form</Link>
+          <Link to="/health-form-v2">Form V2</Link>
+          {/* Tracker visible to ALL users */}
+          <Link to="/tracker">Today Tracker</Link>
+          <Link to="/health-plan">Health Plan</Link>
+          <Link to="/plans">Plans</Link>
+          <Link to="/settings">Settings</Link>
+          <Link to="/subscription">Subscription</Link>
+          <Link to="/donate">Donate</Link>
+          <Link to="/about">About</Link>
+          <Link to="/terms">Terms & Conditions</Link>
+          <Link to="/_ping">_ping</Link>
+        </nav>
 
-      <div className="text-xs mt-4">
-        Theme: <span className="gw-muted">{document.documentElement.dataset.theme || "—"}</span>
+        <div className="sidenav-foot">
+          <span className="theme-label">Theme: <em>—</em></span>
+        </div>
       </div>
     </aside>
   );

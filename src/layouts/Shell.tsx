@@ -1,10 +1,22 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import SideNav from "../components/SideNav";
 import ThemeSwitch from "../components/ThemeSwitch";
+import { isUnlocked } from "@/utils/ownerPin";
+import { useEffect } from "react";
 
 export default function Shell() {
   const nav = useNavigate();
   const loc = useLocation();
+
+  // --- Owner route guard (non-destructive)
+  useEffect(() => {
+    const ownerOnly = ["/accounts"]; // add more owner routes here if needed
+    const mustBeOwner = ownerOnly.some(p => loc.pathname.startsWith(p));
+    if (mustBeOwner && !isUnlocked()) {
+      // soft-redirect away from owner pages for users
+      nav("/", { replace: true });
+    }
+  }, [loc.pathname, nav]);
 
   function openDemo() { nav("/health-plan#demo"); }
 
