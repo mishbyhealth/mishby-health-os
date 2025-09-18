@@ -1,0 +1,140 @@
+// src/pages/HealthFormV2.tsx
+// Lite 2-step, always-typeable, autosave + Export/Reset
+import * as React from "react";
+import { useAutosave, loadDraft, saveDraft, clearDraft } from "../utils/formPersistence";
+
+type Draft = {
+  name: string;
+  email: string;
+  mobile: string;
+  notes: string;
+};
+
+const KEY = "glowell:draft:v2lite";
+const EMPTY: Draft = { name: "", email: "", mobile: "", notes: "" };
+
+function Field({
+  label, type = "text", value, onChange, placeholder,
+}: {
+  label: string; type?: string; value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
+  return (
+    <label style={{ display: "block", marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>{label}</div>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          width: "100%", padding: "10px 12px", borderRadius: 10,
+          border: "1px solid #d0d7de", background: "#fff"
+        }}
+      />
+    </label>
+  );
+}
+
+export default function HealthFormV2() {
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [data, setData] = React.useState<Draft>(() => loadDraft(KEY, EMPTY));
+
+  // हमेशा टाइपेबल: किसी overlay/lock से प्रभावित न हो
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("glowell:lock", "false");
+      document.documentElement.removeAttribute("data-maintenance");
+    } catch {}
+  }, []);
+
+  // autosave
+  useAutosave(KEY, data, 500);
+
+  function reset() {
+    setData(EMPTY);
+    clearDraft(KEY);
+  }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "GloWell_HealthFormV2_Lite.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  const card: React.CSSProperties = {
+    background: "#fff", borderRadius: 16, padding: 18,
+    boxShadow: "0 10px 24px rgba(0,0,0,0.06)", border: "1px solid #e6e8eb"
+  };
+  const row: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
+
+  return (
+    <div className="container" style={{ maxWidth: 920, margin: "0 auto" }}>
+      <div style={{ margin: "14px 0 10px", display: "flex", alignItems: "center", gap: 10 }}>
+        <h2 style={{ margin: 0 }}>Health-Form V2 (Lite)</h2>
+        <span style={{
+          fontSize: 12, padding: "4px 8px", borderRadius: 999, background: "#f1f5ff", color: "#334"
+        }}>
+          Page {step} / 2
+        </span>
+      </div>
+
+      {step === 1 && (
+        <div style={card}>
+          <h3 style={{ marginTop: 0 }}>Basics</h3>
+          <div style={row}>
+            <Field label="Name" value={data.name} onChange={(v) => setData({ ...data, name: v })} placeholder="Full name" />
+            <Field label="Mobile" value={data.mobile} onChange={(v) => setData({ ...data, mobile: v })} placeholder="10-digit number" />
+          </div>
+          <Field label="Email" type="email" value={data.email} onChange={(v) => setData({ ...data, email: v })} placeholder="name@example.com" />
+
+          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            <button className="gw-btn gw-btn-ghost" onClick={() => window.history.back()}>Back</button>
+            <button className="gw-btn gw-btn-ghost" onClick={exportJSON}>Export JSON</button>
+            <button className="gw-btn gw-btn-danger" onClick={reset}>Reset</button>
+            <div style={{ flex: 1 }} />
+            <button className="gw-btn" onClick={() => setStep(2)}>Next</button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div style={card}>
+          <h3 style={{ marginTop: 0 }}>Notes & Review</h3>
+          <label style={{ display: "block" }}>
+            <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>Notes</div>
+            <textarea
+              value={data.notes}
+              onChange={(e) => setData({ ...data, notes: e.target.value })}
+              rows={8}
+              style={{
+                width: "100%", padding: 12, borderRadius: 10,
+                border: "1px solid #d0d7de", background: "#fff", resize: "vertical"
+              }}
+            />
+          </label>
+
+          <div style={{
+            background: "#fafbff", border: "1px dashed #c7d2fe", borderRadius: 12,
+            padding: 12, marginTop: 12, fontSize: 13
+          }}>
+            <div><b>Preview:</b> {data.name || "—"}, {data.email || "—"}, {data.mobile || "—"}</div>
+            <div style={{ color: "#555", whiteSpace: "pre-wrap", marginTop: 6 }}>
+              {data.notes || "No additional notes."}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <button className="gw-btn gw-btn-ghost" onClick={() => setStep(1)}>Back</button>
+            <button className="gw-btn gw-btn-ghost" onClick={exportJSON}>Export JSON</button>
+            <button className="gw-btn gw-btn-danger" onClick={reset}>Reset</button>
+            <div style={{ flex: 1 }} />
+            <button className="gw-btn" onClick={() => alert("Saved locally ✓")}>Save</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

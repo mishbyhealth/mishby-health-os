@@ -1,107 +1,68 @@
 // src/components/OwnerBar.tsx
-import React, { useMemo, useState } from "react";
+import { useEffect, useState } from 'react';
+import MaintenanceBanner from '@/components/MaintenanceBanner';
+import { isLocked, setLocked, initLockFromStorage, onLockChange } from '@/utils/lock';
 
-type Props = {
-  owner: boolean;
-  fullForm: boolean;
-  onFullOn: () => void;
-  onFullOff: () => void;
-  onJumpProfile?: () => void;
-  onJumpSchedule?: () => void;
-  onJumpHealth?: () => void;
-};
-
-function getLockedFromDomOrStorage(): boolean {
-  try {
-    const attr = document.documentElement.getAttribute("data-locked");
-    if (attr === "1") return true;
-    const raw = localStorage.getItem("glowell:locked");
-    return raw === "1" || raw === "true";
-  } catch {
-    return false;
-  }
+function isOwnerUnlocked(): boolean {
+  if (typeof window === 'undefined') return false;
+  // Owner session gate (kept simple; aligns with v14 Owner PIN unlock that sets a session flag)
+  return window.localStorage.getItem('glowell:owner:unlocked') === '1';
 }
 
-function setLockedEverywhere(next: boolean) {
-  try {
-    localStorage.setItem("glowell:locked", next ? "1" : "0");
-  } catch {}
-  try {
-    document.documentElement.setAttribute("data-locked", next ? "1" : "0");
-  } catch {}
-}
+export default function OwnerBar() {
+  const [locked, setLockedState] = useState<boolean>(() => isLocked());
+  const [owner, setOwner] = useState<boolean>(() => isOwnerUnlocked());
 
-export default function OwnerBar({
-  owner,
-  fullForm,
-  onFullOn,
-  onFullOff,
-  onJumpProfile,
-  onJumpSchedule,
-  onJumpHealth,
-}: Props) {
-  if (!owner) return null;
-
-  const initialLocked = useMemo(() => getLockedFromDomOrStorage(), []);
-  const [locked, setLocked] = useState<boolean>(initialLocked);
+  useEffect(() => {
+    initLockFromStorage();
+    setLockedState(isLocked());
+    setOwner(isOwnerUnlocked());
+    const off = onLockChange(setLockedState);
+    const iv = setInterval(() => setOwner(isOwnerUnlocked()), 1500);
+    return () => { off(); clearInterval(iv); };
+  }, []);
 
   const toggleLock = () => {
+    if (!owner) return;
     const next = !locked;
     setLocked(next);
-    setLockedEverywhere(next);
+    setLockedState(next);
   };
 
   return (
-    <div
-      className="gw-card"
-      style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}
-    >
-      <span className="gw-badge">Owner Tools</span>
-      <span className="gw-badge">{fullForm ? "Full Form: ON" : "Full Form: OFF"}</span>
-      <span className={`gw-badge ${locked ? "is-active" : ""}`}>{locked ? "Locked" : "Unlocked"}</span>
+    <>
+      {/* Global maintenance banner sits above everything when locked */}
+      <MaintenanceBanner />
 
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <button
-          type="button"
-          className="gw-btn"
-          onClick={onFullOn}
-          aria-pressed={fullForm}
-          title="Show all drawers/sections"
-        >
-          Full ON
-        </button>
-        <button
-          type="button"
-          className="gw-btn"
-          onClick={onFullOff}
-          aria-pressed={!fullForm}
-          title="Hide advanced drawers (keep Today & Labs)"
-        >
-          Full OFF
-        </button>
+      {/* Thin owner bar with status + controls (shown always; controls gated) */}
+      <div className="w-full bg-slate-50 border-b border-slate-200 text-slate-700 text-xs">
+        <div className="max-w-6xl mx-auto px-3 py-1 flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${locked ? 'bg-amber-100 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${locked ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+            {locked ? 'Maintenance: ON (read-only)' : 'Maintenance: OFF (normal)'}
+          </span>
 
-        {/* Lock / Unlock */}
-        <button
-          type="button"
-          className="gw-btn"
-          onClick={toggleLock}
-          title="Toggle read-only for the whole app"
-        >
-          {locked ? "Unlock" : "Lock"}
-        </button>
+          <span className="opacity-60">Owner:</span>
+          <span className={`px-2 py-0.5 rounded ${owner ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-slate-100 border border-slate-200 text-slate-600'}`}>
+            {owner ? 'Unlocked' : 'Locked'}
+          </span>
+
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!owner}
+              onClick={toggleLock}
+              className={`px-2 py-1 rounded border text-xs ${owner
+                ? 'bg-white hover:bg-slate-50 border-slate-300'
+                : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'}`}
+              aria-disabled={!owner}
+              title={owner ? 'Toggle Maintenance Lock' : 'Unlock Owner session in Settings to toggle lock'}
+            >
+              {locked ? 'Disable Maintenance' : 'Enable Maintenance'}
+            </button>
+          </div>
+        </div>
       </div>
-
-      <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
-        <button type="button" className="gw-btn" onClick={onJumpProfile} title="Jump to Profile">
-          Profile
-        </button>
-        <button type="button" className="gw-btn" onClick={onJumpSchedule} title="Jump to Schedule">
-          Schedule
-        </button>
-        <button type="button" className="gw-btn" onClick={onJumpHealth} title="Jump to Health">
-          Health
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

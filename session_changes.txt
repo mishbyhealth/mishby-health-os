@@ -1,0 +1,15 @@
+﻿At C:\Users\msmuk\Documents\MishbyHealthOS\scripts\
+Session-Diff.ps1:28 char:25
++ $report += "GloWell â?" Session Diff"
++                         ~~~~~~~
+Unexpected token 'Session' in expression or 
+statement.
+At C:\Users\msmuk\Documents\MishbyHealthOS\scripts\
+Session-Diff.ps1:41 char:23
++ Write-Host "Wrote $Out"
++                       ~
+The string is missing the terminator: ".
+    + CategoryInfo          : ParserError: (:) [], 
+    ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
+ 
