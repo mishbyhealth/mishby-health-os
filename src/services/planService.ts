@@ -1,81 +1,120 @@
 // src/services/planService.ts
-// Owner toggle + API helper for the AI Plan stub
+// v17.7d-hotfix-2 — Back-compat exports: `getPlan`, `isAiPlanEnabled`, `setAiPlanEnabled`
+// plus our v17.7d behavior (save compact plan to `glowell:lastPlan`).
 
-const TOGGLE_KEY = 'glowell:aiPlan:on';
+import { saveLastPlan } from "@/utils/plan/saveLastPlan";
 
-// --- Toggle helpers ---
-export function getAiPlanEnabled(): boolean {
+// ---------- Types (kept loose so callers don't break) ----------
+export type PlanInput = {
+  goals?: string;
+  age?: number | string;
+  gender?: string;
+  [k: string]: any;
+};
+
+export type Plan = {
+  id?: string;
+  title?: string;
+  summary?: string;
+  steps?: Array<{ title?: string; detail?: string }>;
+  [k: string]: any;
+};
+
+// ---------- Small helpers for AI Plan flag (back-compat) ----------
+const AI_KEY = "glowell:aiPlanEnabled";
+
+/** Read AI Plan flag from storage. */
+export function isAiPlanEnabled(): boolean {
   try {
-    return localStorage.getItem(TOGGLE_KEY) === '1';
+    return window.localStorage.getItem(AI_KEY) === "true";
   } catch {
     return false;
   }
 }
 
-export function setAiPlanEnabled(on: boolean): void {
+/** Write AI Plan flag and notify listeners. */
+export function setAiPlanEnabled(value: boolean): void {
   try {
-    localStorage.setItem(TOGGLE_KEY, on ? '1' : '0');
+    window.localStorage.setItem(AI_KEY, value ? "true" : "false");
+    try {
+      window.dispatchEvent(
+        new CustomEvent("glowell:aiPlanEnabledChanged", { detail: { enabled: value } })
+      );
+    } catch {
+      /* no-op */
+    }
   } catch {
-    // ignore storage failures
+    /* no-op */
   }
 }
 
-// --- API Helper ---
-type IntakeSummary = Record<string, any>;
-type Aggregates = {
-  d7?: Record<string, any>;
-  d14?: Record<string, any>;
-  d30?: Record<string, any>;
-};
+// ---------- Env ----------
+function isProd(): boolean {
+  try {
+    return (import.meta as any).env?.PROD === true;
+  } catch {
+    return false;
+  }
+}
 
-export type PlanJson = {
-  packs_applied: string[];
-  hydration: Array<{ time: string; ml: number; note?: string }>;
-  meals: {
-    breakfast: string[];
-    lunch: string[];
-    dinner: string[];
-    snacks: string[];
+// ---------- DEV MOCK ----------
+async function mockGeneratePlan(input: PlanInput): Promise<Plan> {
+  const g = (input?.goals ?? "").toString();
+  const h = Array.from(g).reduce((a, c) => (a + c.charCodeAt(0)) % 997, 0);
+  const id = `dev-${Date.now()}-${h}`;
+
+  const plan: Plan = {
+    id,
+    title: g ? `Health Plan for: ${g.slice(0, 40)}` : "Your Personal Health Plan",
+    summary:
+      "This is a DEV mock plan. In production, the server will generate a tailored plan based on your inputs.",
+    steps: [
+      { title: "Hydration", detail: "Drink 7–8 glasses of water daily." },
+      { title: "Movement", detail: "Walk 20–30 minutes, 5 days a week." },
+      { title: "Sleep", detail: "Aim for 7–8 hours of consistent sleep." },
+    ],
+    source: "DEV_MOCK",
+    createdAt: new Date().toISOString(),
   };
-  movement: string[];
-  tips: string[];
-  dosha_notes: string;
-  disclaimers: string[];
-};
 
-// Tries /api/plan first (if you later add a redirect in netlify.toml),
-// then falls back to /.netlify/functions/plan (works out of the box).
-async function postPlan(body: any): Promise<PlanJson> {
-  const headers = { 'Content-Type': 'application/json' };
+  // Save compact copy for /plans page
+  saveLastPlan(plan);
+  return plan;
+}
 
-  // Try preferred path
-  try {
-    const r1 = await fetch('/api/plan', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
-    if (r1.ok) return (await r1.json()) as PlanJson;
-  } catch {
-    /* fallthrough */
-  }
-
-  // Fallback path (default Netlify Functions path)
-  const r2 = await fetch('/.netlify/functions/plan', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
+// ---------- PROD API ----------
+async function apiGeneratePlan(input: PlanInput): Promise<Plan> {
+  const res = await fetch("/api/plan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input ?? {}),
   });
-  if (!r2.ok) {
-    throw new Error(`Plan API failed with status ${r2.status}`);
+
+  if (!res.ok) {
+    throw new Error(`Plan API failed (${res.status})`);
   }
-  return (await r2.json()) as PlanJson;
+
+  const data = (await res.json()) as Plan;
+
+  // Save compact copy for /plans page
+  saveLastPlan(data);
+
+  return data;
 }
 
-export async function requestAiPlan(
-  intakeSummary: IntakeSummary = {},
-  aggregates: Aggregates = {}
-): Promise<PlanJson> {
-  const payload = { intakeSummary, aggregates };
-  return postPlan(payload);
+// ---------- Public API (stable) ----------
+export async function generatePlan(input: PlanInput): Promise<Plan> {
+  if (isProd()) return apiGeneratePlan(input);
+  return mockGeneratePlan(input);
 }
+
+/**
+ * Back-compat alias:
+ * Some pages import { getPlan } from this module.
+ * Keep that working by exporting `getPlan` mapped to `generatePlan`.
+ */
+export const getPlan = generatePlan;
+
+// Default export with all public members (for any default imports)
+export const planService = { generatePlan, getPlan, isAiPlanEnabled, setAiPlanEnabled };
+export default planService;

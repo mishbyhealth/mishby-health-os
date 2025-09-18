@@ -1,0 +1,649 @@
+/* src/styles/shell.css — v19.5
+   PURPOSE:
+   - Keep your existing theme EXACTLY as-is (no header/sidenav/bg changes).
+   - Uniform "light card + darkest borders + WHITE buttons" across ALL pages.
+   - v18.8: Home/Dashboard stat tiles polish.
+   - v18.9: Accessibility — stronger focus-visible, skip-link, reduced motion.
+   - v19.0: Unified form states (error/warn/success/info).
+   - v19.1: Unified Toast/Alert styles.
+   - v19.2: Unified Loading/Progress.
+   - v19.3: Unified Modal/Dialog.
+   - v19.4: Unified Tabs & Pills.
+   - v19.5 (NEW): Unified Breadcrumbs & Pagination.
+*/
+
+/* ---------------- Variables (unchanged + state tokens) ---------------- */
+:root {
+  --shell-header:  #d1d5db;
+  --shell-sidenav: #d1d5db;
+  --shell-bg:      #e5e7eb;
+  --card-bg:       #ffffff;   /* default card surface; your theme may override */
+  --shell-border:  #9ca3af;   /* darkest border tone */
+  --shell-text:    #111827;
+
+  /* State colors (conservative, readable) */
+  --state-error:   #b91c1c;   /* red-700 */
+  --state-warn:    #b45309;   /* amber-700 */
+  --state-ok:      #065f46;   /* emerald-800 */
+  --state-info:    #1d4ed8;   /* blue-700 */
+
+  --state-error-bg: color-mix(in oklab, #ffffff, var(--state-error) 6%);
+  --state-warn-bg:  color-mix(in oklab, #ffffff, var(--state-warn) 6%);
+  --state-ok-bg:    color-mix(in oklab, #ffffff, var(--state-ok) 6%);
+  --state-info-bg:  color-mix(in oklab, #ffffff, var(--state-info) 6%);
+}
+:root[data-theme="dark"]      { --shell-header:#0b0c0d; --shell-sidenav:#0b0c0d; --shell-bg:#111315; --card-bg:#1a1d1f; --shell-border:#1f2326; --shell-text:#e5e7eb; }
+:root[data-theme="classic"]   { --shell-header:#cfd8e3; --shell-sidenav:#cfd8e3; --shell-bg:#e6edf5; --card-bg:#ffffff; --shell-border:#94a3b8; --shell-text:#0f172a; }
+:root[data-theme="mint"]      { --shell-header:#a7f3d0; --shell-sidenav:#a7f3d0; --shell-bg:#d1fae5; --card-bg:#ecfdf5; --shell-border:#34d399; --shell-text:#064e3b; }
+:root[data-theme="sky"]       { --shell-header:#bae6fd; --shell-sidenav:#bae6fd; --shell-bg:#e0f2fe; --card-bg:#f0f9ff; --shell-border:#38bdf8; --shell-text:#0f172a; }
+:root[data-theme="lavender"]  { --shell-header:#c4b5fd; --shell-sidenav:#c4b5fd; --shell-bg:#e9d5ff; --card-bg:#f5f3ff; --shell-border:#a78bfa; --shell-text:#1f2937; }
+:root[data-theme="sunset"]    { --shell-header:#fdba74; --shell-sidenav:#fdba74; --shell-bg:#fed7aa; --card-bg:#fff7ed; --shell-border:#fb923c; --shell-text:#1f2937; }
+:root[data-theme="ocean"]     { --shell-header:#7dd3fc; --shell-sidenav:#7dd3fc; --shell-bg:#bae6fd; --card-bg:#e0f2fe; --shell-border:#38bdf8; --shell-text:#0f172a; }
+:root[data-theme="forest"]    { --shell-header:#6ee7b7; --shell-sidenav:#6ee7b7; --shell-bg:#a7f3d0; --card-bg:#d1fae5; --shell-border:#34d399; --shell-text:#064e3b; }
+:root[data-theme="rose"]      { --shell-header:#fda4af; --shell-sidenav:#fda4af; --shell-bg:#fecdd3; --card-bg:#ffe4e6; --shell-border:#fb7185; --shell-text:#1f2937; }
+:root[data-theme="slate"]     { --shell-header:#94a3b8; --shell-sidenav:#94a3b8; --shell-bg:#cbd5e1; --card-bg:#e2e8f0; --shell-border:#64748b; --shell-text:#0f172a; }
+:root[data-theme="sand"]      { --shell-header:#fcd34d; --shell-sidenav:#fcd34d; --shell-bg:#fde68a; --card-bg:#fef3c7; --shell-border:#f59e0b; --shell-text:#1f2937; }
+
+/* ---------------- Parent scope: support multiple layouts ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page) {}
+
+/* ---------------- 1) Inner boxes → unified light cards on ALL pages ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(
+  .bg-white,
+  .bg-gray-50, .bg-slate-50, .bg-stone-50, .bg-neutral-50, .bg-base-100,
+  .card, .panel, .box, .paper, .content, .prose, .section, .widget, .tile,
+  .gw-card, .mh-card,
+  article, section,
+  [class*="shadow"], [class*="rounded-"]
+) {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border: 1.25px solid var(--shell-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+/* ---------------- 2) Borders darkest everywhere ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(.border, .divide-y > *, .divide-x > *, [class*="border-"]) {
+  border-color: var(--shell-border) !important;
+}
+
+/* ---------------- 3) Inputs: light surface + darkest border ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(input, select, textarea) {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border-color: var(--shell-border) !important;
+  border-radius: 10px !important;
+  outline: none;
+}
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(input:focus, select:focus, textarea:focus) {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08) !important;
+}
+
+/* ---------------- 4) Buttons in content: WHITE + darkest border ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(button, .btn, .Button) {
+  background-color: #ffffff !important;  /* white buttons everywhere */
+  color: var(--shell-text) !important;
+  border: 1.5px solid var(--shell-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+}
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(button:hover:not([disabled]), .btn:hover, .Button:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08) !important;
+}
+
+/* ---------------- 5) Tables follow card/bg + darkest border ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+table, 
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page) th,
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page) td {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border-color: var(--shell-border) !important;
+}
+
+/* ---------------- 6) Focus rings align to darkest border tone ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+[class*="ring-"],
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page) .ring-1, 
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page) .ring-2 {
+  --tw-ring-color: var(--shell-border) !important;
+}
+
+/* ---------------- 7) Route-level fallbacks (common pages) ---------------- */
+[data-route="home"], [data-route="dashboard"], [data-route="profile"],
+[data-route="health-plan"], [data-route="about"] {}
+[data-route="home"]        :where(.card, .panel, .box, .content, article, section),
+[data-route="dashboard"]   :where(.card, .panel, .box, .content, article, section),
+[data-route="profile"]     :where(.card, .panel, .box, .content, article, section),
+[data-route="health-plan"] :where(.card, .panel, .box, .content, article, section),
+[data-route="about"]       :where(.card, .panel, .box, .content, article, section) {
+  background-color: var(--card-bg) !important;
+  border: 1.25px solid var(--shell-border) !important;
+}
+
+/* ---------------- 8) HEALTH FORM — route/class based (NO forced white) ---------------- */
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) {
+  background-color: var(--card-bg) !important;        /* same as all pages */
+  color: var(--shell-text) !important;
+  border: 1.25px solid var(--shell-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) :where(button, .btn, .Button) {
+  background-color: #ffffff !important;
+  color: var(--shell-text) !important;
+  border: 1.5px solid var(--shell-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+}
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) :where(input, select, textarea) {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border: 1px solid var(--shell-border) !important;
+  border-radius: 10px !important;
+  outline: none;
+}
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) :where(input:focus, select:focus, textarea:focus) {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08) !important;
+}
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) table,
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) th,
+:where(
+  .WizardShell, .wizard-box,
+  .form-card, .form-box,
+  .FormStep, .Step, .StepCard,
+  .FormSection, .Section, .SectionCard,
+  .drawer, .Drawer, .accordion, .Accordion
+) td {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border-color: var(--shell-border) !important;
+}
+
+/* ---------------- 9) Home/Dashboard “Stat Tiles” polish (v18.8) ---------------- */
+[data-route="home"] :where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard),
+[data-route="dashboard"] :where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard),
+:where(.HomeStats, .DashboardStats) :where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard) {
+  background-color: var(--card-bg) !important;
+  color: var(--shell-text) !important;
+  border: 1.25px solid var(--shell-border) !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+:where(.HomeStats, .DashboardStats, .StatGrid, .TileGrid) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+:where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard) :where(.title, .label, .name) { font-weight: 600; }
+:where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard) :where(.value, .count, .number) { font-size: 1.25rem; line-height: 1.3; }
+:where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard) :where(.icon, .badge, .dot) {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 999px; background: #fff; border: 1px solid var(--shell-border);
+}
+:where(.StatTile, .stat, .stat-card, .tile, .KPI, .MetricCard) :where(button, .btn, .Button) {
+  background-color: #ffffff !important; color: var(--shell-text) !important;
+  border: 1.5px solid var(--shell-border) !important; border-radius: 10px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+}
+
+/* ---------------- 10) Accessibility (v18.9) ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(a, button, input, select, textarea, summary, [tabindex]) :focus-visible {
+  outline: 2px solid var(--shell-border); outline-offset: 2px; border-radius: 10px;
+}
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(.card, .panel, .box, .tile, .StatTile, .stat, .stat-card) :focus-within {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--shell-border), #fff 82%);
+}
+.skip-link {
+  position: absolute; left: -9999px; top: 8px;
+  background: #fff; color: var(--shell-text);
+  border: 1.5px solid var(--shell-border); border-radius: 10px; padding: 8px 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); z-index: 1000;
+}
+.skip-link:focus { left: 8px; outline: 2px solid var(--shell-border); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ---------------- 11) Unified Form States (v19.0) ---------------- */
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(input, select, textarea)[aria-invalid="true"],
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(.is-invalid input, .is-invalid select, .is-invalid textarea) {
+  border-color: var(--state-error) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--state-error), #fff 85%) !important;
+  background-color: var(--state-error-bg) !important;
+}
+.error-text { color: var(--state-error) !important; }
+.error-box  { background: var(--state-error-bg) !important; border: 1px solid var(--state-error) !important; color: var(--shell-text) !important; border-radius: 10px; padding: 10px; }
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(.is-warning input, .is-warning select, .is-warning textarea) {
+  border-color: var(--state-warn) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--state-warn), #fff 86%) !important;
+  background-color: var(--state-warn-bg) !important;
+}
+.warning-text { color: var(--state-warn) !important; }
+.warning-box  { background: var(--state-warn-bg) !important; border: 1px solid var(--state-warn) !important; color: var(--shell-text) !important; border-radius: 10px; padding: 10px; }
+:is(main, main.flex-1, [data-region="main"], #main, .MainArea, .gw-page)
+:where(.is-success input, .is-success select, .is-success textarea) {
+  border-color: var(--state-ok) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--state-ok), #fff 86%) !important;
+  background-color: var(--state-ok-bg) !important;
+}
+.success-text { color: var(--state-ok) !important; }
+.success-box  { background: var(--state-ok-bg) !important; border: 1px solid var(--state-ok) !important; color: var(--shell-text) !important; border-radius: 10px; padding: 10px; }
+.info-text { color: var(--state-info) !important; }
+.info-box  { background: var(--state-info-bg) !important; border: 1px solid var(--state-info) !important; color: var(--shell-text) !important; border-radius: 10px; padding: 10px; }
+.help-text, .hint-text { font-size: 0.92rem; opacity: 0.9; margin-top: 6px; }
+.required-asterisk, .req { color: var(--state-error); font-weight: 700; padding-left: 2px; }
+.Field, .FormField { display: grid; grid-template-rows: auto auto auto; gap: 4px; }
+.Field > label, .FormField > label { font-weight: 600; }
+.Field .messages, .FormField .messages { min-height: 18px; }
+.inline-messages { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* ---------------- 12) Unified Toast / Alert (v19.1) ---------------- */
+:where(.toast-container, .ToastContainer, .snackbar-container, .alert-stack) {
+  position: fixed; inset: auto 12px 12px auto; display: flex; flex-direction: column; gap: 10px; z-index: 1000; pointer-events: none;
+}
+:where(.toast-top, .ToastTop)    { inset: 12px 12px auto auto; }
+:where(.toast-left, .ToastLeft)  { inset: auto auto 12px 12px; }
+:where(.toast-top-left)          { inset: 12px auto auto 12px; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification) {
+  pointer-events: auto; background-color: var(--card-bg) !important; color: var(--shell-text) !important;
+  border: 1.25px solid var(--shell-border) !important; border-radius: 12px !important; padding: 10px 12px !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1); display: grid; grid-template-columns: 1fr auto; gap: 10px; min-width: 260px; max-width: min(92vw, 560px);
+}
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification) :where(.title, .heading) { font-weight: 600; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification) :where(.message, .desc) { opacity: 0.95; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification) :where(button, .btn) {
+  background-color: #ffffff !important; color: var(--shell-text) !important; border: 1.5px solid var(--shell-border) !important;
+  border-radius: 10px !important; padding: 6px 10px !important;
+}
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification).error,
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification)[data-variant="error"] { border-color: var(--state-error) !important; background: var(--state-error-bg) !important; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification).warning,
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification)[data-variant="warning"] { border-color: var(--state-warn) !important; background: var(--state-warn-bg) !important; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification).success,
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification)[data-variant="success"] { border-color: var(--state-ok) !important; background: var(--state-ok-bg) !important; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification).info,
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification)[data-variant="info"] { border-color: var(--state-info) !important; background: var(--state-info-bg) !important; }
+:where(.toast, .Toast, .snackbar, .Snackbar, .alert, .Alert, .notification) :where(.actions, .close, .end) { display: inline-flex; gap: 8px; align-items: center; justify-content: flex-end; }
+
+/* ---------------- 13) Unified Loading / Progress (v19.2) ---------------- */
+@keyframes _gw_spin { to { transform: rotate(360deg); } }
+:where(.spinner, .Spinner, .loading, .Loader) {
+  width: 28px; height: 28px; border: 3px solid var(--shell-border); border-top-color: #ffffff; border-radius: 999px;
+  display: inline-block; animation: _gw_spin 0.9s linear infinite; background: transparent;
+}
+:where(.spinner-lg, .SpinnerLg) { width: 40px; height: 40px; border-width: 4px; }
+:where(.spinner-sm, .SpinnerSm) { width: 20px; height: 20px; border-width: 2px; }
+:where(progress, .progress, .Progress, .bar, .Bar) {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 10px; background: var(--card-bg);
+  border: 1.25px solid var(--shell-border); border-radius: 999px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+}
+:where(progress)::-webkit-progress-bar { background: var(--card-bg); }
+:where(progress)::-webkit-progress-value { background: color-mix(in oklab, #ffffff, var(--shell-text) 8%); }
+:where(progress)::moz-progress-bar { background: color-mix(in oklab, #ffffff, var(--shell-text) 8%); }
+:where(.progress, .Progress, .bar, .Bar) > :where(.fill, .Fill) { display: block; height: 100%; background: color-mix(in oklab, #ffffff, var(--shell-text) 8%); border-right: 1px solid var(--shell-border); }
+:where(.progress, .Progress, progress) + :where(.progress-label, .ProgressLabel) { font-size: 0.92rem; opacity: 0.9; margin-top: 4px; }
+@keyframes _gw_shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+:where(.skeleton, .Skeleton, .shimmer, .Shimmer) {
+  display: block; width: 100%; min-height: 0.8rem; border-radius: 8px; border: 1px solid var(--shell-border);
+  background-image: linear-gradient(90deg,
+    color-mix(in oklab, var(--card-bg), #fff 0%) 0%,
+    color-mix(in oklab, var(--card-bg), #fff 22%) 20%,
+    color-mix(in oklab, var(--card-bg), #fff 0%) 40%);
+  background-size: 200% 100%; animation: _gw_shimmer 1.2s ease-in-out infinite;
+}
+:where(.skeleton-circle) { border-radius: 999px; min-height: unset; width: 40px; height: 40px; }
+:where(.skeleton-sm) { min-height: 0.6rem; }
+:where(.skeleton-lg) { min-height: 1.1rem; }
+:where(.loading-card, .LoadingCard) { background: var(--card-bg); border: 1.25px solid var(--shell-border); border-radius: 12px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); display: grid; gap: 10px; }
+:where(.loading-card, .LoadingCard) :where(.spinner, .Skeleton, .skeleton, .progress, progress) { justify-self: start; }
+@media (prefers-reduced-motion: reduce) {
+  :where(.spinner, .Spinner, .loading, .Loader) { animation: none !important; }
+  :where(.skeleton, .Skeleton, .shimmer, .Shimmer) { animation: none !important; background-size: 100% 100% !important; }
+}
+
+/* ---------------- 14) Unified Modal / Dialog (v19.3) ---------------- */
+:where(.modal-backdrop, .ModalBackdrop, .overlay, .Overlay, dialog::backdrop) {
+  position: fixed; inset: 0; background: color-mix(in oklab, #000, transparent 70%); backdrop-filter: blur(2px); z-index: 900;
+}
+:where(.modal-container, .ModalContainer, .modal, .Modal, dialog[open]) {
+  position: fixed; inset: 0; display: grid; place-items: center; z-index: 1001; padding: 16px;
+}
+:where(.modal-card, .ModalCard, .modal .card, .Modal .card, dialog) {
+  background: var(--card-bg) !important; color: var(--shell-text) !important; border: 1.5px solid var(--shell-border) !important;
+  border-radius: 14px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.20); max-width: min(92vw, 720px); width: 100%;
+  display: grid; grid-template-rows: auto 1fr auto; gap: 12px; padding: 14px; animation: _gw_modal_in .16s ease-out;
+}
+:where(.modal-card, dialog) :where(.modal-header, .ModalHeader) {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border-bottom: 1px solid var(--shell-border); padding-bottom: 8px;
+}
+:where(.modal-card, dialog) :where(.modal-title, .ModalTitle, h1, h2) { font-size: 1.1rem; margin: 0; font-weight: 700; }
+:where(.modal-card, dialog) :where(.modal-body, .ModalBody) { padding: 6px 2px; overflow: auto; max-height: min(70vh, 520px); }
+:where(.modal-card, dialog) :where(.modal-footer, .ModalFooter) {
+  display: flex; gap: 8px; justify-content: flex-end; align-items: center; border-top: 1px solid var(--shell-border); padding-top: 8px;
+}
+:where(.modal-card, dialog) :where(button, .btn, .Button) {
+  background-color: #ffffff !important; color: var(--shell-text) !important; border: 1.5px solid var(--shell-border) !important;
+  border-radius: 10px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+}
+:where(.modal-card, dialog) :where(button:hover:not([disabled])) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.08) !important; }
+:where(.modal-close, .ModalClose, .close, .Close) {
+  background: #ffffff !important; border: 1.25px solid var(--shell-border) !important; border-radius: 999px !important;
+  width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+}
+:where(.modal-card).sm, dialog.sm { max-width: 420px; }
+:where(.modal-card).lg, dialog.lg { max-width: 960px; }
+:where(.modal-card).error { border-color: var(--state-error) !important; }
+:where(.modal-card).warning { border-color: var(--state-warn) !important; }
+:where(.modal-card).success { border-color: var(--state-ok) !important; }
+:where(.modal-card).info    { border-color: var(--state-info) !important; }
+@keyframes _gw_modal_in { from { transform: translateY(10px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes _gw_modal_overlay_in { from { opacity: 0; } to { opacity: 1; } }
+:where(.modal-backdrop, .ModalBackdrop, .overlay, .Overlay, dialog::backdrop) { animation: _gw_modal_overlay_in .12s linear; }
+@media (prefers-reduced-motion: reduce) {
+  :where(.modal-card, dialog),
+  :where(.modal-backdrop, .ModalBackdrop, .overlay, .Overlay, dialog::backdrop) { animation: none !important; }
+}
+
+/* ---------------- 15) Unified Tabs & Pills (v19.4) ---------------- */
+:where(.tabs, .Tabs, .nav-tabs, .NavTabs, [role="tablist"]) {
+  display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1.5px solid var(--shell-border); padding-bottom: 6px; margin-bottom: 10px;
+}
+:where(.tab, .Tab, .nav-tab, .NavTab, [role="tab"]) {
+  display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--shell-text);
+  border: 1px solid transparent; border-radius: 10px; padding: 6px 10px; line-height: 1.2; cursor: pointer;
+}
+:where(.tab, .Tab, .nav-tab, .NavTab, [role="tab"]):hover { background: color-mix(in oklab, var(--card-bg), #fff 35%); border-color: var(--shell-border); }
+:where(.tab.active, .Tab.active, .nav-tab.active, .NavTab.active,
+       .tab.is-active, .Tab.is-active, .nav-tab.is-active, .NavTab.is-active,
+       .tab.current, .Tab.current, .nav-tab.current, .NavTab.current,
+       [role="tab"][aria-selected="true"], [role="tab"][data-active="true"]) {
+  background: var(--card-bg); border-color: var(--shell-border); box-shadow: 0 2px 10px rgba(0,0,0,0.06); position: relative;
+}
+:where(.tab.active, .Tab.active, .nav-tab.active, .NavTab.active,
+       .tab.is-active, .Tab.is-active, .nav-tab.is-active, .NavTab.is-active,
+       .tab.current, .Tab.current, .nav-tab.current, .NavTab.current,
+       [role="tab"][aria-selected="true"], [role="tab"][data-active="true"])::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -7px; height: 3px; border-radius: 3px; background: var(--shell-border);
+}
+:where(.tab, .Tab, .nav-tab, .NavTab, [role="tab"]) :where(.badge, .count, .dot) {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 999px; background: #fff; border: 1px solid var(--shell-border); font-size: 0.78rem;
+}
+:where(.pill, .Pill, .chip, .Chip, .filter-pill) {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--card-bg);
+  border: 1.25px solid var(--shell-border); color: var(--shell-text);
+  border-radius: 999px; padding: 6px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); cursor: pointer;
+}
+:where(.pill:hover, .Pill:hover, .chip:hover, .Chip:hover, .filter-pill:hover) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+:where(.pill.active, .Pill.active, .chip.active, .Chip.active, .filter-pill.active,
+       .pill.is-active, .Pill.is-active, .chip.is-active, .Chip.is-active, .filter-pill.is-active,
+       .pill.current, .Pill.current, .chip.current, .Chip.current, .filter-pill.current,
+       .pill[data-active="true"], .chip[data-active="true"], .filter-pill[data-active="true"]) {
+  outline: 2px solid var(--shell-border); outline-offset: 1px;
+}
+:where(.tab, .Tab, .nav-tab, .NavTab, [role="tab"], .pill, .Pill, .chip, .Chip, .filter-pill):focus-visible {
+  outline: 2px solid var(--shell-border); outline-offset: 2px; border-radius: 10px;
+}
+
+/* ---------------- 16) NEW — Unified Breadcrumbs & Pagination (v19.5) ----------------
+   Breadcrumbs:
+     Containers: .breadcrumbs, .Breadcrumbs, nav[aria-label="Breadcrumb"]
+     Items: .crumb, .Crumb, li, [aria-current="page"]
+   Pagination:
+     Containers: .pagination, .Pagination, nav[aria-label="Pagination"]
+     Items: .page, .Page, li > a/button, [aria-current="page"]
+   Goal: light chip/buttons, darkest borders, clear current page/item.
+*/
+
+/* A) Breadcrumbs container */
+:where(.breadcrumbs, .Breadcrumbs, nav[aria-label="Breadcrumb"]) {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 4px 0 10px;
+}
+
+/* Breadcrumb list support (ol/ul) */
+:where(.breadcrumbs ol, .Breadcrumbs ol, .breadcrumbs ul, .Breadcrumbs ul) {
+  display: inline-flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none;
+}
+
+/* Breadcrumb items (links/pills) */
+:where(.breadcrumbs a, .Breadcrumbs a, nav[aria-label="Breadcrumb"] a,
+       .crumb, .Crumb) {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--card-bg);
+  color: var(--shell-text);
+  border: 1.25px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+:where(.breadcrumbs a:hover, .Breadcrumbs a:hover, nav[aria-label="Breadcrumb"] a:hover,
+       .crumb:hover, .Crumb:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+}
+
+/* Current breadcrumb (no link) */
+:where(.breadcrumbs [aria-current="page"], .Breadcrumbs [aria-current="page"]) {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: color-mix(in oklab, var(--card-bg), #fff 30%);
+  color: var(--shell-text);
+  border: 1.5px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+}
+
+/* Breadcrumb separator */
+:where(.breadcrumbs .sep, .Breadcrumbs .sep) {
+  opacity: 0.7;
+  padding: 0 2px;
+}
+
+/* Focus-visible for breadcrumbs */
+:where(.breadcrumbs a, .Breadcrumbs a, nav[aria-label="Breadcrumb"] a,
+       .crumb, .Crumb, .breadcrumbs [aria-current="page"], .Breadcrumbs [aria-current="page"]):focus-visible {
+  outline: 2px solid var(--shell-border); outline-offset: 2px;
+}
+
+/* B) Pagination container */
+:where(.pagination, .Pagination, nav[aria-label="Pagination"]) {
+  display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin: 12px 0;
+}
+
+/* Pagination buttons/links (default) */
+:where(.pagination a, .pagination button,
+       .Pagination a, .Pagination button,
+       nav[aria-label="Pagination"] a, nav[aria-label="Pagination"] button,
+       .page, .Page) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: 36px; height: 36px; padding: 0 10px;
+  background: #ffffff;
+  color: var(--shell-text);
+  border: 1.5px solid var(--shell-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hover/Active */
+:where(.pagination a:hover, .pagination button:hover,
+       .Pagination a:hover, .Pagination button:hover,
+       nav[aria-label="Pagination"] a:hover, nav[aria-label="Pagination"] button:hover,
+       .page:hover, .Page:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+}
+
+/* Current page */
+:where(.pagination [aria-current="page"], .Pagination [aria-current="page"]) {
+  background: var(--card-bg);
+  border: 2px solid var(--shell-border);
+  font-weight: 700;
+}
+
+/* Disabled state */
+:where(.pagination .disabled, .Pagination .disabled, nav[aria-label="Pagination"] .disabled,
+       .pagination [disabled], .Pagination [disabled]) {
+  opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important;
+}
+
+/* Compact variant (if parent adds .compact) */
+:where(.pagination.compact, .Pagination.compact) :where(a, button, .page, .Page) {
+  min-width: 28px; height: 28px; padding: 0 8px; border-radius: 8px;
+}
+
+/* Focus-visible for pagination */
+:where(.pagination a, .pagination button, .Pagination a, .Pagination button, nav[aria-label="Pagination"] a, nav[aria-label="Pagination"] button, .page, .Page):focus-visible {
+  outline: 2px solid var(--shell-border); outline-offset: 2px;
+}
+
+/* GloWell — Shell Layer UI Consistency (v18.x)
+   Scope: ONLY unify inner surfaces + borders + main buttons
+   Do not alter header/sidenav/background variables here.
+
+   TECH NOTES (simple):
+   - Uses existing CSS variables if present:
+       --card-bg       = light inner surface color
+       --shell-border  = darkest border color (theme's darkest tone)
+   - Adds safe fallbacks so nothing breaks if variables are missing.
+*/
+
+/* Local fallbacks (used only if the theme variables are absent) */
+:root {
+  --_card-bg: var(--card-bg, #ffffff);
+  --_shell-border: var(--shell-border, #1f2937); /* ~gray-800 */
+}
+
+/* 1) Inner boxes/panels/cards use the same light surface + darkest border */
+main :where(.card, .panel, .box, .gw-card, .gw-box, .wizard-box, .form-section, fieldset) {
+  background-color: var(--_card-bg);
+  border: 1px solid var(--_shell-border);
+  border-radius: 8px;
+}
+
+/* 2) Tables: same surface + border unification */
+main table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--_card-bg);
+  border: 1px solid var(--_shell-border);
+}
+
+main table :where(th, td) {
+  border: 1px solid var(--_shell-border);
+  padding: 0.5rem 0.75rem;
+}
+
+/* 3) Inputs: keep them clean; darkest border for clarity */
+main :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: #ffffff;
+  border: 1px solid var(--_shell-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.625rem;
+}
+
+/* 4) Buttons in main: white fill + darkest outline (per v17/v18 rule) */
+main :where(button, .button, .btn) {
+  background-color: #ffffff;
+  border: 1px solid var(--_shell-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Hover/active: subtle depth without changing the rule */
+main :where(button, .button, .btn):hover {
+  filter: brightness(0.98);
+}
+main :where(button, .button, .btn):active {
+  filter: brightness(0.96);
+}
+
+/* 5) Focus rings aligned to darkest border (accessibility) */
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]) :focus,
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]) :focus-visible,
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]):focus,
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--_shell-border);
+  outline-offset: 2px;
+}
+
+/* 6) Health Form special-case removal:
+   Ensure Health Form surfaces match other pages (no "pure-white special" container).
+   We DO NOT force page background; only inner containers get unified.
+*/
+main :where(.HealthForm, .health-form, .HealthFormV2, #HealthFormV2, [data-form="health"]) {
+  background-color: var(--_card-bg) !important;
+  border: 1px solid var(--_shell-border);
+  border-radius: 10px;
+}
+
+/* 7) Minimal utility for places that still need explicit styling in JSX:
+   Apply class "gw-surface" to get unified card style without repeating CSS inline.
+*/
+.gw-surface {
+  background-color: var(--_card-bg);
+  border: 1px solid var(--_shell-border);
+  border-radius: 8px;
+}
+
+/* 8) Keep header/sidenav untouched:
+   (No selectors for header/sidenav here by design — respect theme layering)
+*/

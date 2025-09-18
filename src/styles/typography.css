@@ -1,0 +1,37 @@
+/* GloWell — Typography Consistency (v18.x)
+   Scope: unify headings + labels
+   Safe additive override (append only)
+*/
+
+/* Headings (H1–H3) uniform look across pages */
+main h1, .gw-h1 {
+  font-size: 1.75rem;   /* ~28px */
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+main h2, .gw-h2 {
+  font-size: 1.375rem;  /* ~22px */
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+main h3, .gw-h3 {
+  font-size: 1.125rem;  /* ~18px */
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Form labels (for inputs, selects, textareas) */
+main label, .gw-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+/* Small helper text (hints, notes under inputs) */
+main .gw-hint {
+  font-size: 0.8rem;
+  color: #555;
+}

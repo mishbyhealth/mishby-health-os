@@ -1,21 +1,10 @@
+# netlify.toml — v14 routing for /api/plan to Netlify Functions
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
-[build.environment]
-  NODE_VERSION = "20"
-
-[functions]
-  directory = "netlify/functions"
-
-# API first (must come BEFORE SPA fallback)
 [[redirects]]
   from = "/api/plan"
   to = "/.netlify/functions/plan"
-  status = 200
-
-# SPA fallback for client-side routes
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
   status = 200

@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Snapshot: repo-tree_START + hash",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo", "-NoProfile",
+        "-Command",
+        "pwsh -File scripts/Make-RepoTree.ps1 -Output repo-tree_START.txt -Stamp"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: repo-tree_END.txt",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo", "-NoProfile",
+        "-Command",
+        "pwsh -File scripts/Make-RepoTree.ps1 -Output repo-tree_END.txt"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Report: session_changes.txt",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo", "-NoProfile",
+        "-Command",
+        "pwsh -File scripts/Session-Diff.ps1 -Start repo-tree_START.txt -End repo-tree_END.txt -HashStart .session-hash-start.json -Out session_changes.txt"
+      ],
+      "problemMatcher": [],
+      "dependsOn": ["Make: repo-tree_END.txt"]
+    }
+  ]
+}

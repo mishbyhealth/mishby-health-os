@@ -1,112 +1,107 @@
 // src/pages/Plans.tsx
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
-type PlanIndexItem = {
-  id: string;
-  createdAt?: string;
-  version?: string | number;
-  bmi?: number | null;
-  energyEstimateKcal?: number | null;
-  packs?: string[];
+// Compact plan card already present in repo
+import PlanCard from "@/components/plan/PlanCard";
+
+// Tiny additive link we added in v17.7
+import OpenFullPlanLink from "@/components/OpenFullPlanLink";
+
+/**
+ * Plans
+ * - Shows the compact, last-saved plan summary (if any).
+ * - Preserves storage keys and behavior:
+ *    • Reads from localStorage key: "glowell:lastPlan"
+ *    • Does NOT change routes or generation flow
+ * - Adds a small "Open full plan" button to navigate to /health-plan (Blueprint #3).
+ *
+ * Technical terms (Hindi with meaning):
+ * - localStorage: ब्राउज़र की छोटी स्टोरेज जहाँ हम key-value रखते हैं
+ * - Summary Card (PlanCard): छोटा कार्ड जो प्लान का सार दिखाता है
+ */
+
+type LastPlan = {
+  id?: string;
+  title?: string;
+  summary?: string;
+  // allow extra fields (don’t enforce shape strictly)
+  [k: string]: any;
 };
 
-const INDEX_KEY = "glowell:plans:index";
-
-/** Fallback: discover any saved plan ids from localStorage when index is missing */
-function discoverPlanIdsFromLocalStorage(): string[] {
-  const ids = new Set<string>();
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i) || "";
-    if (k.startsWith("PLN-")) ids.add(k.replace(/^PLN-/, ""));
-    if (/^plan_/.test(k)) ids.add(k); // very old style
-  }
-  return Array.from(ids);
-}
-
-/** Load index or synthesize a lightweight one */
-function loadIndex(): PlanIndexItem[] {
-  try {
-    const raw = localStorage.getItem(INDEX_KEY);
-    const arr = raw ? JSON.parse(raw) : null;
-    if (Array.isArray(arr)) return arr;
-  } catch {}
-  return discoverPlanIdsFromLocalStorage().map((id) => ({ id }));
-}
-
-function fmtDate(s?: string) {
-  if (!s) return "—";
-  const t = Date.parse(s);
-  if (isNaN(t)) return s;
-  return new Date(t).toLocaleString();
-}
+const LAST_PLAN_KEY = "glowell:lastPlan"; // (must remain stable)
 
 export default function Plans() {
-  const nav = useNavigate();
-  const [rows, setRows] = useState<PlanIndexItem[]>([]);
+  const [lastPlan, setLastPlan] = useState<LastPlan | null>(null);
 
+  // Read once on mount; keep minimal + safe
   useEffect(() => {
-    setRows(loadIndex());
+    try {
+      const raw = window.localStorage.getItem(LAST_PLAN_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setLastPlan(parsed || null);
+      }
+    } catch {
+      // ignore bad JSON
+      setLastPlan(null);
+    }
   }, []);
 
-  const count = rows.length;
-  const hasAny = count > 0;
-
-  const tableRows = useMemo(() => rows, [rows]);
+  // Derive a small header title for the card
+  const headerTitle = useMemo(() => {
+    if (!lastPlan) return "Your Plan";
+    if (lastPlan.title && typeof lastPlan.title === "string") return lastPlan.title;
+    return "Your Plan";
+  }, [lastPlan]);
 
   return (
-    <div className="space-y-4">
-      {/* Header / summary */}
-      <section className="gw-card tinted">
-        <h1 className="text-xl font-semibold">Plans History</h1>
-        <p className="gw-muted text-sm">
-          Saved plans detected: <strong>{count}</strong>. This lightweight view works with any
-          existing storage layout. Open a plan to view/print/export.
-        </p>
-      </section>
+    <div className="p-4 sm:p-6 lg:p-8">
+      {/* Page header */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h1 className="text-xl sm:text-2xl font-semibold">Plans</h1>
 
-      {/* List */}
-      <section className="gw-card">
-        {!hasAny ? (
-          <div className="gw-empty">No saved plans yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="gw-tr">
-                  <th className="gw-th">ID</th>
-                  <th className="gw-th">Date</th>
-                  <th className="gw-th">Version</th>
-                  <th className="gw-th">BMI</th>
-                  <th className="gw-th">kCal</th>
-                  <th className="gw-th">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.map((p, i) => (
-                  <tr key={p.id || i} className="gw-tr">
-                    <td className="gw-td" style={{ whiteSpace: "nowrap" }}>
-                      {p.id || "—"}
-                    </td>
-                    <td className="gw-td">{fmtDate(p.createdAt)}</td>
-                    <td className="gw-td">{p.version ?? "—"}</td>
-                    <td className="gw-td">{p.bmi ?? "—"}</td>
-                    <td className="gw-td">{p.energyEstimateKcal ?? "—"}</td>
-                    <td className="gw-td">
-                      <button
-                        className="gw-btn"
-                        onClick={() => nav(`/plans/${encodeURIComponent(p.id)}`)}
-                      >
-                        Open Plan
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* NEW: Tiny, additive shortcut to /health-plan */}
+        <OpenFullPlanLink />
+      </div>
+
+      {/* Body */}
+      {!lastPlan ? (
+        <div className="rounded-lg border p-4 sm:p-6 bg-white">
+          <p className="text-gray-700">
+            No saved plan found yet.
+          </p>
+          <div className="mt-3">
+            <Link
+              to="/health-plan"
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 hover:bg-gray-50"
+            >
+              <span aria-hidden="true">📝</span>
+              <span className="font-medium">Create or open full plan</span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
-        )}
-      </section>
+          <p className="mt-2 text-xs text-gray-500">
+            Tip: When you generate a plan on the Health Plan page, a compact copy is saved
+            here for quick viewing.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Compact summary card (existing component) */}
+          <div className="rounded-lg border bg-white">
+            <div className="flex items-center justify-between border-b px-4 py-2">
+              <h2 className="text-base sm:text-lg font-medium">{headerTitle}</h2>
+              {/* Secondary link as well (non-blocking): */}
+              <OpenFullPlanLink variant="link" className="text-sm" />
+            </div>
+            <div className="p-4">
+              {/* PlanCard should be tolerant of extra fields */}
+              <PlanCard plan={lastPlan} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

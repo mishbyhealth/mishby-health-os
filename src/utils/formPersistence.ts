@@ -1,38 +1,41 @@
-// src/utils/formPersistence.ts
-// Draft helpers + debounced autosave (React hook). Additive; safe.
+// src/utils/formPersistence.ts  (load/save + useAutosave for V2)
+import * as React from "react";
 
-export function loadDraft<T = any>(key: string, fallback: T): T {
+type Json = any;
+
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    const v = JSON.parse(raw);
+    return (v === null || v === undefined) ? fallback : (v as T);
+  } catch { return fallback; }
+}
+
+export function loadDraft<T = Json>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+    return safeParse<T>(raw, fallback);
+  } catch { return fallback; }
 }
 
-export function saveDraft<T = any>(key: string, value: T) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
+export function saveDraft<T = Json>(key: string, value: T): void {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
-export function clearDraft(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {}
+export function clearDraft(key: string): void {
+  try { localStorage.removeItem(key); } catch {}
 }
 
-import { useEffect, useRef } from "react";
+export function useAutosave<T = Json>(key: string, value: T, delayMs = 600) {
+  React.useEffect(() => {
+    const t = setTimeout(() => { saveDraft(key, value); }, Math.max(0, delayMs));
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, value]);
+}
 
-export function useAutosave<T>(key: string, value: T, delayMs = 600) {
-  const timerRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    // @ts-ignore
-    timerRef.current = window.setTimeout(() => saveDraft(key, value), delayMs);
-    return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    };
-  }, [key, value, delayMs]);
+export function onDraftChange(key: string, cb: (v: Json) => void): () => void {
+  const handler = (e: StorageEvent) => { if (e.key === key) cb(safeParse(e.newValue, null)); };
+  try { window.addEventListener("storage", handler); } catch {}
+  return () => { try { window.removeEventListener("storage", handler); } catch {} };
 }

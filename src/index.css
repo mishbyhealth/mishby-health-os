@@ -219,3 +219,132 @@ html[data-theme="slate"]{
 /* Topbar link spacing (if any) */
 .topbar-inner nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
 .topbar-inner nav a{display:inline-block;padding:.25rem .5rem;border-radius:.5rem}
+
+/* SideNav icons (no boxes) */
+.nav-list{display:flex;flex-direction:column;gap:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:transparent;border:0;text-decoration:none}
+.nav-item .ico{width:18px;display:inline-block;text-align:center}
+.nav-item:hover{background:rgba(0,0,0,.05)}
+.nav-item.is-active{background:var(--gw-active,#e6f4ea);font-weight:600}
+
+/* Maintenance Mode: allow focusing/typing; writes are still blocked in services */
+html[data-locked="1"] input,
+html[data-locked="1"] select,
+html[data-locked="1"] textarea {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+html[data-locked="1"] button {
+  pointer-events: auto !important;
+}
+
+/* --- GloWell V2: make inputs clickable even inside .gw-tint --- */
+.gw-tint,
+.gw-tint * {
+  pointer-events: auto !important;
+}
+
+/* If Maintenance flag is ever ON, still allow focusing/typing (writes are blocked in services) */
+html[data-locked="1"] input,
+html[data-locked="1"] select,
+html[data-locked="1"] textarea,
+html[data-locked="1"] button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Keep fields clickable even if Maintenance toggles on */
+html[data-locked="1"] input,
+html[data-locked="1"] select,
+html[data-locked="1"] textarea,
+html[data-locked="1"] button { pointer-events:auto !important; opacity:1 !important; filter:none !important; }
+.gw-tint, .gw-tint * { pointer-events:auto !important; }
+
+/* FORCE enable typing on Wizard blocks */
+.gw-tint, .gw-tint *, .gw-card *, .gw-card input, .gw-card textarea, .gw-card select, .gw-card button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* allow selecting/copying text everywhere */
+*, *::before, *::after { -webkit-user-select: text !important; user-select: text !important; }
+
+/* minimal unlock */
+.gw-tint, .gw-card, .gw-tint *, .gw-card * { pointer-events:auto !important; }
+[disabled], [readonly] { pointer-events:auto !important; }
+
+/* GloWell — Form Spacing Consistency (v18.x)
+   Safe additive block (append only) — no imports
+*/
+main form .form-section,
+main form .gw-field,
+main form .form-field,
+main form .wizard-step fieldset {
+  margin-bottom: 1rem;
+}
+
+main form label {
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+main form input,
+main form select,
+main form textarea {
+  margin-bottom: 0.75rem;
+}
+
+/* GloWell — Table Readability (v18.x)
+   Safe additive block (append only)
+*/
+main table tbody tr:nth-child(even) {
+  background-color: rgba(0,0,0,0.03);
+}
+
+main table tbody tr:hover {
+  filter: brightness(0.98);
+}
+
+main table th {
+  font-weight: 600;
+  text-align: left;
+}
+
+/* GloWell — Focus Visibility (v18.x)
+   Safe additive block (append only)
+*/
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]) {
+  outline: none;
+}
+
+main :where(a, button, .button, .btn, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #1f2937; /* dark, readable */
+  outline-offset: 2px;
+  border-radius: 6px; /* gentle rounding for consistency */
+}
+
+/* GloWell — Links & Lists Consistency (v18.x)
+   Safe additive block (append only)
+*/
+
+/* Links: clear, accessible, consistent */
+main a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+main a:hover {
+  filter: brightness(0.98);
+}
+
+/* Lists: readable spacing and alignment */
+main ul,
+main ol {
+  margin: 0.5rem 0 0.75rem 1.25rem; /* top/right/bottom/left */
+}
+main li {
+  margin: 0.25rem 0;
+  line-height: 1.4;
+}
